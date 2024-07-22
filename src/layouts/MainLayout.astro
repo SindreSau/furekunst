@@ -11,14 +11,27 @@ const { title } = Astro.props;
     <head>
         <meta charset='UTF-8' />
         <meta name='viewport' content='width=device-width, initial-scale=1.0' />
-        <title>{title} | Artist Name</title>
+        <title>{title} | Furekunst</title>
         <!-- Add any other meta tags, stylesheets, or scripts here -->
     </head>
-    <body>
+    <body class='flex flex-col min-h-screen'>
         <Header />
-        <main>
+
+        <main class='flex-grow container mx-auto mt-8 px-3 md:px-1.5 lg:px-0'>
             <slot />
         </main>
+
         <Footer />
     </body>
 </html>
+
+<style is:global>
+    /* FONTS */
+    @font-face {
+        font-family: 'DistantGalaxy';
+        src: url('/fonts/DistantGalaxy.woff') format('woff');
+        font-weight: normal;
+        font-style: normal;
+        font-display: swap;
+    }
+</style>

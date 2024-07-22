@@ -1,18 +1,92 @@
 ---
-// You can add any necessary imports or logic here
+
 ---
 
-<header>
-    <nav>
-        <ul>
-            <li><a href='/'>Home</a></li>
-            <li><a href='/gallery'>Gallery</a></li>
-            <li><a href='/about'>About</a></li>
-            <li><a href='/contact'>Contact</a></li>
-        </ul>
-    </nav>
+<header class='bg-white w-full z-50 px-3 md:px-1.5 lg:px-0'>
+    <div class='container mx-auto py-2'>
+        <div class='flex justify-between items-center py-4'>
+            <!-- Logo -->
+            <a href='/' class='text-xl font-semibold text-gray-800'>Furekunst</a>
+
+            <!-- Mobile menu button -->
+            <button
+                id='mobile-menu-button'
+                class='md:hidden text-gray-600 hover:text-gray-800 focus:outline-none z-50 relative'>
+                <span class='sr-only'>Open main menu</span>
+                <div class='w-6 h-6 relative'>
+                    <span
+                        id='hamburger-top'
+                        class='absolute top-0 left-0 w-6 h-0.5 bg-current transform transition duration-300 ease-in-out'
+                    ></span>
+                    <span
+                        id='hamburger-middle'
+                        class='absolute top-2.5 left-0 w-6 h-0.5 bg-current transform transition duration-300 ease-in-out'
+                    ></span>
+                    <span
+                        id='hamburger-bottom'
+                        class='absolute bottom-0 left-0 w-6 h-0.5 bg-current transform transition duration-300 ease-in-out'
+                    ></span>
+                </div>
+            </button>
+
+            <!-- Desktop menu -->
+            <nav class='hidden md:flex space-x-4'>
+                <a href='/' class='text-gray-600 hover:text-gray-800'>Hjem</a>
+                <a href='/galleri' class='text-gray-600 hover:text-gray-800'>Galleri</a>
+                <a href='/om' class='text-gray-600 hover:text-gray-800'>Om meg</a>
+                <a href='/kontakt' class='text-gray-600 hover:text-gray-800'>Kontakt</a>
+            </nav>
+        </div>
+    </div>
+    <!-- Gray divider -->
+    <div class='container mx-auto'>
+        <div class='h-px bg-gray-300 w-full'></div>
+    </div>
 </header>
 
-<style>
-    /* Add your styles here */
-</style>
+<!-- Mobile menu -->
+<nav
+    id='mobile-menu'
+    class='fixed left-0 right-0 top-[64px] bottom-0 bg-white z-40 transform translate-x-full transition-transform duration-300 ease-in-out md:hidden overflow-y-auto'>
+    <div class='flex flex-col h-full justify-start items-center space-y-8 text-2xl pt-8 shadow-md'>
+        <a href='/' class='text-gray-600 hover:text-gray-800'>Hjem</a>
+        <a href='/galleri' class='text-gray-600 hover:text-gray-800'>Galleri</a>
+        <a href='/om' class='text-gray-600 hover:text-gray-800'>Om meg</a>
+        <a href='/kontakt' class='text-gray-600 hover:text-gray-800'>Kontakt</a>
+    </div>
+</nav>
+
+<script>
+    const mobileMenuButton = document.getElementById('mobile-menu-button');
+    const mobileMenu = document.getElementById('mobile-menu');
+    const hamburgerTop = document.getElementById('hamburger-top');
+    const hamburgerMiddle = document.getElementById('hamburger-middle');
+    const hamburgerBottom = document.getElementById('hamburger-bottom');
+
+    let isMenuOpen = false;
+
+    // Toggle mobile menu
+    if (mobileMenuButton && mobileMenu && hamburgerTop && hamburgerMiddle && hamburgerBottom) {
+        mobileMenuButton.addEventListener('click', () => {
+            isMenuOpen = !isMenuOpen;
+
+            if (isMenuOpen) {
+                mobileMenu.classList.remove('translate-x-full');
+                mobileMenu.classList.add('translate-x-0');
+
+                // Transform to X
+                hamburgerTop.classList.add('rotate-45', 'translate-y-2.5');
+                hamburgerMiddle.classList.add('opacity-0');
+                hamburgerBottom.classList.add('-rotate-45', '-translate-y-3');
+            } else {
+                mobileMenu.classList.remove('translate-x-0');
+                mobileMenu.classList.add('translate-x-full');
+
+                // Transform back to hamburger
+                hamburgerTop.classList.remove('rotate-45', 'translate-y-2.5');
+                hamburgerMiddle.classList.remove('opacity-0');
+                hamburgerBottom.classList.remove('-rotate-45', '-translate-y-3');
+            }
+        });
+    }
+</script>
