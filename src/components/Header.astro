@@ -57,36 +57,45 @@
 </nav>
 
 <script>
-    const mobileMenuButton = document.getElementById('mobile-menu-button');
-    const mobileMenu = document.getElementById('mobile-menu');
-    const hamburgerTop = document.getElementById('hamburger-top');
-    const hamburgerMiddle = document.getElementById('hamburger-middle');
-    const hamburgerBottom = document.getElementById('hamburger-bottom');
+    function setupMobileMenu() {
+        const mobileMenuButton = document.getElementById('mobile-menu-button');
+        const mobileMenu = document.getElementById('mobile-menu');
+        const hamburgerTop = document.getElementById('hamburger-top');
+        const hamburgerMiddle = document.getElementById('hamburger-middle');
+        const hamburgerBottom = document.getElementById('hamburger-bottom');
 
-    let isMenuOpen = false;
+        let isMenuOpen = false;
 
-    // Toggle mobile menu
-    if (mobileMenuButton && mobileMenu && hamburgerTop && hamburgerMiddle && hamburgerBottom) {
-        mobileMenuButton.addEventListener('click', () => {
-            isMenuOpen = !isMenuOpen;
+        if (mobileMenuButton && mobileMenu && hamburgerTop && hamburgerMiddle && hamburgerBottom) {
+            mobileMenuButton.addEventListener('click', () => {
+                isMenuOpen = !isMenuOpen;
 
-            if (isMenuOpen) {
-                mobileMenu.classList.remove('translate-x-full');
-                mobileMenu.classList.add('translate-x-0');
+                if (isMenuOpen) {
+                    mobileMenu.classList.remove('translate-x-full');
+                    mobileMenu.classList.add('translate-x-0');
 
-                // Transform to X
-                hamburgerTop.classList.add('rotate-45', 'translate-y-2.5');
-                hamburgerMiddle.classList.add('opacity-0');
-                hamburgerBottom.classList.add('-rotate-45', '-translate-y-3');
-            } else {
-                mobileMenu.classList.remove('translate-x-0');
-                mobileMenu.classList.add('translate-x-full');
+                    // Transform to X
+                    hamburgerTop.classList.add('rotate-45', 'translate-y-2.5');
+                    hamburgerMiddle.classList.add('opacity-0');
+                    hamburgerBottom.classList.add('-rotate-45', '-translate-y-3');
+                } else {
+                    mobileMenu.classList.remove('translate-x-0');
+                    mobileMenu.classList.add('translate-x-full');
 
-                // Transform back to hamburger
-                hamburgerTop.classList.remove('rotate-45', 'translate-y-2.5');
-                hamburgerMiddle.classList.remove('opacity-0');
-                hamburgerBottom.classList.remove('-rotate-45', '-translate-y-3');
-            }
-        });
+                    // Transform back to hamburger
+                    hamburgerTop.classList.remove('rotate-45', 'translate-y-2.5');
+                    hamburgerMiddle.classList.remove('opacity-0');
+                    hamburgerBottom.classList.remove('-rotate-45', '-translate-y-3');
+                }
+            });
+        } else {
+            console.error('One or more required elements not found for mobile menu setup');
+        }
     }
+
+    // Run on initial load
+    setupMobileMenu();
+
+    // Run on each navigation
+    document.addEventListener('astro:page-load', setupMobileMenu);
 </script>
