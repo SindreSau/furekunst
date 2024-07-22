@@ -1,0 +1,18 @@
+---
+import { Image } from 'astro:assets';
+import MainLayout from '../layouts/MainLayout.astro';
+import heroImage from '../assets/images/Lazy dogs.jpg'; // Adjust the path as needed
+
+const title = 'Hjem';
+---
+
+<MainLayout title={title}>
+    <div class='relative'>
+        <Image src={heroImage} alt='Bilde av ' class='w-full object-cover' />
+    </div>
+
+    <section class='py-12'>
+        <h2 class='text-3xl font-semibold mb-6 text-center'>Populære kunstverk</h2>
+        <!-- Add your featured artworks or other content here -->
+    </section>
+</MainLayout>
