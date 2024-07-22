@@ -1,0 +1,24 @@
+---
+// You can import any necessary components here
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+
+// You can also define any props here if needed
+const { title } = Astro.props;
+---
+
+<html lang='en'>
+    <head>
+        <meta charset='UTF-8' />
+        <meta name='viewport' content='width=device-width, initial-scale=1.0' />
+        <title>{title} | Artist Name</title>
+        <!-- Add any other meta tags, stylesheets, or scripts here -->
+    </head>
+    <body>
+        <Header />
+        <main>
+            <slot />
+        </main>
+        <Footer />
+    </body>
+</html>
