@@ -1,11 +1,37 @@
 ---
+import { Icon } from 'astro-icon/components';
+
 const currentYear = new Date().getFullYear();
 ---
 
-<footer>
-    <p>&copy; {currentYear} Furekunst.</p>
+<footer class='bg-pastel-dark text-gray-700 py-3 lg:py-8 mt-8 lg:mt-12'>
+    <div class='container mx-auto px-4'>
+        <div class='flex flex-col md:flex-row justify-between items-center'>
+            <div class='mb-4 md:mb-0'>
+                <p class='text-sm'>&copy; {currentYear} Furekunst. All rights reserved.</p>
+            </div>
+            <div class='flex space-x-4'>
+                <a href='mailto:contact@furekunst.com' class='hover:text-gray-800 transition-colors duration-300'>
+                    <Icon name='mdi:email' class='w-6 h-6' />
+                    <span class='sr-only'>Email</span>
+                </a>
+                <a
+                    href='https://instagram.com/furekunst'
+                    target='_blank'
+                    rel='noopener noreferrer'
+                    class='hover:text-gray-800 transition-colors duration-300'>
+                    <Icon name='mdi:instagram' class='w-6 h-6' />
+                    <span class='sr-only'>Instagram</span>
+                </a>
+                <a
+                    href='https://facebook.com/furekunst'
+                    target='_blank'
+                    rel='noopener noreferrer'
+                    class='hover:text-gray-800 transition-colors duration-300'>
+                    <Icon name='mdi:facebook' class='w-6 h-6' />
+                    <span class='sr-only'>Facebook</span>
+                </a>
+            </div>
+        </div>
+    </div>
 </footer>
-
-<style>
-    /* Add your styles here */
-</style>

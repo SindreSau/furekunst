@@ -2,6 +2,7 @@
 // You can import any necessary components here
 import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
+import { ViewTransitions } from 'astro:transitions';
 
 // You can also define any props here if needed
 const { title } = Astro.props;
@@ -13,8 +14,10 @@ const { title } = Astro.props;
         <meta name='viewport' content='width=device-width, initial-scale=1.0' />
         <title>{title} | Furekunst</title>
         <!-- Add any other meta tags, stylesheets, or scripts here -->
+
+        <ViewTransitions />
     </head>
-    <body class='flex flex-col min-h-screen'>
+    <body class='flex flex-col min-h-screen bg-pastel font-body'>
         <Header />
 
         <main class='flex-grow container mx-auto mt-8 px-3 md:px-1.5 lg:px-0'>
@@ -24,14 +27,3 @@ const { title } = Astro.props;
         <Footer />
     </body>
 </html>
-
-<style is:global>
-    /* FONTS */
-    @font-face {
-        font-family: 'DistantGalaxy';
-        src: url('/fonts/DistantGalaxy.woff') format('woff');
-        font-weight: normal;
-        font-style: normal;
-        font-display: swap;
-    }
-</style>
