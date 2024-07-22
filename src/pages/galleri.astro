@@ -1,7 +1,24 @@
 ---
 import MainLayout from '../layouts/MainLayout.astro';
+import Frame from '../components/Frame.astro';
+
+const galleryImages = [
+    { src: '/lazydogs.jpg', alt: 'Artwork 1', innerFrame: true },
+    // { src: '/path/to/image2.jpg', alt: 'Artwork 2', innerFrame: false },
+    // { src: '/path/to/image3.jpg', alt: 'Artwork 3', innerFrame: true },
+    // Add more images as needed
+];
 ---
 
 <MainLayout title='Galleri'>
-    <h1>Galleri</h1>
+    <h1 class='text-3xl font-bold mb-6'>Galleri</h1>
+    <div class='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6'>
+        {
+            galleryImages.map((image) => (
+                <div class='flex justify-center'>
+                    <Frame src={image.src} alt={image.alt} innerFrame={image.innerFrame} />
+                </div>
+            ))
+        }
+    </div>
 </MainLayout>

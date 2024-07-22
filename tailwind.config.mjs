@@ -7,13 +7,10 @@ export default {
                 pastel: {
                     light: '#f4fcff',
                     DEFAULT: '#FFF',
-                    dark: '#c8f1ff',
+                    dark: '#EEE',
                 },
-                primary: {
-                    light: '#454545',
-                    DEFAULT: '#393939',
-                    dark: '##121212',
-                },
+                primary: '#9D9D9D',
+                secondary: '#393939',
             },
             fontFamily: {
                 sans: ['Open Sans', 'sans-serif'],

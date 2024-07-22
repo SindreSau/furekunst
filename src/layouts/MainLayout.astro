@@ -12,12 +12,13 @@ const { title } = Astro.props;
     <head>
         <meta charset='UTF-8' />
         <meta name='viewport' content='width=device-width, initial-scale=1.0' />
+        <link rel='icon' href='/favicon.svg' />
         <title>{title} | Furekunst</title>
         <!-- Add any other meta tags, stylesheets, or scripts here -->
 
         <ViewTransitions />
     </head>
-    <body class='flex flex-col min-h-screen bg-pastel font-body'>
+    <body class='flex flex-col min-h-screen bg-pastel font-body text-primary'>
         <Header />
 
         <main class='flex-grow container mx-auto mt-8 px-3 md:px-1.5 lg:px-0'>

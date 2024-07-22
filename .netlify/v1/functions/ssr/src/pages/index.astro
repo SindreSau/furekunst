@@ -1,14 +1,14 @@
 ---
 import { Image } from 'astro:assets';
 import MainLayout from '../layouts/MainLayout.astro';
-import lazydogs from '../assets/images/lazydogs.jpg'; // Adjust the path as needed
+import heroImage from '../assets/images/Lazy dogs.jpg'; // Adjust the path as needed
 
 const title = 'Hjem';
 ---
 
 <MainLayout title={title}>
     <div class='relative'>
-        <Image src={lazydogs} alt='Bilde av ' class='w-full object-cover' />
+        <Image src={heroImage} alt='Bilde av ' class='w-full object-cover' />
     </div>
 
     <section class='py-12'>
