@@ -13,9 +13,11 @@
         "@astrojs/check": "^0.8.2",
         "@astrojs/netlify": "^5.4.0",
         "@astrojs/tailwind": "^5.1.0",
+        "@contentful/rich-text-html-renderer": "^16.6.6",
         "@fontsource/kanit": "^5.0.20",
         "astro": "^4.12.2",
         "astro-icon": "^1.1.0",
+        "contentful": "^10.12.13",
         "tailwindcss": "^3.4.6",
         "typescript": "^5.5.3"
     },
