@@ -1,0 +1,30 @@
+---
+import { Image } from 'astro:assets';
+import Frame from '../components/Frame.astro';
+import type { GalleryPostEntry } from '../types/galleryPost';
+
+interface Props {
+    post: GalleryPostEntry;
+}
+
+const { post } = Astro.props;
+const { fields } = post;
+
+const imageUrl = fields.image.fields.file.url;
+const imageWidth = fields.image.fields.file.details.image?.width || 800;
+const imageHeight = fields.image.fields.file.details.image?.height || 600;
+
+const title = fields.title;
+const description = fields.description;
+const type = fields.type;
+const price = fields.price;
+const size = fields.size;
+const sizeAndPrice = fields.sizeAndPrice;
+---
+
+<div class=''>
+    <Frame src={imageUrl} width={imageWidth} height={imageHeight} alt={title} />
+    <div class='mt-4'>
+        <h2 class='text-xl font-bold'>{title}</h2>
+    </div>
+</div>

@@ -9,4 +9,13 @@ export default defineConfig({
     output: 'server',
     adapter: netlify(),
     integrations: [tailwind(), icon()],
+    vite: {
+        css: {
+            preprocessorOptions: {
+                scss: {
+                    additionalData: `@import "src/styles/global.css";`,
+                },
+            },
+        },
+    },
 });

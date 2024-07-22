@@ -8,7 +8,14 @@ const title = 'Hjem';
 
 <MainLayout title={title}>
     <div class='relative'>
-        <Image src={lazydogs} alt='Bilde av ' class='w-full object-cover' />
+        <Image
+            src={lazydogs}
+            alt='Bilde: Lazy dogs'
+            width={1754}
+            height={1241}
+            class='w-full object-cover opacity-0 transition-opacity duration-200'
+            id='fadeInImage'
+        />
     </div>
 
     <section class='py-12'>
@@ -16,3 +23,34 @@ const title = 'Hjem';
         <!-- Add your featured artworks or other content here -->
     </section>
 </MainLayout>
+
+<style>
+    .fade-in {
+        animation: fadeIn 0.4s ease-in forwards;
+    }
+
+    @keyframes fadeIn {
+        from {
+            transform: translateY(10px);
+            opacity: 0;
+        }
+        to {
+            opacity: 1;
+        }
+    }
+</style>
+
+<script>
+    function fadeInImage() {
+        const img = document.getElementById('fadeInImage');
+        if (img) {
+            img.classList.add('fade-in');
+        }
+    }
+
+    // Run on initial load
+    window.addEventListener('load', fadeInImage);
+
+    // For Astro's view transitions
+    document.addEventListener('astro:page-load', fadeInImage);
+</script>

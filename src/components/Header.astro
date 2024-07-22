@@ -1,8 +1,15 @@
 ---
+const pages = [
+    { title: 'Heim', url: '/' },
+    { title: 'Galleri', url: '/galleri' },
+    { title: 'Om meg', url: '/om' },
+    { title: 'Kontakt', url: '/kontakt' },
+];
 
+const currentPath = Astro.url.pathname;
 ---
 
-<header class='bg-pastel w-full z-50 px-3 md:px-1.5 lg:px-0 font-bold'>
+<header class='bg-pastel w-full z-50 px-3 md:px-1.5 lg:px-0'>
     <div class='container mx-auto py-2'>
         <div class='flex justify-between items-center py-4'>
             <!-- Logo -->
@@ -31,10 +38,16 @@
 
             <!-- Desktop menu -->
             <nav class='hidden md:flex space-x-4'>
-                <a href='/' class='text-gray-600 hover:text-gray-800'>HJEM</a>
-                <a href='/galleri' class='text-gray-600 hover:text-gray-800'>GALLERI</a>
-                <a href='/om' class='text-gray-600 hover:text-gray-800'>OM MEG</a>
-                <a href='/kontakt' class='text-gray-600 hover:text-gray-800'>KONTAKT</a>
+                {
+                    pages.map((page) => (
+                        <a
+                            href={page.url}
+                            class={` hover:text-gray-800 ${currentPath === page.url ? 'text-gray-800' : 'text-gray-400'}`}
+                            aria-current={currentPath === page.url ? 'page' : undefined}>
+                            {page.title}
+                        </a>
+                    ))
+                }
             </nav>
         </div>
     </div>
@@ -49,10 +62,16 @@
     id='mobile-menu'
     class='fixed left-0 right-0 top-[64px] pt-6 bottom-0 bg-pastel-dark z-40 transform translate-x-full transition-transform duration-300 ease-in-out md:hidden overflow-y-auto'>
     <div class='flex flex-col h-full justify-start items-center space-y-8 text-2xl pt-8 shadow-md'>
-        <a href='/' class='text-gray-600 hover:text-gray-800'>Hjem</a>
-        <a href='/galleri' class='text-gray-600 hover:text-gray-800'>Galleri</a>
-        <a href='/om' class='text-gray-600 hover:text-gray-800'>Om meg</a>
-        <a href='/kontakt' class='text-gray-600 hover:text-gray-800'>Kontakt</a>
+        {
+            pages.map((page) => (
+                <a
+                    href={page.url}
+                    class={`text-gray-600 hover:text-gray-800 ${currentPath === page.url ? 'text-gray-800 font-bold' : ''}`}
+                    aria-current={currentPath === page.url ? 'page' : undefined}>
+                    {page.title}
+                </a>
+            ))
+        }
     </div>
 </nav>
 
