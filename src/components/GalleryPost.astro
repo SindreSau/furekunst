@@ -10,7 +10,7 @@ interface Props {
 const { post } = Astro.props;
 const { fields } = post;
 
-const imageUrl = fields.image.fields.file.url;
+const imageUrl = `https:${fields.image.fields.file.url}`;
 const imageWidth = fields.image.fields.file.details.image?.width || 800;
 const imageHeight = fields.image.fields.file.details.image?.height || 600;
 const aspectRatio = imageHeight / imageWidth;
