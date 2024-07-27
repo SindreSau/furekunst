@@ -55,7 +55,7 @@ const slug = fields.title
 
 const title = fields.title;
 const description = fields.description;
-const imageUrl = fields.image.fields.file.url;
+const imageUrl = `https:${fields.image.fields.file.url}`;
 const imageWidth = fields.image.fields.file.details.image?.width || 800;
 const imageHeight = fields.image.fields.file.details.image?.height || 600;
 const type = fields.type;
