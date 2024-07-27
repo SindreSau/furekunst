@@ -8,6 +8,9 @@ import icon from 'astro-icon';
 export default defineConfig({
     output: 'server',
     adapter: netlify(),
+    image: {
+        remotePatterns: [{ protocol: 'https', hostname: 'images.ctfassets.net' }],
+    },
     integrations: [tailwind(), icon()],
     vite: {
         css: {
