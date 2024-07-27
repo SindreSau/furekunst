@@ -11,6 +11,7 @@ interface Props {
     innerFrameWidth?: number;
     outerFrameColor?: string;
     innerFrameColor?: string;
+    passepartout?: boolean;
 }
 
 const {
@@ -20,17 +21,16 @@ const {
     height,
     innerframe = false,
     outerFrameWidth = 3,
-    innerFrameWidth = 5,
+    innerFrameWidth = 0,
     outerFrameColor = 'black',
-    innerFrameColor = '#E0E0E0',
+    innerFrameColor = '#f8f8f8',
+    passepartout = true,
 } = Astro.props;
 
 const aspectRatio = (height / width) * 100;
 ---
 
-<div
-    class='relative w-full frame-shadow hover:scale-[1.015] transition-all duration-200'
-    style={`padding-bottom: ${aspectRatio}%;`}>
+<div class='relative w-full frame-shadow inset-0 h-full object-cover' style={`padding-bottom: ${aspectRatio}%;`}>
     <div class='absolute inset-0'>
         <div class='w-full h-full' style={`border: ${outerFrameWidth}px solid ${outerFrameColor};`}>
             {
@@ -43,6 +43,7 @@ const aspectRatio = (height / width) * 100;
             }
         </div>
         <Image
+            loading={'eager'}
             src={src}
             alt={alt}
             width={width}
@@ -52,12 +53,3 @@ const aspectRatio = (height / width) * 100;
         />
     </div>
 </div>
-
-<style>
-    .frame-shadow {
-        box-shadow: 5px 5px 3px rgba(0, 0, 0, 0.3);
-    }
-    .frame-shadow:hover {
-        box-shadow: 7px 7px 8px rgba(0, 0, 0, 0.2);
-    }
-</style>

@@ -13,7 +13,6 @@ const groupPath = '/' + currentPath.split('/')[1];
 ---
 
 <header class='bg-pastel w-full z-50 px-3 md:px-1.5 lg:px-0'>
-    <span>{groupPath}</span>
     <div class='container mx-auto py-2'>
         <div class='flex justify-between items-center py-4'>
             <!-- Logo -->
@@ -70,11 +69,10 @@ const groupPath = '/' + currentPath.split('/')[1];
             pages.map((page, index) => (
                 <a
                     href={page.url}
-                    class={`mobile-menu-item text-gray-600 hover:text-gray-800 ${
-                        currentPath === page.url ? 'text-gray-800 text-[1.58rem] border-gray-200 border-b-2' : ''
+                    class={`mobile-menu-item text-gray-600 hover:text-gray-800 ${'delay-[' + index * 100 + 'ms'} ${
+                        groupPath === page.url ? 'text-gray-800 text-[1.58rem] border-gray-200 border-b-2' : ''
                     } opacity-0 translate-y-4 transition-all duration-300 ease-out`}
-                    aria-current={currentPath === page.url ? 'page' : undefined}
-                    style={`transition-delay: ${index * 50}ms;`}>
+                    aria-current={currentPath === page.url ? 'page' : undefined}>
                     {page.title}
                 </a>
             ))
@@ -98,12 +96,14 @@ const groupPath = '/' + currentPath.split('/')[1];
             document.body.style.height = isMenuOpen ? '100vh' : '';
         }
 
-        function animateMenuItems(show) {
+        function animateMenuItems(show: boolean) {
             menuItems.forEach((item, index) => {
                 setTimeout(() => {
-                    item.style.opacity = show ? '1' : '0';
-                    item.style.transform = show ? 'translateY(0)' : 'translateY(1rem)';
-                }, index * 50);
+                    if (item instanceof HTMLElement) {
+                        item.style.opacity = show ? '1' : '0';
+                        item.style.transform = show ? 'translateY(0)' : 'translateY(1rem)';
+                    }
+                }, index * 100);
             });
         }
 
