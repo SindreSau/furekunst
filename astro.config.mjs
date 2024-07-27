@@ -12,13 +12,4 @@ export default defineConfig({
         remotePatterns: [{ protocol: 'https', hostname: 'images.ctfassets.net' }],
     },
     integrations: [tailwind(), icon()],
-    vite: {
-        css: {
-            preprocessorOptions: {
-                scss: {
-                    additionalData: `@import "src/styles/global.css";`,
-                },
-            },
-        },
-    },
 });
