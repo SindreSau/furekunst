@@ -7,9 +7,13 @@ const pages = [
 ];
 
 const currentPath = Astro.url.pathname;
+
+// Strip away everything after the first pathname
+const groupPath = '/' + currentPath.split('/')[1];
 ---
 
 <header class='bg-pastel w-full z-50 px-3 md:px-1.5 lg:px-0'>
+    <span>{groupPath}</span>
     <div class='container mx-auto py-2'>
         <div class='flex justify-between items-center py-4'>
             <!-- Logo -->
@@ -42,7 +46,7 @@ const currentPath = Astro.url.pathname;
                     pages.map((page) => (
                         <a
                             href={page.url}
-                            class={`hover:text-gray-800 ${currentPath === page.url ? 'text-gray-800 border-b-2' : 'text-gray-400'}`}
+                            class={`hover:text-gray-800 ${groupPath === page.url ? 'text-gray-800 border-b-2' : 'text-gray-400'}`}
                             aria-current={currentPath === page.url ? 'page' : undefined}>
                             {page.title}
                         </a>
