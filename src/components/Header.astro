@@ -7,9 +7,13 @@ const pages = [
 ];
 
 const currentPath = Astro.url.pathname;
+
+// Strip away everything after the first pathname
+const groupPath = '/' + currentPath.split('/')[1];
 ---
 
 <header class='bg-pastel w-full z-50 px-3 md:px-1.5 lg:px-0'>
+    <span>{groupPath}</span>
     <div class='container mx-auto py-2'>
         <div class='flex justify-between items-center py-4'>
             <!-- Logo -->
@@ -18,7 +22,7 @@ const currentPath = Astro.url.pathname;
             <!-- Mobile menu button -->
             <button
                 id='mobile-menu-button'
-                class='md:hidden text-gray-600 hover:text-gray-800 focus:outline-none z-50 relative'>
+                class='md:hidden px-2 text-gray-600 hover:text-gray-800 focus:outline-none z-50 relative'>
                 <span class='sr-only'>Open main menu</span>
                 <div class='w-6 h-6 relative'>
                     <span
@@ -42,7 +46,7 @@ const currentPath = Astro.url.pathname;
                     pages.map((page) => (
                         <a
                             href={page.url}
-                            class={` hover:text-gray-800 ${currentPath === page.url ? 'text-gray-800' : 'text-gray-400'}`}
+                            class={`hover:text-gray-800 ${groupPath === page.url ? 'text-gray-800 border-b-2' : 'text-gray-400'}`}
                             aria-current={currentPath === page.url ? 'page' : undefined}>
                             {page.title}
                         </a>
@@ -63,11 +67,14 @@ const currentPath = Astro.url.pathname;
     class='fixed left-0 right-0 top-[64px] pt-6 bottom-0 bg-pastel-dark z-40 transform translate-x-full transition-transform duration-300 ease-in-out md:hidden overflow-y-auto'>
     <div class='flex flex-col h-full justify-start items-center space-y-8 text-2xl pt-8 shadow-md'>
         {
-            pages.map((page) => (
+            pages.map((page, index) => (
                 <a
                     href={page.url}
-                    class={`text-gray-600 hover:text-gray-800 ${currentPath === page.url ? 'text-gray-800 font-bold' : ''}`}
-                    aria-current={currentPath === page.url ? 'page' : undefined}>
+                    class={`mobile-menu-item text-gray-600 hover:text-gray-800 ${
+                        currentPath === page.url ? 'text-gray-800 text-[1.58rem] border-gray-200 border-b-2' : ''
+                    } opacity-0 translate-y-4 transition-all duration-300 ease-out`}
+                    aria-current={currentPath === page.url ? 'page' : undefined}
+                    style={`transition-delay: ${index * 50}ms;`}>
                     {page.title}
                 </a>
             ))
@@ -82,8 +89,23 @@ const currentPath = Astro.url.pathname;
         const hamburgerTop = document.getElementById('hamburger-top');
         const hamburgerMiddle = document.getElementById('hamburger-middle');
         const hamburgerBottom = document.getElementById('hamburger-bottom');
+        const menuItems = document.querySelectorAll('.mobile-menu-item');
 
         let isMenuOpen = false;
+
+        function toggleScrollLock() {
+            document.body.style.overflow = isMenuOpen ? 'hidden' : '';
+            document.body.style.height = isMenuOpen ? '100vh' : '';
+        }
+
+        function animateMenuItems(show) {
+            menuItems.forEach((item, index) => {
+                setTimeout(() => {
+                    item.style.opacity = show ? '1' : '0';
+                    item.style.transform = show ? 'translateY(0)' : 'translateY(1rem)';
+                }, index * 50);
+            });
+        }
 
         if (mobileMenuButton && mobileMenu && hamburgerTop && hamburgerMiddle && hamburgerBottom) {
             mobileMenuButton.addEventListener('click', () => {
@@ -92,6 +114,7 @@ const currentPath = Astro.url.pathname;
                 if (isMenuOpen) {
                     mobileMenu.classList.remove('translate-x-full');
                     mobileMenu.classList.add('translate-x-0');
+                    animateMenuItems(true);
 
                     // Transform to X
                     hamburgerTop.classList.add('rotate-45', 'translate-y-2.5');
@@ -100,12 +123,15 @@ const currentPath = Astro.url.pathname;
                 } else {
                     mobileMenu.classList.remove('translate-x-0');
                     mobileMenu.classList.add('translate-x-full');
+                    animateMenuItems(false);
 
                     // Transform back to hamburger
                     hamburgerTop.classList.remove('rotate-45', 'translate-y-2.5');
                     hamburgerMiddle.classList.remove('opacity-0');
                     hamburgerBottom.classList.remove('-rotate-45', '-translate-y-3');
                 }
+
+                toggleScrollLock();
             });
         } else {
             console.error('One or more required elements not found for mobile menu setup');

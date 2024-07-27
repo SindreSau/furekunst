@@ -13,8 +13,8 @@ const posts = entries.items as unknown as GalleryPostEntry[];
 ---
 
 <MainLayout title='Galleri'>
-    <h1 class='text-3xl font-bold mb-6'>Galleri</h1>
-    <div class='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6'>
+    <h1 class='text-3xl mb-6'>Galleri</h1>
+    <div class='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6'>
         {posts.map((post) => <GalleryPost post={post} />)}
     </div>
 </MainLayout>

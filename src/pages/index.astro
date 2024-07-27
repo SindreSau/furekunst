@@ -11,8 +11,9 @@ const title = 'Hjem';
         <Image
             src={lazydogs}
             alt='Bilde: Lazy dogs'
-            width={1754}
-            height={1241}
+            widths={[240, 540, 720, 1754]}
+            sizes={'(max-width: 640px) 100vw, 640px'}
+            loading={'eager'}
             class='w-full object-cover opacity-0 transition-opacity duration-200'
             id='fadeInImage'
         />
@@ -26,12 +27,12 @@ const title = 'Hjem';
 
 <style>
     .fade-in {
-        animation: fadeIn 0.4s ease-in forwards;
+        animation: fadeIn 0.2s ease-in forwards;
     }
 
     @keyframes fadeIn {
         from {
-            transform: translateY(10px);
+            transform: translateY(8px);
             opacity: 0;
         }
         to {

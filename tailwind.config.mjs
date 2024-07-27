@@ -7,7 +7,7 @@ export default {
                 pastel: {
                     light: '#f4fcff',
                     DEFAULT: '#FFF',
-                    dark: '#EEE',
+                    dark: '#F8F8F8',
                 },
                 primary: '#9D9D9D',
                 secondary: '#393939',
