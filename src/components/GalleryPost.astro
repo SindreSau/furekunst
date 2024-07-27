@@ -13,10 +13,14 @@ const { fields } = post;
 const imageUrl = fields.image.fields.file.url;
 const imageWidth = fields.image.fields.file.details.image?.width || 800;
 const imageHeight = fields.image.fields.file.details.image?.height || 600;
+const aspectRatio = imageHeight / imageWidth;
+const isLandscape = aspectRatio < 1;
+
 const title = fields.title;
 const type = fields.type;
 const price = fields.price;
 const sizeAndPrice: SizeAndPriceEntry[] = fields.sizeAndPrice || [];
+const passepartout = fields.passepartout;
 
 let lowestPrice: number | undefined;
 if (type === 'print' && sizeAndPrice.length > 0) {
@@ -31,16 +35,22 @@ const slug = title
     .replace(/[^\w-]+/g, '');
 ---
 
-<a href={`/galleri/${slug}`} class='group flex flex-col h-full cursor-pointer'>
-    <Frame
-        src={imageUrl}
-        alt={title}
-        innerframe={true}
-        width={imageWidth}
-        height={imageHeight}
-        outerFrameWidth={5}
-        innerFrameWidth={0}
-    />
+<a
+    href={`/galleri/${slug}`}
+    class={`group flex flex-col h-full cursor-pointer ${isLandscape ? 'col-span-2' : 'col-span-1'}`}>
+    <div
+        class='flex-grow flex items-center justify-center overflow-hidden frame-shadow'
+        transition:name={'image-' + slug}>
+        <Frame
+            src={imageUrl}
+            alt={title}
+            innerframe={true}
+            width={imageWidth}
+            height={imageHeight}
+            outerFrameWidth={5}
+            passepartout={passepartout}
+        />
+    </div>
     <div class='flex flex-row justify-between items-center mt-2 p-2'>
         <h2 class='text-xl font-bold truncate'>{title}</h2>
         {
@@ -53,3 +63,9 @@ const slug = title
         }
     </div>
 </a>
+
+<style>
+    .frame-shadow {
+        box-shadow: 5px 5px 3px rgba(0, 0, 0, 0.3);
+    }
+</style>

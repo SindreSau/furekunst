@@ -41,6 +41,7 @@ interface GalleryPostFields {
         size?: EntryFields.Symbol;
         price?: EntryFields.Integer;
         sizeAndPrice?: SizeAndPrice[];
+        passepartout: EntryFields.Boolean;
     };
     contentTypeId: 'galleryPost';
 }
@@ -63,6 +64,7 @@ export interface GalleryPostEntry {
                 price: number;
             };
         }>;
+        passepartout: boolean;
     };
     contentTypeId: 'galleryPost';
     sys: {

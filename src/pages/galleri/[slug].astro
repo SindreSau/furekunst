@@ -5,7 +5,7 @@ import { contentfulClient } from '../../lib/contentful';
 import type { GalleryPostEntry } from '../../types/galleryPost';
 import type { SizeAndPriceEntry } from '../../types/sizeAndPrice';
 
-import { Entry } from 'contentful';
+import type { Entry } from 'contentful';
 
 export async function getStaticPaths() {
     const entries = await contentfulClient.getEntries<GalleryPostEntry>({
@@ -48,6 +48,11 @@ const { fields } = posts.find((post) => {
     return slug === Astro.params.slug;
 }) as GalleryPostEntry;
 
+const slug = fields.title
+    .toLowerCase()
+    .replace(/\s+/g, '-')
+    .replace(/[^\w-]+/g, '');
+
 const title = fields.title;
 const description = fields.description;
 const imageUrl = fields.image.fields.file.url;
@@ -56,24 +61,26 @@ const imageHeight = fields.image.fields.file.details.image?.height || 600;
 const type = fields.type;
 const price = fields.price;
 const sizeAndPrice: SizeAndPriceEntry[] = fields.sizeAndPrice || [];
+const passepartout = fields.passepartout;
 ---
 
 <MainLayout title={title}>
     <div class='container mx-auto px-4 py-8'>
-        <h1 class='text-3xl font-bold mb-6'>{title}</h1>
         <div class='grid grid-cols-1 md:grid-cols-2 gap-8'>
-            <div>
+            <div transition:name={'image-' + slug}>
                 <Frame
+                    transition:name={'image-' + slug}
                     src={imageUrl}
                     alt={title}
                     innerframe={true}
                     width={imageWidth}
                     height={imageHeight}
                     outerFrameWidth={5}
-                    innerFrameWidth={0}
+                    innerFrameWidth={passepartout ? 0 : 16}
                 />
             </div>
             <div>
+                <h1 class='text-3xl font-bold mb-6'>{title}</h1>
                 {description && <p class='mb-4'>{description}</p>}
                 <p class='font-bold mb-2'>Type: {type}</p>
                 {type === 'original' && price && <p class='text-xl font-bold mb-4'>Pris: kr {price},00</p>}
