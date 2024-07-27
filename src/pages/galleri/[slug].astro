@@ -1,0 +1,97 @@
+---
+import MainLayout from '../../layouts/MainLayout.astro';
+import Frame from '../../components/Frame.astro';
+import { contentfulClient } from '../../lib/contentful';
+import type { GalleryPostEntry } from '../../types/galleryPost';
+import type { SizeAndPriceEntry } from '../../types/sizeAndPrice';
+
+import { Entry } from 'contentful';
+
+export async function getStaticPaths() {
+    const entries = await contentfulClient.getEntries<GalleryPostEntry>({
+        content_type: 'galleryPost',
+    });
+
+    return {
+        paths: entries.items.map((entry: Entry<GalleryPostEntry>) => {
+            const { fields } = entry;
+            const title = fields.title as unknown as string;
+            const slug = title
+                .toLowerCase()
+                .replace(/\s+/g, '-')
+                .replace(/[^\w-]+/g, '');
+            return {
+                params: { slug },
+            };
+        }),
+        fallback: false,
+    };
+}
+
+export interface Props {
+    entry: GalleryPostEntry;
+}
+
+const entries = await contentfulClient.getEntries<GalleryPostEntry>({
+    content_type: 'galleryPost',
+});
+
+const posts = entries.items as unknown as GalleryPostEntry[];
+const { fields } = posts.find((post) => {
+    const { fields } = post;
+    const title = fields.title as unknown as string;
+    const slug = title
+        .toLowerCase()
+        .replace(/\s+/g, '-')
+        .replace(/[^\w-]+/g, '');
+    // @ts-ignore
+    return slug === Astro.params.slug;
+}) as GalleryPostEntry;
+
+const title = fields.title;
+const description = fields.description;
+const imageUrl = fields.image.fields.file.url;
+const imageWidth = fields.image.fields.file.details.image?.width || 800;
+const imageHeight = fields.image.fields.file.details.image?.height || 600;
+const type = fields.type;
+const price = fields.price;
+const sizeAndPrice: SizeAndPriceEntry[] = fields.sizeAndPrice || [];
+---
+
+<MainLayout title={title}>
+    <div class='container mx-auto px-4 py-8'>
+        <h1 class='text-3xl font-bold mb-6'>{title}</h1>
+        <div class='grid grid-cols-1 md:grid-cols-2 gap-8'>
+            <div>
+                <Frame
+                    src={imageUrl}
+                    alt={title}
+                    innerframe={true}
+                    width={imageWidth}
+                    height={imageHeight}
+                    outerFrameWidth={5}
+                    innerFrameWidth={0}
+                />
+            </div>
+            <div>
+                {description && <p class='mb-4'>{description}</p>}
+                <p class='font-bold mb-2'>Type: {type}</p>
+                {type === 'original' && price && <p class='text-xl font-bold mb-4'>Pris: kr {price},00</p>}
+                {
+                    type === 'print' && sizeAndPrice.length > 0 && (
+                        <div>
+                            <h2 class='text-xl font-bold mb-2'>Tilgjengelige størrelser og priser:</h2>
+                            <ul>
+                                {sizeAndPrice.map((item) => (
+                                    <li class='mb-2'>
+                                        {item.fields.size}: kr {item.fields.price},00
+                                    </li>
+                                ))}
+                            </ul>
+                        </div>
+                    )
+                }
+            </div>
+        </div>
+    </div>
+</MainLayout>

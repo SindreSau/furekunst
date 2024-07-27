@@ -1,7 +1,7 @@
 ---
-import { Image } from 'astro:assets';
 import Frame from '../components/Frame.astro';
 import type { GalleryPostEntry } from '../types/galleryPost';
+import type { SizeAndPriceEntry } from '../types/sizeAndPrice';
 
 interface Props {
     post: GalleryPostEntry;
@@ -13,18 +13,43 @@ const { fields } = post;
 const imageUrl = fields.image.fields.file.url;
 const imageWidth = fields.image.fields.file.details.image?.width || 800;
 const imageHeight = fields.image.fields.file.details.image?.height || 600;
-
 const title = fields.title;
-const description = fields.description;
 const type = fields.type;
 const price = fields.price;
-const size = fields.size;
-const sizeAndPrice = fields.sizeAndPrice;
+const sizeAndPrice: SizeAndPriceEntry[] = fields.sizeAndPrice || [];
+
+let lowestPrice: number | undefined;
+if (type === 'print' && sizeAndPrice.length > 0) {
+    lowestPrice = Math.min(...sizeAndPrice.map((item) => item.fields.price));
+}
+
+const displayPrice = type === 'print' ? lowestPrice : price;
+
+const slug = title
+    .toLowerCase()
+    .replace(/\s+/g, '-')
+    .replace(/[^\w-]+/g, '');
 ---
 
-<div class=''>
-    <Frame src={imageUrl} width={imageWidth} height={imageHeight} alt={title} />
-    <div class='mt-4'>
-        <h2 class='text-xl font-bold'>{title}</h2>
+<a href={`/galleri/${slug}`} class='group flex flex-col h-full cursor-pointer'>
+    <Frame
+        src={imageUrl}
+        alt={title}
+        innerframe={true}
+        width={imageWidth}
+        height={imageHeight}
+        outerFrameWidth={5}
+        innerFrameWidth={0}
+    />
+    <div class='flex flex-row justify-between items-center mt-2 p-2'>
+        <h2 class='text-xl font-bold truncate'>{title}</h2>
+        {
+            displayPrice !== undefined && (
+                <span class='text-sm whitespace-nowrap'>
+                    {type === 'print' ? 'Fra kr ' : 'kr '}
+                    {displayPrice + ',00'}
+                </span>
+            )
+        }
     </div>
-</div>
+</a>
