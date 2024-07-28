@@ -10,14 +10,23 @@ const entries = await contentfulClient.getEntries<IGalleryPost>({
 });
 
 const posts = entries.items as unknown as GalleryPostEntry[];
-
-console.log(posts);
 ---
 
 <MainLayout title='Galleri'>
     <h1 class='text-3xl mb-6 fade-in-element'>Galleri</h1>
-    <div
-        class='flex flex-col sm:grid sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 auto-rows-[1fr]'>
-        {posts.map((post) => <GalleryPost post={post} />)}
+    <div class='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6'>
+        {
+            posts.map((post) => {
+                const aspectRatio =
+                    (post.fields.image.fields.file.details.image?.height ?? 1) /
+                    (post.fields.image.fields.file.details.image?.width ?? 1);
+                const isLandscape = aspectRatio < 1;
+                return (
+                    <div class={isLandscape ? 'col-span-1 sm:col-span-2' : 'col-span-1'}>
+                        <GalleryPost post={post} />
+                    </div>
+                );
+            })
+        }
     </div>
 </MainLayout>

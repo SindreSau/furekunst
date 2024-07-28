@@ -5,32 +5,7 @@ import { contentfulClient } from '../../lib/contentful';
 import type { GalleryPostEntry } from '../../types/galleryPost';
 import type { SizeAndPriceEntry } from '../../types/sizeAndPrice';
 
-import type { Entry } from 'contentful';
-
-export async function getStaticPaths() {
-    const entries = await contentfulClient.getEntries<GalleryPostEntry>({
-        content_type: 'galleryPost',
-    });
-
-    return {
-        paths: entries.items.map((entry: Entry<GalleryPostEntry>) => {
-            const { fields } = entry;
-            const title = fields.title as unknown as string;
-            const slug = title
-                .toLowerCase()
-                .replace(/\s+/g, '-')
-                .replace(/[^\w-]+/g, '');
-            return {
-                params: { slug },
-            };
-        }),
-        fallback: false,
-    };
-}
-
-export interface Props {
-    entry: GalleryPostEntry;
-}
+// ... (keep the existing imports and getStaticPaths function)
 
 const entries = await contentfulClient.getEntries<GalleryPostEntry>({
     content_type: 'galleryPost',
@@ -58,16 +33,22 @@ const description = fields.description;
 const imageUrl = `https:${fields.image.fields.file.url}`;
 const imageWidth = fields.image.fields.file.details.image?.width || 800;
 const imageHeight = fields.image.fields.file.details.image?.height || 600;
+const aspectRatio = imageHeight / imageWidth;
 const type = fields.type;
 const price = fields.price;
 const sizeAndPrice: SizeAndPriceEntry[] = fields.sizeAndPrice || [];
 const passepartout = fields.passepartout;
+
+console.log('imageWidth ', imageWidth, '. imageHeight ', imageHeight, '. aspectRatio ', aspectRatio);
 ---
 
 <MainLayout title={title}>
     <div class='container mx-auto px-4 py-8'>
         <div class='grid grid-cols-1 md:grid-cols-2 gap-8'>
-            <div transition:name={'image-' + slug}>
+            <button
+                popovertarget='fullscreen-popover'
+                transition:name={'image-' + slug}
+                class='frame-shadow md:hover:scale-[1.01] transition duration-300 cursor-pointer hidden md:block'>
                 <Frame
                     transition:name={'image-' + slug}
                     src={imageUrl}
@@ -77,7 +58,18 @@ const passepartout = fields.passepartout;
                     passepartout={passepartout}
                     quality='high'
                 />
+            </button>
+            <div class='md:hidden'>
+                <Frame
+                    src={imageUrl}
+                    width={imageWidth}
+                    alt={title}
+                    height={imageHeight}
+                    passepartout={passepartout}
+                    quality='high'
+                />
             </div>
+
             <div>
                 <h1 class='text-3xl font-bold mb-6'>{title}</h1>
                 {description && <p class='mb-4'>{description}</p>}
@@ -100,4 +92,134 @@ const passepartout = fields.passepartout;
             </div>
         </div>
     </div>
+
+    <div
+        popover
+        id='fullscreen-popover'
+        class='fixed top-0 left-0 w-full h-full bg-black bg-opacity-50 flex items-center justify-center p-4'>
+        <div
+            class={'relative  max-w-[90vw] max-h-[90vh] flex items-center justify-center ' +
+                (aspectRatio > 1 ? 'h-full' : 'w-full')}>
+            <!-- Close button -->
+            <button
+                id='close-popover'
+                class='absolute top-2 right-2 text-white bg-black bg-opacity-50 rounded-full w-12 h-12 flex items-center justify-center hover:bg-opacity-75 transition-colors duration-200 z-10'
+                aria-label='Close popover'>
+                &times;
+            </button>
+
+            <!-- Image -->
+            <div
+                class='frame-shadow w-full h-full'
+                style={`aspect-ratio: ${imageWidth} / ${imageHeight}; max-width: 100%; max-height: 100%;`}>
+                <Frame
+                    transition:name={'image-' + slug}
+                    src={imageUrl}
+                    alt={title}
+                    width={imageWidth}
+                    height={imageHeight}
+                    outerFrameWidth={5}
+                    passepartout={passepartout}
+                    quality='max'
+                />
+            </div>
+        </div>
+    </div>
 </MainLayout>
+
+<style>
+    .frame-shadow {
+        box-shadow: 5px 5px 3px rgba(0, 0, 0, 0.3);
+    }
+
+    @media screen and (min-width: 768px) {
+        .frame-shadow:hover {
+            box-shadow: 7px 7px 8px rgba(0, 0, 0, 0.2);
+        }
+    }
+
+    #fullscreen-popover {
+        opacity: 0;
+        visibility: hidden;
+    }
+
+    #fullscreen-popover:popover-open {
+        opacity: 1;
+        visibility: visible;
+    }
+
+    #fullscreen-popover .frame-shadow {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    #fullscreen-popover .frame-shadow > :global(*) {
+        max-width: 100%;
+        max-height: 100%;
+        object-fit: contain;
+    }
+</style>
+
+<script>
+    const popover = document.getElementById('fullscreen-popover');
+    const closeButton = document.getElementById('close-popover');
+    const openButton = document.querySelector('[popovertarget="fullscreen-popover"]');
+
+    function showPopover() {
+        if (popover) {
+            popover.style.display = 'flex';
+            setTimeout(() => {
+                popover.style.opacity = '1';
+                popover.style.visibility = 'visible';
+            }, 10);
+        }
+    }
+
+    function hidePopover() {
+        if (popover) {
+            popover.style.opacity = '0';
+            popover.style.visibility = 'hidden';
+            setTimeout(() => {
+                popover.style.display = 'none';
+            }, 300); // Match this with your transition duration
+        }
+    }
+
+    function handlePopoverClick(e: MouseEvent) {
+        if (e.target === popover) {
+            hidePopover();
+        }
+    }
+
+    if (openButton) {
+        openButton.addEventListener('click', showPopover);
+    }
+
+    if (closeButton) {
+        closeButton.addEventListener('click', hidePopover);
+    }
+
+    if (popover) {
+        popover.addEventListener('click', handlePopoverClick);
+    }
+
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+            hidePopover();
+        }
+    });
+
+    // Disable popover on mobile devices
+    function handleResize() {
+        if (window.innerWidth < 768) {
+            hidePopover();
+            if (openButton) (openButton as HTMLElement).style.display = 'none';
+        } else {
+            if (openButton) (openButton as HTMLElement).style.display = '';
+        }
+    }
+
+    window.addEventListener('resize', handleResize);
+    handleResize(); // Call once on load
+</script>
