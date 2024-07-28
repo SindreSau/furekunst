@@ -10,10 +10,12 @@ const entries = await contentfulClient.getEntries<IGalleryPost>({
 });
 
 const posts = entries.items as unknown as GalleryPostEntry[];
+
+console.log(posts);
 ---
 
 <MainLayout title='Galleri'>
-    <h1 class='text-3xl mb-6'>Galleri</h1>
+    <h1 class='text-3xl mb-6 fade-in-element'>Galleri</h1>
     <div class='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 auto-rows-[1fr]'>
         {posts.map((post) => <GalleryPost post={post} />)}
     </div>

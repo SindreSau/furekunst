@@ -12,8 +12,8 @@ const currentPath = Astro.url.pathname;
 const groupPath = '/' + currentPath.split('/')[1];
 ---
 
-<header class='bg-pastel w-full z-50 px-3 md:px-1.5 lg:px-0'>
-    <div class='container mx-auto py-2'>
+<header class='bg-pastel w-full z-50 px-3 md:px-1.5 lg:px-0 container'>
+    <div class='mx-auto py-2'>
         <div class='flex justify-between items-center py-4'>
             <!-- Logo -->
             <a href='/' class='text-xl font-semibold text-gray-800 font-didot tracking-widest'>ELISABETH FURE</a>
@@ -55,7 +55,7 @@ const groupPath = '/' + currentPath.split('/')[1];
         </div>
     </div>
     <!-- Gray divider -->
-    <div class='container mx-auto'>
+    <div class='mx-auto'>
         <div class='h-px bg-gray-300 w-full'></div>
     </div>
 </header>
