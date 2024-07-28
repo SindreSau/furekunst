@@ -1,58 +1,170 @@
 ---
 import { Image } from 'astro:assets';
 import MainLayout from '../layouts/MainLayout.astro';
-import lazydogs from '../assets/images/lazydogs.jpg'; // Adjust the path as needed
+import lazydogs from '../assets/images/lazydogs.jpg';
+import hjort from '../assets/images/hjort.jpeg';
+import labrador from '../assets/images/labrador.jpeg';
+import sjimpanse from '../assets/images/sjimpanse.jpeg';
+import Frame from '../components/Frame.astro';
 
 const title = 'Hjem';
+const carouselImages = [hjort, sjimpanse, labrador];
 ---
 
 <MainLayout title={title}>
-    <div class='relative'>
+    <div class='relative fade-in-element'>
         <Image
             src={lazydogs}
             alt='Bilde: Lazy dogs'
-            widths={[240, 540, 720, 1754]}
-            sizes={`(max-width: 360px) 240px, (max-width: 720px) 540px, (max-width: 1600px) 720px, 1754px`}
+            widths={[240, 540, 720, 1200]}
+            sizes={`(max-width: 360px) 240px, (max-width: 720px) 540px, (max-width: 1600px) 720px, 1200px`}
             quality={'high'}
             loading={'eager'}
-            class='w-full object-cover opacity-0 transition-opacity duration-200'
-            id='fadeInImage'
+            class='w-full object-cover'
+            id='heroImage'
         />
     </div>
 
     <section class='py-12'>
-        <h1 class='text-center'>Populære kunstverk</h1>
-        <!-- Add your featured artworks or other content here -->
+        <h1 class='text-center mb-8 fade-in-element'>Populære kunstverk</h1>
+
+        <!-- Carousel for small screens -->
+        <div class='md:hidden relative w-full h-full overflow-hidden fade-in-element'>
+            <div id='carousel' class='flex transition-transform duration-300 ease-in-out h-full'>
+                {
+                    carouselImages.map((img, index) => (
+                        <div class='w-full flex-shrink-0'>
+                            <Image
+                                src={img}
+                                alt={`Slide ${index + 1}`}
+                                width={500}
+                                class='w-full h-full object-cover'
+                                quality={'mid'}
+                                loading={'lazy'}
+                            />
+                        </div>
+                    ))
+                }
+            </div>
+            <button
+                id='prevBtn'
+                class='absolute left-2 top-1/2 transform -translate-y-1/2 bg-white bg-opacity-50 p-2 rounded-full'>
+                <svg
+                    xmlns='http://www.w3.org/2000/svg'
+                    fill='none'
+                    viewBox='0 0 24 24'
+                    stroke='currentColor'
+                    class='w-6 h-6'>
+                    <path stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M15 19l-7-7 7-7'></path>
+                </svg>
+            </button>
+            <button
+                id='nextBtn'
+                class='absolute right-2 top-1/2 transform -translate-y-1/2 bg-white bg-opacity-50 p-2 rounded-full'>
+                <svg
+                    xmlns='http://www.w3.org/2000/svg'
+                    fill='none'
+                    viewBox='0 0 24 24'
+                    stroke='currentColor'
+                    class='w-6 h-6'>
+                    <path stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M9 5l7 7-7 7'></path>
+                </svg>
+            </button>
+        </div>
+
+        <!-- Grid for larger screens -->
+        <div class='hidden md:grid sm:grid-cols-3 gap-8'>
+            {
+                carouselImages.map((img, index) => (
+                    <div class='aspect-auto overflow-hidden fade-in-element'>
+                        <Image
+                            src={img}
+                            alt={`Image ${index + 1}`}
+                            width={500}
+                            class='w-full h-full object-cover'
+                            quality={'mid'}
+                            loading={'lazy'}
+                        />
+                    </div>
+                ))
+            }
+        </div>
     </section>
-</MainLayout>
 
-<style>
-    .fade-in {
-        animation: fadeIn 0.2s ease-in forwards;
-    }
-
-    @keyframes fadeIn {
-        from {
-            transform: translateY(8px);
+    <style>
+        .fade-in-element {
             opacity: 0;
+            transform: translateY(20px);
+            transition:
+                opacity 0.5s ease-out,
+                transform 0.5s ease-out;
         }
-        to {
+
+        .fade-in-element.visible {
             opacity: 1;
+            transform: translateY(0);
         }
-    }
-</style>
+    </style>
 
-<script>
-    function fadeInImage() {
-        const img = document.getElementById('fadeInImage');
-        if (img) {
-            img.classList.add('fade-in');
+    <script>
+        function setupCarousel() {
+            const carousel = document.getElementById('carousel');
+            const prevBtn = document.getElementById('prevBtn');
+            const nextBtn = document.getElementById('nextBtn');
+            let currentIndex = 0;
+
+            function updateCarousel() {
+                if (carousel) {
+                    carousel.style.transform = `translateX(-${currentIndex * 100}%)`;
+                }
+            }
+
+            prevBtn?.addEventListener('click', () => {
+                currentIndex = (currentIndex - 1 + 3) % 3;
+                updateCarousel();
+            });
+
+            nextBtn?.addEventListener('click', () => {
+                currentIndex = (currentIndex + 1) % 3;
+                updateCarousel();
+            });
         }
-    }
 
-    // Run on initial load
-    window.addEventListener('load', fadeInImage);
+        function setupFadeInAnimations() {
+            const fadeElements = document.querySelectorAll('.fade-in-element');
 
-    // For Astro's view transitions
-    document.addEventListener('astro:page-load', fadeInImage);
-</script>
+            const observer = new IntersectionObserver(
+                (entries) => {
+                    entries.forEach((entry, index) => {
+                        if (entry.isIntersecting) {
+                            setTimeout(() => {
+                                entry.target.classList.add('visible');
+                            }, index * 100); // Stagger effect: 100ms delay for each element
+                            observer.unobserve(entry.target);
+                        }
+                    });
+                },
+                {
+                    root: null,
+                    rootMargin: '0px',
+                    threshold: 0.1,
+                }
+            );
+
+            fadeElements.forEach((element) => {
+                observer.observe(element);
+            });
+        }
+
+        function init() {
+            setupCarousel();
+            setupFadeInAnimations();
+        }
+
+        // Run on initial load
+        document.addEventListener('DOMContentLoaded', init);
+
+        // For Astro's view transitions
+        document.addEventListener('astro:page-load', init);
+    </script>
+</MainLayout>

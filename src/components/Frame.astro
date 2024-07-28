@@ -6,11 +6,11 @@ interface Props {
     alt: string;
     width: number;
     height: number;
-    innerframe?: boolean;
+    quality?: 'low' | 'mid' | 'high' | 'max';
     outerFrameWidth?: number;
-    innerFrameWidth?: number;
+    passepartoutWidth?: number;
     outerFrameColor?: string;
-    innerFrameColor?: string;
+    passepartoutColor?: string;
     passepartout?: boolean;
 }
 
@@ -19,25 +19,26 @@ const {
     alt,
     width,
     height,
-    innerframe = false,
+    quality = 'mid',
     outerFrameWidth = 3,
-    innerFrameWidth = 0,
+    passepartoutWidth = 20,
     outerFrameColor = 'black',
-    innerFrameColor = '#f8f8f8',
-    passepartout = true,
+    passepartoutColor = '#f8f8f8',
+    passepartout = false,
 } = Astro.props;
 
 const aspectRatio = (height / width) * 100;
+const totalFrameWidth = outerFrameWidth + (passepartout ? passepartoutWidth : 0);
 ---
 
 <div class='relative w-full frame-shadow inset-0 h-full object-cover' style={`padding-bottom: ${aspectRatio}%;`}>
     <div class='absolute inset-0'>
         <div class='w-full h-full' style={`border: ${outerFrameWidth}px solid ${outerFrameColor};`}>
             {
-                innerframe && (
+                passepartout && (
                     <div
                         class='absolute inset-0'
-                        style={`border: ${innerFrameWidth}px solid ${innerFrameColor}; top: ${outerFrameWidth}px; left: ${outerFrameWidth}px; right: ${outerFrameWidth}px; bottom: ${outerFrameWidth}px;`}
+                        style={`border: ${passepartoutWidth}px solid ${passepartoutColor}; top: ${outerFrameWidth}px; left: ${outerFrameWidth}px; right: ${outerFrameWidth}px; bottom: ${outerFrameWidth}px;`}
                     />
                 )
             }
@@ -47,8 +48,12 @@ const aspectRatio = (height / width) * 100;
             alt={alt}
             width={width}
             height={height}
+            widths={[240, 540, 720, 1200]}
+            sizes={`(max-width: 360px) 240px, (max-width: 720px) 540px, (max-width: 1600px) 720px, 1200px`}
+            quality={quality}
+            loading={'eager'}
             class='absolute inset-0 w-full h-full object-cover'
-            style={`padding: ${outerFrameWidth + (innerframe ? innerFrameWidth : 0)}px;`}
+            style={`padding: ${totalFrameWidth}px;`}
         />
     </div>
 </div>

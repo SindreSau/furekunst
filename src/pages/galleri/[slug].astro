@@ -71,12 +71,11 @@ const passepartout = fields.passepartout;
                 <Frame
                     transition:name={'image-' + slug}
                     src={imageUrl}
-                    alt={title}
-                    innerframe={true}
                     width={imageWidth}
+                    alt={title}
                     height={imageHeight}
-                    outerFrameWidth={5}
-                    innerFrameWidth={passepartout ? 0 : 16}
+                    passepartout={passepartout}
+                    quality='high'
                 />
             </div>
             <div>
