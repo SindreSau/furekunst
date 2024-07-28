@@ -5,7 +5,6 @@ import lazydogs from '../assets/images/lazydogs.jpg';
 import hjort from '../assets/images/hjort.jpeg';
 import labrador from '../assets/images/labrador.jpeg';
 import sjimpanse from '../assets/images/sjimpanse.jpeg';
-import Frame from '../components/Frame.astro';
 
 const title = 'Hjem';
 const carouselImages = [hjort, sjimpanse, labrador];
@@ -29,11 +28,13 @@ const carouselImages = [hjort, sjimpanse, labrador];
         <h1 class='text-center mb-8 fade-in-element'>Populære kunstverk</h1>
 
         <!-- Carousel for small screens -->
-        <div class='md:hidden relative w-full h-full overflow-hidden fade-in-element'>
-            <div id='carousel' class='flex transition-transform duration-300 ease-in-out h-full'>
+        <div class='md:hidden relative w-full h-[500px] overflow-hidden fade-in-element'>
+            <!-- Adjust height as needed -->
+            <div id='carousel' class='w-full h-full relative'>
                 {
                     carouselImages.map((img, index) => (
-                        <div class='w-full flex-shrink-0'>
+                        <div
+                            class={`absolute top-0 left-0 w-full h-full transition-opacity duration-1000 ease-in-out ${index === 0 ? 'opacity-100 z-10' : 'opacity-0 z-0'}`}>
                             <Image
                                 src={img}
                                 alt={`Slide ${index + 1}`}
@@ -48,7 +49,7 @@ const carouselImages = [hjort, sjimpanse, labrador];
             </div>
             <button
                 id='prevBtn'
-                class='absolute left-2 top-1/2 transform -translate-y-1/2 bg-white bg-opacity-50 p-2 rounded-full'>
+                class='absolute left-2 top-1/2 transform -translate-y-1/2 bg-white bg-opacity-50 p-2 rounded-full z-20'>
                 <svg
                     xmlns='http://www.w3.org/2000/svg'
                     fill='none'
@@ -60,7 +61,7 @@ const carouselImages = [hjort, sjimpanse, labrador];
             </button>
             <button
                 id='nextBtn'
-                class='absolute right-2 top-1/2 transform -translate-y-1/2 bg-white bg-opacity-50 p-2 rounded-full'>
+                class='absolute right-2 top-1/2 transform -translate-y-1/2 bg-white bg-opacity-50 p-2 rounded-full z-20'>
                 <svg
                     xmlns='http://www.w3.org/2000/svg'
                     fill='none'
@@ -89,6 +90,20 @@ const carouselImages = [hjort, sjimpanse, labrador];
                 ))
             }
         </div>
+
+        <!-- Link to gallery (button) -->
+        <div class='flex justify-center gap-12 mt-12 fade-in-element'>
+            <a
+                href='/galleri'
+                class='inline-block px-6 py-3 border-4 border-double border-gray-800 text-gray-800 font-serif font-medium md:hover:px-8 md:hover:py-3 transition-all duration-300 ease-in-out'>
+                Galleri →
+            </a>
+            <a
+                href='/om-kontakt'
+                class='inline-block px-6 py-3 border-4 border-double border-gray-800 text-gray-800 font-serif font-medium md:hover:px-8 md:hover:py-3 transition-all duration-300 ease-in-out'>
+                Ta kontakt →
+            </a>
+        </div>
     </section>
 
     <style>
@@ -111,22 +126,69 @@ const carouselImages = [hjort, sjimpanse, labrador];
             const carousel = document.getElementById('carousel');
             const prevBtn = document.getElementById('prevBtn');
             const nextBtn = document.getElementById('nextBtn');
+            const slides = carousel ? (Array.from(carousel.children) as HTMLElement[]) : [];
             let currentIndex = 0;
+            let intervalId: number | null = null;
 
-            function updateCarousel() {
-                if (carousel) {
-                    carousel.style.transform = `translateX(-${currentIndex * 100}%)`;
+            function showSlide(index: number) {
+                slides.forEach((slide, i) => {
+                    slide.style.opacity = i === index ? '1' : '0';
+                    slide.style.zIndex = i === index ? '1' : '0';
+                });
+            }
+
+            function nextSlide() {
+                currentIndex = (currentIndex + 1) % slides.length;
+                showSlide(currentIndex);
+            }
+
+            function prevSlide() {
+                currentIndex = (currentIndex - 1 + slides.length) % slides.length;
+                showSlide(currentIndex);
+            }
+
+            function startAutoSwitch() {
+                if (window.innerWidth < 768 && intervalId === null) {
+                    // Only on mobile screens
+                    intervalId = window.setInterval(nextSlide, 4000);
+                }
+            }
+
+            function stopAutoSwitch() {
+                if (intervalId !== null) {
+                    window.clearInterval(intervalId);
+                    intervalId = null;
                 }
             }
 
             prevBtn?.addEventListener('click', () => {
-                currentIndex = (currentIndex - 1 + 3) % 3;
-                updateCarousel();
+                prevSlide();
+                stopAutoSwitch();
+                startAutoSwitch();
             });
 
             nextBtn?.addEventListener('click', () => {
-                currentIndex = (currentIndex + 1) % 3;
-                updateCarousel();
+                nextSlide();
+                stopAutoSwitch();
+                startAutoSwitch();
+            });
+
+            // Start auto-switching
+            startAutoSwitch();
+
+            // Handle page visibility changes
+            document.addEventListener('visibilitychange', () => {
+                if (document.hidden) {
+                    stopAutoSwitch();
+                } else {
+                    startAutoSwitch();
+                }
+            });
+
+            // Handle window resize
+            window.addEventListener('resize', () => {
+                stopAutoSwitch();
+                startAutoSwitch();
             });
         }
 

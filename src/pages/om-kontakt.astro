@@ -1,0 +1,74 @@
+---
+import { Image } from 'astro:assets';
+import MainLayout from '../layouts/MainLayout.astro';
+
+import profilbilde from '../assets/images/profilbilde.jpeg';
+import { Icon } from 'astro-icon/components';
+---
+
+<MainLayout title='Om'>
+    <article class='flex w-full md:flex-row flex-col gap-6 md:gap-12'>
+        <!-- Left side -->
+        <Image
+            src={profilbilde}
+            alt={'Profilbilde'}
+            width={300}
+            height={300}
+            widths={[240, 540, 720]}
+            sizes={`(max-width: 360px) 240px, (max-width: 720px) 540px, 720px`}
+            quality={'high'}
+            loading={'eager'}
+            class='md:w-1/2 w-full object-cover rounded-lg'
+        />
+
+        <!-- Right side -->
+        <div class='w-full'>
+            <h1 class='mb-5'>Om meg</h1>
+
+            <!-- Biography -->
+            <div class='flex flex-col gap-2 mb-12 tracking-wider'>
+                <p>
+                    Lorem ipsum, dolor sit amet consectetur adipisicing elit. Quia ea accusamus inventore accusantium?
+                    Odio possimus exercitationem saepe accusantium officia tempore tempora eius! Soluta, fugit laborum
+                    saepe repudiandae illo
+                </p>
+                <p>
+                    Earum libero perferendis dolorum delectus rerum eligendi possimus nulla doloremque itaque mollitia
+                    ea vitae maiores asperiores rem enim, assumenda in blanditiis repellat soluta, sint tempore. Hic
+                    rerum animi numquam fugiat!
+                </p>
+            </div>
+
+            <h1 class='text-2xl mb-4 text-gray-500'>Kontakt</h1>
+
+            <!-- Socials/contact -->
+            <div class='flex flex-col gap-4 font-didot'>
+                <a
+                    href='mailto:fure.kunst@gmail.com'
+                    class='text-gray-500 hover:text-gray-800 transition-colors duration-300 flex gap-4 text-xl items-center'>
+                    <Icon name='mdi:email' class='w-8 h-8' />
+                    <span class='sr-only'>Email</span>
+                    fure.kunst@gmail.com
+                </a>
+                <a
+                    href='https://www.instagram.com/fure.kunst'
+                    target='_blank'
+                    rel='noopener noreferrer'
+                    class='text-gray-500 hover:text-gray-800 transition-colors duration-300 flex gap-4 text-xl items-center'>
+                    <Icon name='mdi:instagram' class='w-8 h-8' />
+                    <span class='sr-only'>Instagram</span>
+                    Instagram
+                </a>
+                <a
+                    href='https://www.facebook.com/fure.kunst/'
+                    target='_blank'
+                    rel='noopener noreferrer'
+                    class='text-gray-500 hover:text-gray-800 transition-colors duration-300 flex gap-4 text-xl items-center'>
+                    <Icon name='mdi:facebook' class='w-8 h-8' />
+                    <span class='sr-only'>Facebook</span>
+                    Facebook
+                </a>
+            </div>
+        </div>
+    </article>
+</MainLayout>
