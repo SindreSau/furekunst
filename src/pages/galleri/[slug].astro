@@ -13,6 +13,9 @@ const entries = await contentfulClient.getEntries<GalleryPostEntry>({
 
 const posts = entries.items as unknown as GalleryPostEntry[];
 const { fields } = posts.find((post) => {
+    if (!post.fields.title) {
+        return false;
+    }
     const { fields } = post;
     const title = fields.title as unknown as string;
     const slug = title

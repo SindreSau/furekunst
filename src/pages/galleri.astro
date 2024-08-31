@@ -10,6 +10,8 @@ const entries = await contentfulClient.getEntries<IGalleryPost>({
 });
 
 const posts = entries.items as unknown as GalleryPostEntry[];
+
+console.log(posts);
 ---
 
 <MainLayout title='Galleri'>
@@ -17,6 +19,10 @@ const posts = entries.items as unknown as GalleryPostEntry[];
     <div class='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6'>
         {
             posts.map((post) => {
+                // Check if the post has the correct fields and an image
+                if (!post.fields.image || !post.fields.image.fields.file) {
+                    return null;
+                }
                 const aspectRatio =
                     (post.fields.image.fields.file.details.image?.height ?? 1) /
                     (post.fields.image.fields.file.details.image?.width ?? 1);
