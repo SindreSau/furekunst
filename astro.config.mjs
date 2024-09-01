@@ -6,7 +6,7 @@ import icon from 'astro-icon';
 
 // https://astro.build/config
 export default defineConfig({
-    output: 'static',
+    output: 'server',
     adapter: netlify(),
     image: {
         remotePatterns: [{ protocol: 'https', hostname: 'images.ctfassets.net' }],
