@@ -6,6 +6,7 @@ interface Props {
     alt: string;
     width: number;
     height: number;
+    widths: number[];
     quality?: 'low' | 'mid' | 'high' | 'max';
     outerFrameWidth?: number;
     passepartoutWidth?: number;
@@ -19,6 +20,7 @@ const {
     alt,
     width,
     height,
+    widths,
     quality = 'mid',
     outerFrameWidth = 3,
     passepartoutWidth = 20,
@@ -29,6 +31,10 @@ const {
 
 const aspectRatio = (height / width) * 100;
 const totalFrameWidth = outerFrameWidth + (passepartout ? passepartoutWidth : 0);
+
+const sizesString = widths
+    ? widths.map((width) => `(max-width: ${width}px) ${width}px`).join(', ')
+    : `(max-width: ${width}px) ${width}px`;
 ---
 
 <div class='relative w-full frame-shadow inset-0 h-full object-cover' style={`padding-bottom: ${aspectRatio}%;`}>
@@ -45,11 +51,12 @@ const totalFrameWidth = outerFrameWidth + (passepartout ? passepartoutWidth : 0)
         </div>
         <Image
             src={src}
+            inferSize={true}
             alt={alt}
             width={width}
             height={height}
-            widths={[240, 540, 720, 1200]}
-            sizes={`(max-width: 360px) 240px, (max-width: 720px) 540px, (max-width: 1600px) 720px, 1200px`}
+            widths={widths}
+            sizes={sizesString}
             quality={quality}
             loading={'eager'}
             class='absolute inset-0 w-full h-full object-cover'

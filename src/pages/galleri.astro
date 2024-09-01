@@ -10,16 +10,13 @@ const entries = await contentfulClient.getEntries<IGalleryPost>({
 });
 
 const posts = entries.items as unknown as GalleryPostEntry[];
-
-console.log(posts);
 ---
 
 <MainLayout title='Galleri'>
     <h1 class='text-3xl mb-6 fade-in-element'>Galleri</h1>
     <div class='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 md:px-0 px-10'>
         {
-            posts.map((post) => {
-                // Check if the post has the correct fields and an image
+            posts.map((post, index) => {
                 if (!post.fields.image || !post.fields.image.fields.file) {
                     return null;
                 }
@@ -27,8 +24,9 @@ console.log(posts);
                     (post.fields.image.fields.file.details.image?.height ?? 1) /
                     (post.fields.image.fields.file.details.image?.width ?? 1);
                 const isLandscape = aspectRatio < 1;
+
                 return (
-                    <div class={isLandscape ? 'col-span-1 sm:col-span-2' : 'col-span-1'}>
+                    <div class={`fade-in-element ${isLandscape ? 'col-span-1 sm:col-span-2' : 'col-span-1'}`}>
                         <GalleryPost post={post} />
                     </div>
                 );
@@ -36,3 +34,52 @@ console.log(posts);
         }
     </div>
 </MainLayout>
+
+<style>
+    .fade-in-element {
+        opacity: 0;
+        transform: translateY(20px);
+        transition:
+            opacity 0.5s ease-out,
+            transform 0.5s ease-out;
+    }
+
+    .fade-in-element.visible {
+        opacity: 1;
+        transform: translateY(0);
+    }
+</style>
+
+<script>
+    function setupFadeInAnimations() {
+        const fadeElements = document.querySelectorAll('.fade-in-element');
+
+        const observer = new IntersectionObserver(
+            (entries) => {
+                entries.forEach((entry, index) => {
+                    if (entry.isIntersecting) {
+                        setTimeout(() => {
+                            entry.target.classList.add('visible');
+                        }, index * 50); // Stagger effect: 100ms delay for each element
+                        observer.unobserve(entry.target);
+                    }
+                });
+            },
+            {
+                root: null,
+                rootMargin: '0px',
+                threshold: 0.1,
+            }
+        );
+
+        fadeElements.forEach((element) => {
+            observer.observe(element);
+        });
+    }
+
+    // Run on initial load
+    document.addEventListener('DOMContentLoaded', setupFadeInAnimations);
+
+    // For Astro's view transitions
+    document.addEventListener('astro:after-swap', setupFadeInAnimations);
+</script>
