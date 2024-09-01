@@ -20,7 +20,7 @@ const { title } = Astro.props;
     <body class='flex flex-col min-h-screen bg-pastel font-body text-primary'>
         <Header />
 
-        <main id='innhold' class='flex-grow container mx-auto mt-8 px-3 md:px-1.5 lg:px-0'>
+        <main id='innhold' class='flex-grow container mx-auto mt-8 px-3 md:px-1.5 lg:px-0' transition:animate=''>
             <slot />
         </main>
 

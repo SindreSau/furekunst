@@ -60,20 +60,22 @@ console.log('imageWidth ', imageWidth, '. imageHeight ', imageHeight, '. aspectR
                     transition:name={'image-' + slug}
                     src={imageUrl}
                     width={imageWidth}
+                    widths={[300, 600, 1200]}
                     alt={title}
                     height={imageHeight}
                     passepartout={passepartout}
-                    quality='mid'
+                    quality='high'
                 />
             </button>
             <div class='md:hidden'>
                 <Frame
                     src={imageUrl}
                     width={imageWidth}
+                    widths={[300, 600, 1200]}
                     alt={title}
                     height={imageHeight}
                     passepartout={passepartout}
-                    quality='mid'
+                    quality='high'
                 />
             </div>
 
@@ -124,6 +126,7 @@ console.log('imageWidth ', imageWidth, '. imageHeight ', imageHeight, '. aspectR
                     src={imageUrl}
                     alt={title}
                     width={imageWidth}
+                    widths={[300, 600, 1200]}
                     height={imageHeight}
                     outerFrameWidth={5}
                     passepartout={passepartout}

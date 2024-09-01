@@ -4,6 +4,10 @@ import MainLayout from '../layouts/MainLayout.astro';
 
 import profilbilde from '../assets/images/profilbilde.jpeg';
 import { Icon } from 'astro-icon/components';
+
+const sizesString = '(max-width: 640px) 240px, (max-width: 768px) 360px, (max-width: 1024px) 410px, 410px';
+let width = 410;
+let height = 560;
 ---
 
 <MainLayout title='Om'>
@@ -12,10 +16,10 @@ import { Icon } from 'astro-icon/components';
         <Image
             src={profilbilde}
             alt={'Profilbilde'}
-            width={300}
-            height={300}
-            widths={[240, 540, 720]}
-            sizes={`(max-width: 360px) 240px, (max-width: 720px) 540px, 720px`}
+            width={width}
+            height={height}
+            widths={[240, 360, 410]}
+            sizes={sizesString}
             quality={'high'}
             loading={'eager'}
             class='md:w-1/2 w-full object-cover rounded-lg'
