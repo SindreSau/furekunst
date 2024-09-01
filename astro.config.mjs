@@ -12,4 +12,5 @@ export default defineConfig({
         remotePatterns: [{ protocol: 'https', hostname: 'images.ctfassets.net' }],
     },
     integrations: [tailwind(), icon()],
+    site: 'https://furekunst.no',
 });

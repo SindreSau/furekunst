@@ -81,5 +81,5 @@ const posts = entries.items as unknown as GalleryPostEntry[];
     document.addEventListener('DOMContentLoaded', setupFadeInAnimations);
 
     // For Astro's view transitions
-    document.addEventListener('astro:page-load', setupFadeInAnimations);
+    document.addEventListener('astro:after-swap', setupFadeInAnimations);
 </script>
