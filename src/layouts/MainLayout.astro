@@ -5,6 +5,8 @@ import { ViewTransitions } from 'astro:transitions';
 
 // You can also define any props here if needed
 const { title } = Astro.props;
+
+const lazydogsUrl = '/public/lazydogs.jpg';
 ---
 
 <html lang='en'>
@@ -13,7 +15,30 @@ const { title } = Astro.props;
         <meta name='viewport' content='width=device-width, initial-scale=1.0' />
         <link rel='icon' href='/favicon.svg' />
         <title>{title} | Furekunst</title>
-        <!-- Add any other meta tags, stylesheets, or scripts here -->
+
+        <!-- Sitemap -->
+        <link rel='sitemap' href='/sitemap-index.xml' />
+
+        <!-- SEO Meta Tags -->
+        <meta
+            name='description'
+            content='Furekunst viser kunstner Elisabeth Fure Schwarz sine malerier. Her kan du se gjennom galleriet, og ta kontakt ved interesse for kjøp.'
+        />
+        <meta name='keywords' content='Kunst, Elisabeth, Fure, Schwarz, maleri, akvarell, akryl, galleri' />
+        <meta name='author' content='Sindre Sauarlia' />
+
+        <!-- Open Graph / Facebook -->
+        <meta property='og:type' content='Furekunst' />
+        <meta property='og:url' content='https://furekunst.no' />
+        <meta property='og:title' content={title} />
+        <meta property='og:description' content='Galleri for Elisabeth Fure Schwarz | Furekunst' />
+        <meta property='og:image' content='/lazydogs.jpg' />
+
+        <!-- Canonical link (dynamic) -->
+        <link rel='canonical' href={`https://furekunst.no${Astro.url.pathname}`} />
+
+        <!-- Language detection -->
+        <meta http-equiv='content-language' content='nb-NO' />
 
         <ViewTransitions />
     </head>
