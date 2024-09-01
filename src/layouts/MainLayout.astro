@@ -3,52 +3,57 @@ import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
 import { ViewTransitions } from 'astro:transitions';
 
-// You can also define any props here if needed
 const { title } = Astro.props;
-
-const lazydogsUrl = '/public/lazydogs.jpg';
+const description =
+    'Furekunst viser kunstner Elisabeth Fure Schwarz sine malerier. Her kan du se gjennom galleriet, og ta kontakt ved interesse for kjøp.';
 ---
 
-<html lang='en'>
+<html lang='nb'>
     <head>
         <meta charset='UTF-8' />
         <meta name='viewport' content='width=device-width, initial-scale=1.0' />
         <link rel='icon' href='/favicon.svg' />
         <title>{title} | Furekunst</title>
 
-        <!-- Sitemap -->
         <link rel='sitemap' href='/sitemap-index.xml' />
 
-        <!-- SEO Meta Tags -->
-        <meta
-            name='description'
-            content='Furekunst viser kunstner Elisabeth Fure Schwarz sine malerier. Her kan du se gjennom galleriet, og ta kontakt ved interesse for kjøp.'
-        />
+        <meta name='description' content={description} />
         <meta name='keywords' content='Kunst, Elisabeth, Fure, Schwarz, maleri, akvarell, akryl, galleri' />
         <meta name='author' content='Sindre Sauarlia' />
 
-        <!-- Open Graph / Facebook -->
-        <meta property='og:type' content='Furekunst' />
-        <meta property='og:url' content='https://furekunst.no' />
-        <meta property='og:title' content={title} />
-        <meta property='og:description' content='Galleri for Elisabeth Fure Schwarz | Furekunst' />
-        <meta property='og:image' content='/lazydogs.jpg' />
+        <meta property='og:type' content='website' />
+        <meta property='og:url' content={new URL(Astro.url.pathname, Astro.site).toString()} />
+        <meta property='og:title' content={`${title} | Furekunst`} />
+        <meta property='og:description' content={description} />
+        <meta property='og:image' content={new URL('/lazydogs.jpg', Astro.site).toString()} />
 
-        <!-- Canonical link (dynamic) -->
-        <link rel='canonical' href={`https://furekunst.no${Astro.url.pathname}`} />
+        <meta name='twitter:card' content='summary_large_image' />
+        <meta name='twitter:title' content={`${title} | Furekunst`} />
+        <meta name='twitter:description' content={description} />
+        <meta name='twitter:image' content={new URL('/lazydogs.jpg', Astro.site).toString()} />
 
-        <!-- Language detection -->
+        <link rel='canonical' href={new URL(Astro.url.pathname, Astro.site).toString()} />
+
         <meta http-equiv='content-language' content='nb-NO' />
 
         <ViewTransitions />
+
+        <script type='application/ld+json'>
+            {
+                "@context": "https://schema.org",
+                "@type": "WebSite",
+                "name": "Furekunst",
+                "url": "https://furekunst.no/",
+                "description": "${description}",
+                "inLanguage": "nb-NO"
+            }
+        </script>
     </head>
     <body class='flex flex-col min-h-screen bg-pastel font-body text-primary'>
         <Header />
-
         <main id='innhold' class='flex-grow container mx-auto mt-8 px-3 md:px-1.5 lg:px-0' transition:animate='fade'>
             <slot />
         </main>
-
         <Footer />
     </body>
 </html>
