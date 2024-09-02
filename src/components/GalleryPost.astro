@@ -43,7 +43,7 @@ const quality = aspectRatio <= 0.9 ? 'mid' : 'low';
     <div class='flex items-center justify-center overflow-hidden frame-shadow' transition:name={'image-' + slug}>
         <Frame
             src={imageUrl}
-            alt={title}
+            alt={title + ': ' + fields.description || 'image of ' + title}
             width={imageWidth}
             widths={[240, 360, 480, 590]}
             quality={quality}
