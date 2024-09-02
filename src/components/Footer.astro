@@ -6,19 +6,19 @@ const currentYear = new Date().getFullYear();
 
 <footer class='bg-pastel-dark text-gray-700 py-3 lg:py-8 mt-8 lg:mt-12'>
     <div class='container mx-auto px-4'>
-        <div class='flex flex-col md:flex-row justify-between items-center'>
+        <div class='flex flex-col md:flex-row justify-between items-center order-1'>
             <div class='mb-4 md:mb-0'>
                 <p class='text-sm'>&copy; {currentYear} Furekunst. All rights reserved.</p>
             </div>
 
             <a
                 href='/om-siden'
-                class='flex items-center gap-1 hover:text-gray-800 transition-colors duration-300 underline'>
+                class='flex items-center gap-1 hover:text-gray-800 transition-colors duration-300 underline md:order-2 order-3 mt-4 mb-10'>
                 <Icon name={`mdi:information`} class='text-gray-500 w-[17px] h-[17px]' />
                 Om nettsiden</a
             >
 
-            <div class='flex space-x-4'>
+            <div class='flex space-x-4 order-2 md:order-3'>
                 <a href='mailto:fure.kunst@gmail.com' class='hover:text-gray-800 transition-colors duration-300'>
                     <Icon name='mdi:email' class='w-6 h-6' />
                     <span class='sr-only'>Email</span>

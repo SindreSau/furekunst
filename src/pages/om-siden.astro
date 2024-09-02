@@ -42,19 +42,18 @@ const techStack = [
                     </a>
                 </div>
 
-                <h2 class='text-2xl font-semibold text-gray-800 mt-12 mb-4 fade-in-element'>Tech Stack</h2>
-                <p class='text-gray-600 mb-4 leading-relaxed fade-in-element'>
+                <h2 class='text-2xl font-semibold text-gray-800 mt-12 mb-4 fade-in-element'>Tech stack</h2>
+                <p class='fade-in-element text-gray-600 mb-8'>
                     Nettsiden er primært bygget med Astro og Tailwind. Astro genererer statiske nettsider som standard
                     og laster kun JavaScript når det er nødvendig. Tailwind muliggjør rask og fleksibel styling.
                     Galleriet er koblet til Contentful CMS, slik at kunstneren enkelt kan legge til nye verk.
                 </p>
-
-                <div class='flex flex-wrap items-center justify-center gap-8 my-8'>
+                <div class='flex flex-wrap items-center justify-center gap-6 md:gap-8 my-8'>
                     {
                         techStack.map((tech) => (
                             <div class='flex flex-col items-center group fade-in-element'>
                                 <Icon name={tech.icon} class={iconClass} />
-                                <span class='mt-2 text-sm text-gray-500 opacity-0 group-hover:opacity-100 transition-opacity duration-300'>
+                                <span class='mt-2 text-xs md:text-sm text-gray-500 opacity-0 group-hover:opacity-100 transition-opacity duration-300'>
                                     {tech.name}
                                 </span>
                             </div>
@@ -63,10 +62,10 @@ const techStack = [
                 </div>
 
                 <h2 class='text-2xl font-semibold text-gray-800 mt-12 mb-4 fade-in-element'>Bygget for</h2>
-                <div class='flex flex-wrap justify-center gap-4 text-gray-600 mb-6'>
+                <div class='grid grid-cols-2 md:flex md:flex-wrap justify-center gap-4 text-gray-600 mb-6'>
                     {
                         ['Ytelse', 'Tilgjengelighet', 'Best practice', 'SEO'].map((item) => (
-                            <span class='px-4 py-2 bg-gray-100 rounded-full text-sm font-medium hover:bg-gray-200 transition-colors duration-300 fade-in-element'>
+                            <span class='px-4 py-2 bg-gray-100 rounded-full text-sm font-medium hover:bg-gray-200 transition-colors duration-300 fade-in-element text-center'>
                                 {item}
                             </span>
                         ))
@@ -75,16 +74,16 @@ const techStack = [
 
                 <div
                     class='mt-12 bg-gradient-to-r from-purple-400 via-pink-500 to-red-500 p-1 rounded-lg fade-in-element'>
-                    <div class='bg-white p-6 rounded-lg'>
+                    <div class='bg-white p-4 md:p-6 rounded-lg'>
                         <h3 class='text-xl font-semibold text-gray-800 mb-4'>Lighthouse Score</h3>
-                        <div class='flex justify-around'>
+                        <div class='grid grid-cols-2 md:flex md:justify-around gap-4'>
                             {
                                 ['Performance', 'Accessibility', 'Best Practices', 'SEO'].map((metric) => (
                                     <div class='text-center fade-in-element'>
-                                        <div class='inline-flex items-center justify-center w-16 h-16 rounded-full bg-green-600 text-white font-bold text-xl'>
+                                        <div class='inline-flex items-center justify-center w-16 h-16 rounded-full bg-green-500 text-white font-bold text-xl'>
                                             100
                                         </div>
-                                        <p class='mt-2 text-sm text-gray-600'>{metric}</p>
+                                        <p class='mt-2 text-xs md:text-sm text-gray-600'>{metric}</p>
                                     </div>
                                 ))
                             }
@@ -137,7 +136,7 @@ const techStack = [
                     if (entry.isIntersecting) {
                         setTimeout(() => {
                             entry.target.classList.add('visible');
-                        }, index * 60); // Stagger effect * delay for each element
+                        }, index * 80); // Stagger effect * delay for each element
                         observer.unobserve(entry.target);
                     }
                 });
