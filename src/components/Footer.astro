@@ -10,6 +10,14 @@ const currentYear = new Date().getFullYear();
             <div class='mb-4 md:mb-0'>
                 <p class='text-sm'>&copy; {currentYear} Furekunst. All rights reserved.</p>
             </div>
+
+            <a
+                href='/om-siden'
+                class='flex items-center gap-1 hover:text-gray-800 transition-colors duration-300 underline'>
+                <Icon name={`mdi:information`} class='text-gray-500 w-[17px] h-[17px]' />
+                Om nettsiden</a
+            >
+
             <div class='flex space-x-4'>
                 <a href='mailto:fure.kunst@gmail.com' class='hover:text-gray-800 transition-colors duration-300'>
                     <Icon name='mdi:email' class='w-6 h-6' />

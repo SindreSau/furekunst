@@ -16,6 +16,7 @@
         "@astrojs/tailwind": "^5.1.0",
         "@contentful/rich-text-html-renderer": "^16.6.6",
         "@fontsource/kanit": "^5.0.20",
+        "@iconify-json/simple-icons": "^1.2.1",
         "astro": "^4.15.1",
         "astro-icon": "^1.1.0",
         "contentful": "^10.12.13",
