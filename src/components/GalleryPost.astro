@@ -22,7 +22,7 @@ const price = fields.price;
 const sizeAndPrice: SizeAndPriceEntry[] = fields.sizeAndPrice || [];
 const passepartout = fields.passepartout;
 
-let lowestPrice: number | undefined;
+let lowestPrice: number = 0;
 if (type === 'print' && sizeAndPrice.length > 0) {
     lowestPrice = Math.min(...sizeAndPrice.map((item) => item.fields.price));
 }
@@ -33,20 +33,20 @@ const slug = title
     .toLowerCase()
     .replace(/\s+/g, '-')
     .replace(/[^\w-]+/g, '');
+
+const quality = aspectRatio <= 0.9 ? 'mid' : 'low';
 ---
 
 <a
     href={`/galleri/${slug}`}
     class={`group flex flex-col h-full cursor-pointer ${isLandscape ? 'col-span-2' : 'col-span-1'}`}>
-    <div
-        class='flex-grow flex items-center justify-center overflow-hidden frame-shadow'
-        transition:name={'image-' + slug}>
+    <div class='flex items-center justify-center overflow-hidden frame-shadow' transition:name={'image-' + slug}>
         <Frame
             src={imageUrl}
             alt={title}
             width={imageWidth}
-            widths={[240, 360, 480]}
-            quality='low'
+            widths={[240, 360, 480, 590]}
+            quality={quality}
             height={imageHeight}
             outerFrameWidth={5}
             passepartout={passepartout}
@@ -56,9 +56,9 @@ const slug = title
         <h2 class='text-xl font-bold truncate'>{title}</h2>
         {
             displayPrice !== undefined && (
-                <span class='text-sm whitespace-nowrap'>
+                <span class='text-sm whitespace-nowrap text-gray-800'>
                     {type === 'print' ? 'Fra kr ' : 'kr '}
-                    {displayPrice + ',00'}
+                    {displayPrice > 0 ? displayPrice + ',00' : <s>{displayPrice},00</s>}
                 </span>
             )
         }

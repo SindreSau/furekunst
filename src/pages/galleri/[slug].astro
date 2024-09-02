@@ -48,7 +48,7 @@ console.log('imageWidth ', imageWidth, '. imageHeight ', imageHeight, '. aspectR
 <MainLayout title={title}>
     <div class='container mx-auto px-4'>
         <!-- Back button -->
-        <a href='/galleri' class='hover:underline mb-4 inline-block'> &larr; Tilbake til galleri </a>
+        <a href='/galleri' class='hover:underline mb-4 inline-block text-gray-500'> &larr; Tilbake til galleri </a>
 
         <!-- Image and information -->
         <div class='grid grid-cols-1 md:grid-cols-2 gap-8'>
@@ -81,9 +81,13 @@ console.log('imageWidth ', imageWidth, '. imageHeight ', imageHeight, '. aspectR
 
             <div>
                 <h1 class='text-3xl font-bold mb-6'>{title}</h1>
-                {description && <p class='mb-4'>{description}</p>}
+                {description && <p class='mb-4 text-gray-600'>{description}</p>}
                 <p class='font-bold mb-2'>Type: {type}</p>
-                {type === 'original' && price && <p class='text-xl font-bold mb-4'>Pris: kr {price},00</p>}
+                {
+                    type === 'original' && price && (
+                        <p class='text-xl font-bold mb-4 text-gray-600'>Pris: kr {price},00</p>
+                    )
+                }
                 {
                     type === 'print' && sizeAndPrice.length > 0 && (
                         <div>
