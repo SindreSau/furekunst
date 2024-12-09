@@ -59,8 +59,13 @@ export function initializePopover(imageData: {
     function showPopover(): void {
         if (popover && window.innerWidth >= 768) {
             if (!popoverContent) {
-                popoverContent = createPopoverContent(imageData);
-                popover.innerHTML = popoverContent;
+                const { imageUrl, title, imageWidth, imageHeight } = imageData;
+                popoverContent = createPopoverContent({
+                    imageUrl,
+                    title,
+                    imageWidth: typeof imageWidth === 'number' ? imageWidth : parseInt(imageWidth),
+                    imageHeight: typeof imageHeight === 'number' ? imageHeight : parseInt(imageHeight),
+                });
             }
             popover.style.display = 'flex';
             setTimeout(() => {

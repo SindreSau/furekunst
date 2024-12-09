@@ -22,7 +22,7 @@ const groupPath = '/' + currentPath.split('/')[1];
             <!-- Mobile menu button -->
             <button
                 id='mobile-menu-button'
-                class='md:hidden px-2 text-gray-600 hover:text-gray-800 focus:outline-none z-50 relative'>
+                class='md:hidden px-2 text-gray-600 hover:text-gray-900 focus:outline-none z-50 relative'>
                 <span class='sr-only'>Open main menu</span>
                 <div class='w-6 h-6 relative'>
                     <span
@@ -46,7 +46,7 @@ const groupPath = '/' + currentPath.split('/')[1];
                     pages.map((page) => (
                         <a
                             href={page.url}
-                            class={`hover:text-gray-800 ${groupPath === page.url ? 'text-gray-800 border-b-2' : 'text-gray-400'}`}
+                            class={`hover:text-gray-900 ${groupPath === page.url ? 'text-gray-900 border-b-2' : 'text-gray-600'}`}
                             aria-current={currentPath === page.url ? 'page' : undefined}>
                             {page.title}
                         </a>
