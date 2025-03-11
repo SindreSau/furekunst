@@ -46,9 +46,9 @@ const quality = aspectRatio <= 0.9 ? 'mid' : 'low';
             src={imageUrl}
             alt={title + ': ' + fields.description || 'image of ' + title}
             width={imageWidth}
+            height={imageHeight}
             widths={[240, 360, 480, 590]}
             quality={quality}
-            height={imageHeight}
             outerFrameWidth={5}
             passepartout={passepartout}
             loading={imageNumber < 6 ? 'eager' : 'lazy'}
