@@ -5,9 +5,10 @@ import type { SizeAndPriceEntry } from '../types/sizeAndPrice';
 
 interface Props {
     post: GalleryPostEntry;
+    imageNumber: number;
 }
 
-const { post } = Astro.props;
+const { post, imageNumber } = Astro.props;
 const { fields } = post;
 
 const imageUrl = `https:${fields.image.fields.file.url}`;
@@ -50,6 +51,7 @@ const quality = aspectRatio <= 0.9 ? 'mid' : 'low';
             height={imageHeight}
             outerFrameWidth={5}
             passepartout={passepartout}
+            loading={imageNumber < 3 ? 'eager' : 'lazy'}
         />
     </div>
     <div class='flex flex-row justify-between items-center mt-2 p-2'>

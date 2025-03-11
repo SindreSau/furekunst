@@ -13,6 +13,7 @@ interface Props {
     outerFrameColor?: string;
     passepartoutColor?: string;
     passepartout?: boolean;
+    loading?: 'lazy' | 'eager';
 }
 
 const {
@@ -27,6 +28,7 @@ const {
     outerFrameColor = 'black',
     passepartoutColor = '#f8f8f8',
     passepartout = false,
+    loading = 'lazy',
 } = Astro.props;
 
 const aspectRatio = (height / width) * 100;
@@ -58,7 +60,7 @@ const sizesString = widths
             widths={widths}
             sizes={sizesString}
             quality={quality}
-            loading={'eager'}
+            loading={loading}
             class='absolute inset-0 w-full h-full object-cover'
             style={`padding: ${totalFrameWidth}px;`}
         />
