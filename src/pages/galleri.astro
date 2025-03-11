@@ -10,8 +10,6 @@ const entries = await contentfulClient.getEntries<IGalleryPost>({
 });
 
 const posts = entries.items as unknown as GalleryPostEntry[];
-
-export const prerender = true;
 ---
 
 <MainLayout title='Galleri'>
