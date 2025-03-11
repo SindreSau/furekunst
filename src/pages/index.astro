@@ -8,6 +8,8 @@ import sjimpanse from '../assets/images/sjimpanse.jpeg';
 
 const title = 'Hjem';
 const carouselImages = [hjort, sjimpanse, labrador];
+
+export const prerender = true;
 ---
 
 <MainLayout title={title}>
@@ -18,7 +20,7 @@ const carouselImages = [hjort, sjimpanse, labrador];
             width={1754}
             height={1241}
             widths={[240, 540, 720, 1000]}
-            sizes={`(max-width: 360px) 240px, (max-width: 720px) 540px, (max-width: 1600px) 720px, 1000px`}
+            sizes={'(max-width: 360px) 240px, (max-width: 720px) 540px, (max-width: 1600px) 720px, 1000px'}
             quality={'high'}
             format='webp'
             loading={'eager'}
