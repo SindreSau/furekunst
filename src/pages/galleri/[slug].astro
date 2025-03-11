@@ -5,24 +5,31 @@ import { contentfulClient } from '../../lib/contentful';
 import type { GalleryPostEntry } from '../../types/galleryPost';
 import type { SizeAndPriceEntry } from '../../types/sizeAndPrice';
 
-const entries = await contentfulClient.getEntries<GalleryPostEntry>({
-    content_type: 'galleryPost',
-});
+export async function getStaticPaths() {
+    const entries = await contentfulClient.getEntries<GalleryPostEntry>({
+        content_type: 'galleryPost',
+    });
 
-const posts = entries.items as unknown as GalleryPostEntry[];
-const { fields } = posts.find((post) => {
-    if (!post.fields.title) {
-        return false;
-    }
-    const { fields } = post;
-    const title = fields.title as unknown as string;
-    const slug = title
-        .toLowerCase()
-        .replace(/\s+/g, '-')
-        .replace(/[^\w-]+/g, '');
-    // @ts-ignore
-    return slug === Astro.params.slug;
-}) as GalleryPostEntry;
+    const posts = entries.items as unknown as GalleryPostEntry[];
+
+    return posts.map((post) => {
+        const { fields } = post;
+        const title = fields.title as unknown as string;
+        const slug = title
+            .toLowerCase()
+            .replace(/\s+/g, '-')
+            .replace(/[^\w-]+/g, '');
+
+        return {
+            params: { slug },
+            props: { post },
+        };
+    });
+}
+
+// Get the post from props (passed by getStaticPaths)
+const { post } = Astro.props;
+const { fields } = post;
 
 const slug = fields.title
     .toLowerCase()
@@ -41,10 +48,9 @@ const sizeAndPrice: SizeAndPriceEntry[] = fields.sizeAndPrice || [];
 const passepartout = fields.passepartout;
 
 console.log('imageWidth ', imageWidth, '. imageHeight ', imageHeight, '. aspectRatio ', aspectRatio);
-
-export const prerender = true;
 ---
 
+<!-- Rest of your template remains the same -->
 <MainLayout title={title}>
     <div class='container mx-auto px-4'>
         <!-- Back button -->
