@@ -7,12 +7,12 @@ interface ImageData {
     imageHeight: number;
 }
 
-function assertNumber(value: any): number {
-    if (typeof value !== 'number') {
-        return Number(value);
-    }
-    return value;
-}
+// function assertNumber(value: any): number {
+//     if (typeof value !== 'number') {
+//         return Number(value);
+//     }
+//     return value;
+// }
 
 export function initializePopover(imageData: {
     imageUrl: string;
@@ -20,11 +20,11 @@ export function initializePopover(imageData: {
     imageWidth: number | string;
     imageHeight: number | string;
 }): void {
-    const safeImageData: ImageData = {
-        ...imageData,
-        imageWidth: assertNumber(imageData.imageWidth),
-        imageHeight: assertNumber(imageData.imageHeight),
-    };
+    // const safeImageData: ImageData = {
+    //     ...imageData,
+    //     imageWidth: assertNumber(imageData.imageWidth),
+    //     imageHeight: assertNumber(imageData.imageHeight),
+    // };
 
     const popover = document.getElementById('fullscreen-popover') as HTMLElement | null;
     const popoverTrigger = document.getElementById('popover-trigger') as HTMLElement | null;

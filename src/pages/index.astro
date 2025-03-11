@@ -11,15 +11,18 @@ const carouselImages = [hjort, sjimpanse, labrador];
 ---
 
 <MainLayout title={title}>
-    <div class='relative fade-in-element'>
+    <div class='relative fade-in-element aspect-[1754/1241]'>
         <Image
             src={lazydogs}
             alt='Bilde: Lazy dogs'
+            width={1754}
+            height={1241}
             widths={[240, 540, 720, 1000]}
             sizes={`(max-width: 360px) 240px, (max-width: 720px) 540px, (max-width: 1600px) 720px, 1000px`}
-            quality={'mid'}
+            quality={'high'}
+            format='webp'
             loading={'eager'}
-            class='w-full object-cover'
+            class='w-full h-full object-cover'
             id='heroImage'
         />
     </div>
@@ -111,6 +114,11 @@ const carouselImages = [hjort, sjimpanse, labrador];
     </section>
 
     <style>
+        #heroImage {
+            transform: rotate(0deg) !important;
+            image-orientation: from-image !important;
+        }
+
         .fade-in-element {
             opacity: 0;
             transform: translateY(20px);
