@@ -33,6 +33,8 @@ const slug = title
     .toLowerCase()
     .replace(/\s+/g, '-')
     .replace(/[^\w-]+/g, '');
+
+const quality = aspectRatio <= 0.9 ? 'mid' : 'low';
 ---
 
 <a
@@ -43,9 +45,9 @@ const slug = title
             src={imageUrl}
             alt={title + ': ' + fields.description || 'image of ' + title}
             width={imageWidth}
-            height={imageHeight}
             widths={[240, 360, 480, 590]}
-            quality={'high'}
+            quality={quality}
+            height={imageHeight}
             outerFrameWidth={5}
             passepartout={passepartout}
         />
