@@ -1,30 +1,30 @@
 {
-    "name": "furekunst",
-    "type": "module",
-    "version": "0.0.1",
-    "scripts": {
-        "dev": "astro dev --host",
-        "start": "astro dev",
-        "build": "astro check && astro build",
-        "preview": "astro preview",
-        "astro": "astro"
-    },
-    "dependencies": {
-        "@astrojs/check": "^0.9.3",
-        "@astrojs/netlify": "^5.5.1",
-        "@astrojs/sitemap": "^3.1.6",
-        "@astrojs/tailwind": "^5.1.0",
-        "@contentful/rich-text-html-renderer": "^16.6.6",
-        "@fontsource/kanit": "^5.0.20",
-        "@iconify-json/simple-icons": "^1.2.1",
-        "astro": "^4.15.1",
-        "astro-icon": "^1.1.0",
-        "contentful": "^10.12.13",
-        "tailwindcss": "^3.4.6",
-        "typescript": "^5.5.3"
-    },
-    "devDependencies": {
-        "@iconify-json/mdi": "^1.1.67"
-    },
-    "packageManager": "pnpm@9.15.0+sha256.09a8fe31a34fda706354680619f4002f4ccef6dadff93240d24ef6c831f0fd28"
+  "name": "furekunst",
+  "type": "module",
+  "version": "0.0.1",
+  "scripts": {
+    "dev": "astro dev --host",
+    "start": "astro dev",
+    "build": "astro check && astro build",
+    "preview": "astro preview",
+    "astro": "astro"
+  },
+  "dependencies": {
+    "@astrojs/check": "^0.9.4",
+    "@astrojs/netlify": "^6.2.3",
+    "@astrojs/sitemap": "^3.2.1",
+    "@astrojs/tailwind": "^6.0.0",
+    "@contentful/rich-text-html-renderer": "^17.0.0",
+    "@fontsource/kanit": "^5.2.5",
+    "@iconify-json/simple-icons": "^1.2.28",
+    "astro": "^5.4.3",
+    "astro-icon": "^1.1.5",
+    "contentful": "^11.5.6",
+    "tailwindcss": "^3.4.17",
+    "typescript": "^5.8.2"
+  },
+  "devDependencies": {
+    "@iconify-json/mdi": "^1.2.3"
+  },
+  "packageManager": "pnpm@9.15.0+sha256.09a8fe31a34fda706354680619f4002f4ccef6dadff93240d24ef6c831f0fd28"
 }
