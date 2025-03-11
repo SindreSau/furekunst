@@ -5,6 +5,8 @@ import { contentfulClient } from '../../lib/contentful';
 import type { GalleryPostEntry } from '../../types/galleryPost';
 import type { SizeAndPriceEntry } from '../../types/sizeAndPrice';
 
+export const prerender = true;
+
 export async function getStaticPaths() {
     const entries = await contentfulClient.getEntries<GalleryPostEntry>({
         content_type: 'galleryPost',
