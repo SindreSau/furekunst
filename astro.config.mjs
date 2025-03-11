@@ -10,7 +10,14 @@ import vercel from '@astrojs/vercel';
 // https://astro.build/config
 export default defineConfig({
     output: 'server',
-    adapter: vercel(),
+    adapter: vercel({
+        imageService: true,
+        devImageService: 'sharp',
+        isr: true,
+        webAnalytics: {
+            enabled: true,
+        },
+    }),
 
     image: {
         remotePatterns: [{ protocol: 'https', hostname: 'images.ctfassets.net' }],
