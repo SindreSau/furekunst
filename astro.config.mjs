@@ -11,7 +11,6 @@ import vercel from '@astrojs/vercel';
 export default defineConfig({
     output: 'server',
     adapter: vercel({
-        isr: true,
         webAnalytics: {
             enabled: true,
         },
