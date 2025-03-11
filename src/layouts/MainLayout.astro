@@ -2,6 +2,7 @@
 import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
 import { ClientRouter } from 'astro:transitions';
+import Analytics from '@vercel/analytics/astro';
 
 const { title } = Astro.props;
 const description =
@@ -48,6 +49,7 @@ const description =
                 "inLanguage": "nb-NO"
             }
         </script>
+        <Analytics />
     </head>
     <body class='flex flex-col min-h-screen bg-pastel font-body text-primary'>
         <Header />
