@@ -20,9 +20,5 @@ pnpm-debug.log*
 # macOS-specific files
 .DS_Store
 
-# setting folder
-.idea/
-.vscode
-
 # Netlify
 .netlify
