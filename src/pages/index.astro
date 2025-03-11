@@ -11,7 +11,7 @@ const carouselImages = [hjort, sjimpanse, labrador];
 ---
 
 <MainLayout title={title}>
-    <div class='relative fade-in-element aspect-[1754/1241]'>
+    <div class='relative fade-in-element'>
         <Image
             src={lazydogs}
             alt='Bilde: Lazy dogs'
@@ -114,11 +114,6 @@ const carouselImages = [hjort, sjimpanse, labrador];
     </section>
 
     <style>
-        #heroImage {
-            transform: rotate(0deg) !important;
-            image-orientation: from-image !important;
-        }
-
         .fade-in-element {
             opacity: 0;
             transform: translateY(20px);
