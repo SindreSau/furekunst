@@ -38,7 +38,7 @@ export default function Home() {
                 <div className='w-full h-px bg-gray-300 md:mb-12 mb-6'></div>
             </FadeInSection>
 
-            <section className='flex md:items-start items-center md:bg-red-100 md:gap-0  gap-5 flex-col-reverse md:flex-row mb-12'>
+            <section className='flex md:items-start items-center md:gap-0  gap-5 flex-col-reverse md:flex-row mb-12'>
                 <FadeInSection delay={150} className='md:w-1/3'>
                     <div className='overflow-hidden'>
                         <Image
@@ -91,7 +91,7 @@ export default function Home() {
 
             {/* Bottom separator */}
             <FadeInSection delay={75}>
-                <div className='w-full h-px bg-gray-300 md:mb-12 mb-6'></div>
+                <div className='w-full h-px bg-gray-300 mb-6'></div>
             </FadeInSection>
 
             <section className='py-6'>
@@ -130,7 +130,7 @@ export default function Home() {
                         <FrameButton type='link' href='/galleri' rightArrow={false}>
                             Galleri
                         </FrameButton>
-                        <FrameButton type='link' href='/om-kontakt' rightArrow={false}>
+                        <FrameButton type='link' href='/kontakt' rightArrow={false}>
                             Ta kontakt
                         </FrameButton>
                     </div>

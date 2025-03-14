@@ -135,7 +135,7 @@
         @apply text-2xl md:text-3xl text-gray-900 font-didot;
     }
     h2 {
-        @apply text-xl md:text-2xl text-gray-800 font-didot;
+        @apply text-xl md:text-2xl text-gray-900 font-didot;
     }
 
     p {

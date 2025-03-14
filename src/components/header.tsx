@@ -17,7 +17,7 @@ const Header = () => {
     const pages: Page[] = [
         { title: 'Heim', url: '/' },
         { title: 'Galleri', url: '/galleri' },
-        { title: 'Om meg / Kontakt', url: '/om-kontakt' },
+        { title: 'Kontakt', url: '/kontakt' },
     ];
 
     const groupPath = '/' + pathname.split('/')[1];
@@ -50,7 +50,7 @@ const Header = () => {
                 </a>
                 <div className='flex justify-between items-center py-4'>
                     {/* Logo */}
-                    <Link href='/' className='text-xl font-semibold text-gray-800 font-didot tracking-widest'>
+                    <Link href='/' className='text-xl text-gray-800 font-didot tracking-widest'>
                         ELISABETH FURE
                     </Link>
 
