@@ -81,7 +81,7 @@ function PaginationPrevious({
     <PaginationLink
       href={href}
       aria-label="Gå til forrige side"
-      className={cn('gap-1 flex items-center', className)}
+      className={cn('flex items-center gap-1', className)}
       {...props}
     >
       <ChevronLeftIcon className="mr-1 h-4 w-4" />
@@ -99,7 +99,7 @@ function PaginationNext({
     <PaginationLink
       href={href}
       aria-label="Gå til neste side"
-      className={cn('gap-1 flex items-center', className)}
+      className={cn('flex items-center gap-1', className)}
       {...props}
     >
       <span>Neste</span>

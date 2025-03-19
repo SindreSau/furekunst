@@ -17,7 +17,7 @@ export default function Home() {
   return (
     <>
       <FadeInSection>
-        <div className="relative md:mb-12 mb-8">
+        <div className="relative mb-8 md:mb-12">
           <Image
             src={lazydogs}
             alt="Bilde: Lazy dogs"
@@ -25,7 +25,7 @@ export default function Home() {
             height={1241}
             quality={100}
             priority
-            className="w-full h-full object-cover"
+            className="h-full w-full object-cover"
             id="heroImage"
           />
         </div>
@@ -37,7 +37,7 @@ export default function Home() {
       </FadeInSection>
 
       {/* About section */}
-      <section className="flex md:items-start items-center md:gap-0  gap-5 flex-col-reverse md:flex-row my-12">
+      <section className="my-12 flex flex-col-reverse items-center gap-5 md:flex-row md:items-start md:gap-0">
         <FadeInSection delay={150} className="md:w-1/3">
           <div className="overflow-hidden">
             <Image
@@ -47,19 +47,19 @@ export default function Home() {
               height={3088}
               sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 400px"
               quality={65}
-              className="h-full max-w-[50vw] md:max-w-none rounded-sm sm:rounded-none w-full object-cover frame-shadow"
+              className="frame-shadow h-full w-full max-w-[50vw] rounded-sm object-cover sm:rounded-none md:max-w-none"
               priority
             />
           </div>
         </FadeInSection>
 
         <FadeInSection delay={100}>
-          <div className="hidden md:block h-auto w-px bg-gray-300 mx-4 self-stretch my-auto"></div>
+          <div className="mx-4 my-auto hidden h-auto w-px self-stretch bg-gray-300 md:block"></div>
         </FadeInSection>
 
-        <div className="flex flex-col md:w-2/3 ">
+        <div className="flex flex-col md:w-2/3">
           <FadeInSection delay={100}>
-            <h1 className="mb-6 font-didot">Om Kunstnaren</h1>
+            <h1 className="font-didot mb-6">Om Kunstnaren</h1>
           </FadeInSection>
           <FadeInSection delay={200}>
             <div className="flex flex-col gap-4 tracking-wider text-gray-700">
@@ -98,7 +98,7 @@ export default function Home() {
 
       <section className="py-12">
         <FadeInSection delay={100}>
-          <h1 className="text-center mb-8 font-didot">Nokre utvalgte bilete</h1>
+          <h1 className="font-didot mb-8 text-center">Nokre utvalgte bilete</h1>
         </FadeInSection>
 
         {/* Carousel for small screens */}
@@ -109,16 +109,16 @@ export default function Home() {
         </FadeInSection>
 
         {/* Grid for larger screens */}
-        <div className="hidden md:grid sm:grid-cols-3 gap-8">
+        <div className="hidden gap-8 sm:grid-cols-3 md:grid">
           {carouselImages.map((img, index) => (
             <FadeInSection key={index} delay={200 + index * 100}>
-              <div className="aspect-auto overflow-hidden h-full">
+              <div className="aspect-auto h-full overflow-hidden">
                 <Image
                   src={img}
                   alt={`Image ${index + 1}`}
                   width={370}
                   height={370}
-                  className="w-full h-full object-cover frame-shadow"
+                  className="frame-shadow h-full w-full object-cover"
                   loading="lazy"
                 />
               </div>
@@ -128,7 +128,7 @@ export default function Home() {
 
         {/* Link to gallery (button) */}
         <FadeInSection delay={50}>
-          <div className="flex justify-center gap-12 mt-12">
+          <div className="mt-12 flex justify-center gap-12">
             <FrameButton type="link" href="/galleri" rightArrow={false}>
               Galleri
             </FrameButton>

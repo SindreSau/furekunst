@@ -35,7 +35,7 @@ export default async function GalleryPage({
 
   return (
     <>
-      <h1 className="text-3xl font-bold mb-6">Galleri</h1>
+      <h1 className="mb-6 text-3xl font-bold">Galleri</h1>
       <ClientGalleryPage posts={currentPosts} />
       <PaginationComponent currentPage={currentPage} totalPages={totalPages} />
     </>

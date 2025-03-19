@@ -54,22 +54,17 @@ export default async function ArtworkPage({
   }
 
   const { fields } = artwork
-  const imageUrl = `https:${fields.image.fields.file.url}?w=800&h=800`
+  const imageUrl = `https:${fields.image.fields.file.url}?w=1500&h=1500`
   const imageWidth = fields.image.fields.file.details.image?.width || 800
   const imageHeight = fields.image.fields.file.details.image?.height || 600
 
   return (
     <div className="container mx-auto px-4 md:px-0">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+      <div className="grid grid-cols-1 gap-8 md:grid-cols-2">
         {/* Image container */}
         <div className="relative">
           <div
-            className={`
-              relative 
-              border-2 border-black 
-              ${fields.passepartout ? 'p-4 bg-gray-50' : 'p-0'}
-              shadow-md
-            `}
+            className={`relative border-2 border-black ${fields.passepartout ? 'bg-gray-50 p-4' : 'p-0'} shadow-md`}
           >
             <Image
               src={imageUrl}
@@ -77,8 +72,8 @@ export default async function ArtworkPage({
               width={imageWidth}
               height={imageHeight}
               priority
-              quality={65}
-              className="w-full h-auto object-contain"
+              quality={85}
+              className="h-auto w-full object-contain"
             />
           </div>
         </div>

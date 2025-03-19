@@ -16,7 +16,7 @@ export default function PaginationComponent({
   totalPages: number
 }) {
   return (
-    <div className="flex justify-center my-8">
+    <div className="my-8 flex justify-center">
       <Pagination>
         <PaginationContent>
           {currentPage > 1 && (

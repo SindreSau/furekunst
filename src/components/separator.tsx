@@ -5,7 +5,7 @@ interface SeparatorProps {
 }
 
 const Separator = ({ className }: SeparatorProps) => {
-  return <div className={cn('w-full h-px bg-gray-300', className)}></div>
+  return <div className={cn('h-px w-full bg-gray-300', className)}></div>
 }
 
 export default Separator

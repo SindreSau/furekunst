@@ -101,11 +101,11 @@ export default function ImageCarousel({ images }: ImageCarouselProps) {
       </Carousel>
 
       {/* Indicators */}
-      <div className="flex justify-center mt-4 gap-2">
+      <div className="mt-4 flex justify-center gap-2">
         {Array.from({ length: count }).map((_, index) => (
           <button
             key={index}
-            className={`w-2 h-2 rounded-full transition-all ${
+            className={`h-2 w-2 rounded-full transition-all ${
               index === current ? 'bg-primary w-4' : 'bg-primary/50'
             }`}
             onClick={() => api?.scrollTo(index)}

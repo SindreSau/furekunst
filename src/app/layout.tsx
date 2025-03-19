@@ -64,12 +64,12 @@ export default function RootLayout({
   return (
     <html className="light" lang="nb">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} ${didot.variable} flex flex-col min-h-screen font-body text-primary antialiased`}
+        className={`${geistSans.variable} ${geistMono.variable} ${didot.variable} font-body text-primary flex min-h-screen flex-col antialiased`}
       >
         <Header />
         <main
           id="innhold"
-          className="flex-grow container mx-auto mt-8 max-w-7xl"
+          className="container mx-auto mt-8 max-w-7xl flex-grow"
         >
           {children}
         </main>

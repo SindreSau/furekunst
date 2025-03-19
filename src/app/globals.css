@@ -132,14 +132,14 @@
     @apply bg-pastel text-foreground;
   }
   h1 {
-    @apply text-2xl md:text-3xl text-gray-900 font-didot;
+    @apply font-didot text-2xl text-gray-900 md:text-3xl;
   }
   h2 {
-    @apply text-xl md:text-2xl text-gray-900 font-didot;
+    @apply font-didot text-xl text-gray-900 md:text-2xl;
   }
 
   p {
-    @apply text-base text-gray-700 font-body;
+    @apply font-body text-base text-gray-700;
   }
 
   a {

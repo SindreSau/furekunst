@@ -17,11 +17,11 @@ export default function ClientGalleryPage({
         1150: 2,
         640: 1,
       }}
-      className="flex w-auto -ml-4"
+      className="-ml-4 flex w-auto"
       columnClassName="pl-4 bg-clip-padding"
     >
       {posts.map((post, index) => {
-        const imageUrl = `https:${post.fields.image.fields.file.url}?w=700`
+        const imageUrl = `https:${post.fields.image.fields.file.url}?w=700&h=700`
         const width = post.fields.image.fields.file.details.image?.width || 800
         const height =
           post.fields.image.fields.file.details.image?.height || 600
@@ -40,7 +40,7 @@ export default function ClientGalleryPage({
             observeScroll={false}
           >
             <Link href={`/galleri/${slug}`} className="group block">
-              <div className="overflow-hidden duration-300 ">
+              <div className="overflow-hidden duration-300">
                 <div className="relative">
                   <Image
                     src={imageUrl}
@@ -49,15 +49,15 @@ export default function ClientGalleryPage({
                     height={height}
                     quality={85}
                     priority={index < 6}
-                    className="w-full h-auto object-cover transition-transform duration-300 group-hover:scale-[1.02]"
+                    className="h-auto w-full object-cover transition-transform duration-300 group-hover:scale-[1.02]"
                   />
                 </div>
-                <div className="p-3">
+                <div className="flex items-center justify-between p-3">
                   <h2 className="mt-1 text-xl font-medium">
                     {post.fields.title}
                   </h2>
                   {post.fields.type && (
-                    <p className="text-sm text-gray-600 mt-1">
+                    <p className="rounded-md bg-[#fafafa6c] px-2 text-sm text-gray-700">
                       {post.fields.type}
                     </p>
                   )}

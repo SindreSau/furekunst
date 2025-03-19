@@ -43,16 +43,16 @@ const Header = () => {
 
   return (
     <header className="z-50 w-full">
-      <div className="container max-w-7xl mx-auto  py-2">
+      <div className="container mx-auto max-w-7xl py-2">
         {/* Skip to main content */}
         <a href="#innhold" className="sr-only focus:not-sr-only">
           Hopp til hovedinnhold
         </a>
-        <div className="flex justify-between items-center py-4">
+        <div className="flex items-center justify-between py-4">
           {/* Logo */}
           <Link
             href="/"
-            className="text-xl text-gray-800 font-didot tracking-widest"
+            className="font-didot text-xl tracking-widest text-gray-800"
           >
             ELISABETH FURE
           </Link>
@@ -60,37 +60,37 @@ const Header = () => {
           {/* Mobile menu button */}
           <button
             onClick={toggleMenu}
-            className="md:hidden px-2 text-gray-600 hover:text-gray-900 focus:outline-none z-50 relative cursor-pointer"
+            className="relative z-50 cursor-pointer px-2 text-gray-600 hover:text-gray-900 focus:outline-none md:hidden"
           >
             <span className="sr-only">Open main menu</span>
-            <div className="w-6 h-6 relative">
+            <div className="relative h-6 w-6">
               <span
-                className={`absolute top-0 left-0 w-6 h-0.5 bg-current transform transition duration-300 ease-in-out ${
-                  isMenuOpen ? 'rotate-45 translate-y-2.5' : ''
+                className={`absolute top-0 left-0 h-0.5 w-6 transform bg-current transition duration-300 ease-in-out ${
+                  isMenuOpen ? 'translate-y-2.5 rotate-45' : ''
                 }`}
               ></span>
               <span
-                className={`absolute top-2.5 left-0 w-6 h-0.5 bg-current transform transition duration-300 ease-in-out ${
+                className={`absolute top-2.5 left-0 h-0.5 w-6 transform bg-current transition duration-300 ease-in-out ${
                   isMenuOpen ? 'opacity-0' : ''
                 }`}
               ></span>
               <span
-                className={`absolute bottom-0 left-0 w-6 h-0.5 bg-current transform transition duration-300 ease-in-out ${
-                  isMenuOpen ? '-rotate-45 -translate-y-3' : ''
+                className={`absolute bottom-0 left-0 h-0.5 w-6 transform bg-current transition duration-300 ease-in-out ${
+                  isMenuOpen ? '-translate-y-3 -rotate-45' : ''
                 }`}
               ></span>
             </div>
           </button>
 
           {/* Desktop menu */}
-          <nav className="hidden md:flex space-x-4">
+          <nav className="hidden space-x-4 md:flex">
             {pages.map(page => (
               <Link
                 key={page.url}
                 href={page.url}
                 className={`hover:text-gray-900 ${
                   groupPath === page.url
-                    ? 'text-gray-900 border-b-2'
+                    ? 'border-b-2 text-gray-900'
                     : 'text-gray-600'
                 }`}
                 aria-current={pathname === page.url ? 'page' : undefined}
@@ -102,23 +102,23 @@ const Header = () => {
         </div>
 
         {/* Gray divider - container width instead of full width */}
-        <div className="h-px bg-gray-300 w-full"></div>
+        <div className="h-px w-full bg-gray-300"></div>
       </div>
 
       {/* Mobile menu */}
       <nav
-        className={`fixed left-0 right-0 top-[64px] pt-6 bottom-0 bg-pastel-dark z-40 transform ${
+        className={`bg-pastel-dark fixed top-[64px] right-0 bottom-0 left-0 z-40 transform pt-6 ${
           isMenuOpen ? 'translate-x-0' : 'translate-x-full'
-        } transition-transform duration-300 ease-in-out md:hidden overflow-y-auto`}
+        } overflow-y-auto transition-transform duration-300 ease-in-out md:hidden`}
       >
-        <div className="flex flex-col h-full justify-start items-center space-y-8 text-2xl pt-8 shadow-md">
+        <div className="flex h-full flex-col items-center justify-start space-y-8 pt-8 text-2xl shadow-md">
           {pages.map((page, index) => (
             <div
               key={page.url}
               className={`transition-all duration-500 ease-out ${
                 isMenuOpen
-                  ? 'opacity-100 translate-y-0'
-                  : 'opacity-0 translate-y-8'
+                  ? 'translate-y-0 opacity-100'
+                  : 'translate-y-8 opacity-0'
               }`}
               style={{
                 transitionDelay: isMenuOpen ? `${index * 150}ms` : '0ms',
@@ -128,7 +128,7 @@ const Header = () => {
                 href={page.url}
                 className={`text-gray-600 hover:text-gray-800 ${
                   groupPath === page.url
-                    ? 'text-gray-800 text-[1.58rem] border-gray-200 border-b-2'
+                    ? 'border-b-2 border-gray-200 text-[1.58rem] text-gray-800'
                     : ''
                 }`}
                 aria-current={pathname === page.url ? 'page' : undefined}
