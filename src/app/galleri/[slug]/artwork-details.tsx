@@ -1,7 +1,6 @@
 'use client'
 
 import { GalleryPostEntry } from '@/types/gallery-post.types'
-import { useState } from 'react'
 
 export function ArtworkDetails({ artwork }: { artwork: GalleryPostEntry }) {
   const { fields } = artwork
