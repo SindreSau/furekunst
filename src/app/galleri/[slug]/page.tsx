@@ -20,13 +20,15 @@ export async function generateStaticParams() {
 export async function generateMetadata({
   params,
 }: {
-  params: { slug: string }
+  params: Promise<{ slug: string }>
 }) {
-  const artwork = await getGalleryPostBySlug(params.slug)
+  const resolvedParams = await params
+  const artwork = await getGalleryPostBySlug(resolvedParams.slug)
 
   if (!artwork) {
     return {
       title: 'Artwork Not Found',
+      description: 'The requested artwork could not be found.',
     }
   }
 
