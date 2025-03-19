@@ -28,6 +28,9 @@ export async function generateMetadata({
     return {
       title: 'Artwork Not Found',
       description: 'The requested artwork could not be found.',
+      metadataBase: new URL(
+        `https://furekunst.no/galleri/${resolvedParams.slug}`,
+      ),
     }
   }
 
@@ -41,9 +44,10 @@ export async function generateMetadata({
 export default async function ArtworkPage({
   params,
 }: {
-  params: { slug: string }
+  params: Promise<{ slug: string }>
 }) {
-  const artwork = await getGalleryPostBySlug(params.slug)
+  const resolvedParams = await params
+  const artwork = await getGalleryPostBySlug(resolvedParams.slug)
 
   if (!artwork) {
     notFound()

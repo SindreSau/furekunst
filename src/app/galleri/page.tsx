@@ -17,7 +17,8 @@ export default async function GalleryPage({
 }: {
   searchParams: Promise<{ page?: string }>
 }) {
-  const pageParam = (await searchParams)?.page
+  const resolvedSearchParams = await searchParams
+  const pageParam = resolvedSearchParams.page
   const currentPage = pageParam ? parseInt(pageParam, 10) : 1
   const postsPerPage = 12 // Adjust based on your preference
 
