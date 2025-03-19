@@ -1,4 +1,4 @@
-import type { Asset, Entry, EntryFields } from 'contentful'
+import type { Asset, EntryFields } from 'contentful'
 
 // Custom Asset type to match Contentful's structure
 interface ContentfulAsset extends Asset {
@@ -27,10 +27,10 @@ interface SizeAndPriceFields {
 }
 
 // For ContentType structure
-interface SizeAndPriceTypeFields {
-  fields: SizeAndPriceFields
-  contentTypeId: 'sizeAndPrice'
-}
+// interface SizeAndPriceTypeFields {
+//   fields: SizeAndPriceFields
+//   contentTypeId: 'sizeAndPrice'
+// }
 
 // For actual entries
 interface SizeAndPrice {
@@ -67,19 +67,19 @@ interface SizeAndPrice {
 }
 
 // GalleryPost content type fields
-interface GalleryPostFields {
-  fields: {
-    image: ContentfulAsset
-    title: EntryFields.Symbol
-    description?: EntryFields.Text
-    type: EntryFields.Symbol // 'original' | 'print'
-    size?: EntryFields.Symbol
-    price?: EntryFields.Integer
-    sizeAndPrice?: SizeAndPrice[]
-    passepartout: EntryFields.Boolean
-  }
-  contentTypeId: 'galleryPost'
-}
+// interface GalleryPostFields {
+//   fields: {
+//     image: ContentfulAsset
+//     title: EntryFields.Symbol
+//     description?: EntryFields.Text
+//     type: EntryFields.Symbol // 'original' | 'print'
+//     size?: EntryFields.Symbol
+//     price?: EntryFields.Integer
+//     sizeAndPrice?: SizeAndPrice[]
+//     passepartout: EntryFields.Boolean
+//   }
+//   contentTypeId: 'galleryPost'
+// }
 
 // For use with getEntries
 export interface IGalleryPost {

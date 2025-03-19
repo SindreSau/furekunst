@@ -1,5 +1,4 @@
 import FrameButton from '@/components/frame-button'
-import Link from 'next/link'
 
 const NotFoundPage = () => {
   return (
