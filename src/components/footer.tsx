@@ -27,8 +27,8 @@ const Footer = () => {
           </Link>
 
           <div className="order-2 flex space-x-4 md:order-3">
-            <a
-              href={CONSTANTS.email}
+            <Link
+              href={`mailto:${CONSTANTS.email}`}
               className="transition-colors duration-300 hover:text-gray-800"
             >
               <svg
@@ -45,9 +45,9 @@ const Footer = () => {
                 <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" />
               </svg>
               <span className="sr-only">Email</span>
-            </a>
+            </Link>
 
-            <a
+            <Link
               href={CONSTANTS.instagram}
               target="_blank"
               rel="noopener noreferrer"
@@ -68,9 +68,9 @@ const Footer = () => {
                 <line x1="17.5" x2="17.51" y1="6.5" y2="6.5" />
               </svg>
               <span className="sr-only">Instagram</span>
-            </a>
+            </Link>
 
-            <a
+            <Link
               href={CONSTANTS.facebook}
               target="_blank"
               rel="noopener noreferrer"
@@ -89,7 +89,7 @@ const Footer = () => {
                 <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z" />
               </svg>
               <span className="sr-only">Facebook</span>
-            </a>
+            </Link>
           </div>
         </div>
       </div>

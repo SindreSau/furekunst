@@ -1,11 +1,11 @@
 import { notFound } from 'next/navigation'
-import Image from 'next/image'
 import {
   getGalleryPosts,
   getGalleryPostBySlug,
   titleToSlug,
 } from '@/lib/contentful-api'
 import { ArtworkDetails } from './artwork-details'
+import { FramedImage } from './framed-image'
 
 // Generate static params for all artwork pages
 export async function generateStaticParams() {
@@ -63,19 +63,13 @@ export default async function ArtworkPage({
       <div className="grid grid-cols-1 gap-8 md:grid-cols-2">
         {/* Image container */}
         <div className="relative">
-          <div
-            className={`relative border-2 border-black ${fields.passepartout ? 'bg-gray-50 p-4' : 'p-0'} shadow-md`}
-          >
-            <Image
-              src={imageUrl}
-              alt={fields.title}
-              width={imageWidth}
-              height={imageHeight}
-              priority
-              quality={85}
-              className="h-auto w-full object-contain"
-            />
-          </div>
+          <FramedImage
+            imageUrl={imageUrl}
+            alt={fields.title}
+            width={imageWidth}
+            height={imageHeight}
+            hasPassepartout={fields.passepartout}
+          />
         </div>
 
         {/* Details container */}
