@@ -37,9 +37,8 @@ export default function Home() {
             alt="Bilde: Lazy dogs"
             width={1754}
             height={1241}
-            quality={80}
+            quality={70}
             priority
-            sizes="(max-width: 768px) 90vw, (max-width: 1024px) 80vw, 600px"
             placeholder="blur"
             blurDataURL="/lazy-dogs-blur.webp"
             className="h-full w-full object-cover"

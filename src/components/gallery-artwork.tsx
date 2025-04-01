@@ -85,7 +85,8 @@ export function GalleryArtwork({
                   alt={post.fields.title}
                   width={width}
                   height={height}
-                  quality={85}
+                  quality={55}
+                  sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 600px"
                   priority={index < 6}
                   onLoad={() => setIsLoaded(true)}
                   className={cn(

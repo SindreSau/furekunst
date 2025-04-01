@@ -1,21 +1,9 @@
 import type { Metadata } from 'next'
-import { Geist, Geist_Mono } from 'next/font/google'
 import { didot } from '@/lib/fonts'
 import './globals.css'
 import Header from '@/components/header'
 import Footer from '@/components/footer'
 import { Analytics } from '@vercel/analytics/react'
-
-// You might want to add a custom font for the Didot font that was used in your Astro site
-const geistSans = Geist({
-  variable: '--font-geist-sans',
-  subsets: ['latin'],
-})
-
-const geistMono = Geist_Mono({
-  variable: '--font-geist-mono',
-  subsets: ['latin'],
-})
 
 export const metadata: Metadata = {
   description:
@@ -108,7 +96,7 @@ export default function RootLayout({
         ></script>
       </head>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} ${didot.variable} font-body text-primary flex min-h-screen flex-col antialiased`}
+        className={`${didot.variable} font-body text-primary flex min-h-screen flex-col antialiased`}
       >
         <Header />
         <main

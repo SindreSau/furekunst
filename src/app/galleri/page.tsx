@@ -44,13 +44,12 @@ export default async function GalleryPage({
 
   return (
     <>
-      <FadeInSection>
-        <h1 className="mb-1">Galleri</h1>
-        <p className="text-muted-foreground mb-4 flex items-center text-sm">
-          Klikk gjerne på eit bilete for å sjå fleire detaljar
-          <MousePointerClick className="ml-1 w-4 text-gray-500" />
-        </p>
-      </FadeInSection>
+      <h1 className="mb-1">Galleri</h1>
+      <p className="text-muted-foreground mb-4 flex items-center text-sm">
+        Klikk gjerne på eit bilete for å sjå fleire detaljar
+        <MousePointerClick className="ml-1 w-4 text-gray-500" />
+      </p>
+
       <ClientGalleryPage posts={currentPosts} />
       <PaginationComponent currentPage={currentPage} totalPages={totalPages} />
     </>

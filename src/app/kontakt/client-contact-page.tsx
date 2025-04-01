@@ -43,7 +43,7 @@ const ClientContactPage = () => {
           </p>
         </FadeInSection>
 
-        <div className="flex flex-col gap-6 font-serif">
+        <div className="flex w-min flex-col gap-6 font-serif">
           <FadeInSection delay={250}>
             <a
               href={`mailto:${CONSTANTS.email}`}
