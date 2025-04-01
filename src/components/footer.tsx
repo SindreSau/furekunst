@@ -18,13 +18,13 @@ const Footer = () => {
             </p>
           </div>
 
-          <Link
+          {/* <Link
             href="/om-siden"
             className="focus:ring-opacity-50 mt-2 flex items-center gap-1 rounded-md px-2 py-1 text-sm font-medium transition-all duration-300 hover:underline focus:ring-2 md:mt-0"
           >
             <Info size={14} />
             Om nettsiden
-          </Link>
+          </Link> */}
 
           <div className="order-2 flex space-x-4 md:order-3">
             <Link
