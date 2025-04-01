@@ -1,5 +1,4 @@
 'use client'
-import { useState, useEffect } from 'react'
 import { GalleryPostEntry } from '@/types/gallery-post.types'
 import Masonry from 'react-masonry-css'
 import { GalleryArtwork } from '@/components/gallery-artwork'
@@ -9,13 +8,6 @@ export default function ClientGalleryPage({
 }: {
   posts: GalleryPostEntry[]
 }) {
-  // Force immediate render
-  const [isClient, setIsClient] = useState(false)
-
-  useEffect(() => {
-    setIsClient(true)
-  }, [])
-
   return (
     <div className="min-h-[200px]">
       <Masonry

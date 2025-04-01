@@ -3,6 +3,8 @@
 import Image from 'next/image'
 import { cn } from '@/lib/utils'
 import { motion } from 'motion/react'
+import Zoom from 'react-medium-image-zoom'
+import 'react-medium-image-zoom/dist/styles.css'
 import { useState, useEffect } from 'react'
 
 interface FramedImageProps {
@@ -22,14 +24,40 @@ export function FramedImage({
 }: FramedImageProps) {
   const [isLoaded, setIsLoaded] = useState(false)
   const [isMounted, setIsMounted] = useState(false)
+  const [isSmallScreen, setIsSmallScreen] = useState(false)
 
   // Use client-side detection for when component has mounted
   useEffect(() => {
     setIsMounted(true)
+
+    // Define the check screen size function
+    const checkScreenSize = () => {
+      setIsSmallScreen(window.innerWidth < 768)
+    }
+
+    // Run it immediately
+    checkScreenSize()
+
+    // Set up listener for resize events
+    window.addEventListener('resize', checkScreenSize)
+
+    // Clean up
+    return () => window.removeEventListener('resize', checkScreenSize)
   }, [])
 
+  // Create a custom Zoom component that handles the responsive behavior
+  const ResponsiveZoom = ({ children }: { children: React.ReactNode }) => {
+    // If we've detected we're on a small screen, don't wrap with Zoom
+    if (isMounted && isSmallScreen) {
+      return <>{children}</>
+    }
+
+    // Otherwise use Zoom (also used during SSR before client detection)
+    return <Zoom zoomMargin={100}>{children}</Zoom>
+  }
+
   return (
-    <>
+    <ResponsiveZoom>
       {/* Outer wrapper to ensure proper overflow handling */}
       <div className="overflow-visible p-1">
         {/* Container div that holds everything */}
@@ -108,6 +136,6 @@ export function FramedImage({
           </motion.figure>
         </div>
       </div>
-    </>
+    </ResponsiveZoom>
   )
 }

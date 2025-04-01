@@ -27,4 +27,6 @@ export const didot = localFont({
   ],
   variable: '--font-didot',
   display: 'swap',
+  preload: true,
+  fallback: ['serif'],
 })

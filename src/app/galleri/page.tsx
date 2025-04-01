@@ -3,7 +3,6 @@ import ClientGalleryPage from './client-gallery'
 import PaginationComponent from '@/components/pagination-component'
 import { getMetadata } from '@/lib/metadata'
 import { MousePointerClick } from 'lucide-react'
-import { FadeInSection } from '@/components/fade-in-section'
 
 export const revalidate = 3600
 
