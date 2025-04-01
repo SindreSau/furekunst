@@ -1,15 +1,21 @@
 import { getGalleryPosts } from '@/lib/contentful-api'
 import ClientGalleryPage from './client-gallery'
 import PaginationComponent from '@/components/pagination-component'
+import { getMetadata } from '@/lib/metadata'
 
 export const revalidate = 3600
 
 export async function generateMetadata() {
-  return {
-    title: 'Galleri | Furekunst',
-    description: "Elisabeth Fure Schwarz's kunstgalleri",
-    metadataBase: new URL('https://furekunst.no/galleri'),
-  }
+  return getMetadata({
+    title: 'Galleri',
+    description:
+      'Utforsk min kunstsamling med maleri i akryl, akvarell, og olje, samt tegninger med tusj og penn.',
+    path: 'galleri',
+    ogImage: '/galleri/og-image.jpeg',
+    twitterImage: '/galleri/twitter.jpeg',
+    additionalKeywords:
+      'kunstgalleri, Furekunst galleri, bilder til salgs, kjøp kunst, Elisabeth Fure Schwarz kunst',
+  })
 }
 
 export default async function GalleryPage({

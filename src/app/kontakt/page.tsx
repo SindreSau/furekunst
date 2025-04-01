@@ -1,6 +1,18 @@
 import { CONSTANTS } from '@/lib/constants'
+import { getMetadata } from '@/lib/metadata'
 import { MailIcon } from 'lucide-react'
 import Link from 'next/link'
+
+export async function generateMetadata() {
+  return getMetadata({
+    title: 'Kontakt',
+    description:
+      'Ta kontakt med Elisabeth Fure Schwarz for spørsmål om kjøp eller bestilling av personlige bilete.',
+    path: 'kontakt',
+    additionalKeywords:
+      'kontakt kunstner, bestill, personlig kunst, bestill maleri, kunstnar, Elisabeth Fure Schwarz, Furekunst',
+  })
+}
 
 const ContactPage = () => {
   return (

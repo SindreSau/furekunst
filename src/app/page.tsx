@@ -4,6 +4,11 @@ import Image from 'next/image'
 import FrameButton from '@/components/frame-button'
 import ImageCarousel from '@/components/image-carousel'
 import Separator from '@/components/separator'
+import { getMetadata } from '@/lib/metadata'
+
+export async function generateMetadata() {
+  return getMetadata()
+}
 
 export default function Home() {
   const lazydogs = '/lazy-dogs.jpg'
@@ -45,8 +50,7 @@ export default function Home() {
               alt="Elisabeth Fure Schwarz"
               width={2316}
               height={3088}
-              sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 400px"
-              quality={65}
+              sizes="(max-width: 768px) 100vw, (max-width: 1024px) 70vw, 600px"
               className="frame-shadow h-full w-full max-w-[50vw] rounded-sm object-cover sm:rounded-none md:max-w-none"
               priority
             />
