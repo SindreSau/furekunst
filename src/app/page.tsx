@@ -7,7 +7,15 @@ import Separator from '@/components/separator'
 import { getMetadata } from '@/lib/metadata'
 
 export async function generateMetadata() {
-  return getMetadata()
+  return getMetadata({
+    title: 'Heim - Kunstnar Elisabeth Fure Schwarz',
+    description:
+      'Elisabeth Fure Schwarz er kunstnaren bak Furekunst, med hovudfokus på akvarell. Utforsk galleriet med originale kunstverk og bestill personlege bilete.',
+    path: '',
+    additionalKeywords:
+      'Elisabeth Fure, Fure kunst, heimeside, kunstheimeside, Elisabeth Fure Schwarz kunst, norsk kunstnar, kunstportefølje, kjøp kunst',
+    type: 'website',
+  })
 }
 
 export default function Home() {

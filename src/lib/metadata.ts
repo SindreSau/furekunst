@@ -1,12 +1,14 @@
-// lib/metadata.js
-// This file will contain your baseline metadata configuration
+// lib/metadata.ts
+// This file contains your baseline metadata configuration
+import type { GalleryPostEntry } from '@/types/gallery-post.types'
+import type { Metadata } from 'next'
 
 export const siteConfig = {
   name: 'Furekunst',
   creator: 'Elisabeth Fure Schwarz',
   url: 'https://furekunst.no',
   baseDescription:
-    'Her kan du se kunstverkene mine og ta kontakt ved interesse for kjøp eller bestilling av personlige bilder.',
+    'Her kan du sjå kunstverka mine og ta kontakt ved interesse for kjøp eller tinging av personlege bilete. Furekunst viser måleri, akvarell og teikningar av Elisabeth Fure Schwarz.',
   defaultLocale: 'nn_NO',
   twitterHandle: '@elisabethfure',
   ogImagePath: '/open-graph.jpeg',
@@ -18,24 +20,24 @@ export const siteConfig = {
     },
   ],
   keywords:
-    'kunst, galleri, Furekunst, Elisabeth Fure Schwarz, maleri, akvarell, akryl, olje, print, kunstner, kunstnar, bilete, bilete av dyr, portrett, naturbilete',
+    'kunst, galleri, Furekunst, Elisabeth Fure Schwarz, Elisabeth Fure, Elisabeth kunst, Fure kunst, Elisabeth Fure kunstnar, måleri, akvarell, akryl, olje, print, kunstnar, bilete, bilete av dyr, portrett, naturbilete, norsk kunst, norsk kunstnar, kunstgalleri, kunstutstilling, kjøp kunst, original kunst, målerikunst, kunsthandverk, bestill kunst, personleg kunst',
+}
+
+interface MetadataParams {
+  title?: string
+  description?: string
+  path?: string
+  ogImage?: string
+  twitterImage?: string
+  additionalKeywords?: string
+  type?: 'website' | 'article' | 'profile'
 }
 
 /**
  * Generates metadata for a page
  *
- * @param {Object} options - Customization options
- * @param {string} options.title - Page-specific title (will be combined with site name)
- * @param {string} options.description - Page-specific description
- * @param {string} options.path - Path to append to base URL
- * @param {string} options.ogImage - Custom OG image path (overrides default)
- *                                   For external images (e.g. from Contentful), pass the full URL
- *                                   For local images, pass the path relative to the public directory
- * @param {string} options.twitterImage - Custom Twitter image path (overrides default)
- *                                        Works the same as ogImage
- * @param {string} options.additionalKeywords - Additional keywords to append to base keywords
- * @param {string} options.type - The type of page (default: 'website')
- * @returns {Object} - Complete metadata object
+ * @param options - Customization options
+ * @returns Complete metadata object
  *
  * @example
  * // For a dynamic page with an image from Contentful:
@@ -55,7 +57,7 @@ export function getMetadata({
   twitterImage = siteConfig.twitterImagePath,
   additionalKeywords = '',
   type = 'website',
-} = {}) {
+}: MetadataParams = {}): Metadata {
   const keywords = additionalKeywords
     ? `${siteConfig.keywords}, ${additionalKeywords}`
     : siteConfig.keywords
@@ -103,5 +105,130 @@ export function getMetadata({
       creator: siteConfig.twitterHandle,
       site: siteConfig.twitterHandle,
     },
+    robots: {
+      index: true,
+      follow: true,
+      googleBot: {
+        index: true,
+        follow: true,
+        'max-image-preview': 'large',
+        'max-snippet': -1,
+      },
+    },
+  }
+}
+
+// Define the type for structured data
+interface ArtworkStructuredData {
+  '@context': string
+  '@type': string
+  name: string
+  description: string
+  artMedium: string
+  artform: string
+  image: string
+  size?: string
+  creator: {
+    '@type': string
+    name: string
+    url: string
+  }
+  offers:
+    | {
+        '@type': string
+        availability: string
+        priceCurrency: string
+        price: number | string
+        description?: string
+      }
+    | Array<{
+        '@type': string
+        availability: string
+        priceCurrency: string
+        price: number | string
+        description?: string
+      }>
+}
+
+/**
+ * Generates structured data for an artwork
+ * @param artwork - The artwork data from Contentful
+ * @returns Structured data object for the artwork
+ */
+export function getArtworkStructuredData(
+  artwork: GalleryPostEntry,
+): ArtworkStructuredData {
+  // Basic structured data
+  const structuredData: ArtworkStructuredData = {
+    '@context': 'https://schema.org',
+    '@type': 'VisualArtwork',
+    name: artwork.fields.title,
+    description:
+      artwork.fields.description || 'Kunstverk av Elisabeth Fure Schwarz',
+    artMedium: artwork.fields.description?.split(' ')[0] || 'Måleri',
+    artform: artwork.fields.type === 'original' ? 'Original' : 'Print',
+    image: `https:${artwork.fields.image.fields.file.url}`,
+    creator: {
+      '@type': 'Person',
+      name: 'Elisabeth Fure Schwarz',
+      url: 'https://furekunst.no',
+    },
+    offers: {
+      '@type': 'Offer',
+      availability: 'https://schema.org/InStock',
+      priceCurrency: 'NOK',
+      price: artwork.fields.price || 'Ikke oppgitt',
+    },
+  }
+
+  // Add size information if available
+  if (artwork.fields.size) {
+    structuredData.size = artwork.fields.size
+  }
+
+  // Handle different price structures
+  if (artwork.fields.price) {
+    // Single price (works for both original and print)
+    structuredData.offers = {
+      '@type': 'Offer',
+      availability: 'https://schema.org/InStock',
+      priceCurrency: 'NOK',
+      price: artwork.fields.price,
+    }
+  } else if (
+    artwork.fields.sizeAndPrice &&
+    artwork.fields.sizeAndPrice.length > 0
+  ) {
+    // Multiple offers for prints with different sizes
+    const offers = artwork.fields.sizeAndPrice.map(item => ({
+      '@type': 'Offer',
+      availability: 'https://schema.org/InStock',
+      priceCurrency: 'NOK',
+      price: item.fields.price,
+      description: `Storleik: ${item.fields.size}`,
+    }))
+
+    // Replace single offer with multiple offers
+    structuredData.offers = offers.length === 1 ? offers[0] : offers
+  }
+
+  return structuredData
+}
+
+/**
+ * Generates structured data for the artist
+ * @returns Structured data object for the artist
+ */
+export function getArtistStructuredData() {
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'Person',
+    name: 'Elisabeth Fure Schwarz',
+    jobTitle: 'Kunstnar',
+    url: 'https://furekunst.no',
+    sameAs: [
+      'https://www.instagram.com/fure.kunst',
+      'https://www.facebook.com/fure.kunst/',
+    ],
   }
 }
