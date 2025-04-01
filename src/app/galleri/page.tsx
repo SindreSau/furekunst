@@ -9,14 +9,15 @@ export const revalidate = 3600
 
 export async function generateMetadata() {
   return getMetadata({
-    title: 'Galleri',
+    title: 'Galleri - Kunstverk til sals',
     description:
-      'Utforsk mi kunstsamling med maleri i akryl, akvarell, og olje, samt teikningar med tusj og penn.',
+      'Utforsk kunstsamlinga til Elisabeth Fure Schwarz med måleri i akryl, akvarell, og olje, samt teikningar med tusj og penn.',
     path: 'galleri',
     ogImage: '/galleri/og-image.jpeg',
     twitterImage: '/galleri/twitter.jpeg',
     additionalKeywords:
-      'kunstgalleri, Furekunst galleri, bilder til salgs, kjøp kunst, Elisabeth Fure Schwarz kunst',
+      'kunstgalleri, Furekunst galleri, Elisabeth Fure galleri, bilete til sals, kjøp kunst, Elisabeth Fure Schwarz kunst, original kunst, kunstutstilling, akvarell kunst, akryl måleri',
+    type: 'website',
   })
 }
 
