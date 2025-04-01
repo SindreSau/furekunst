@@ -12,6 +12,7 @@ export default function FadeImage(props: ImageProps) {
         className={`${props.className || ''} transition-all duration-500 ease-out ${
           loaded ? 'blur-0' : 'blur-[1px]'
         }`}
+        alt={props.alt || 'unknown image'}
         onLoadingComplete={() => setLoaded(true)}
       />
     </div>
