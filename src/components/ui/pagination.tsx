@@ -5,7 +5,6 @@ import {
   MoreHorizontalIcon,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import Link from 'next/link'
 
 // Base frame button styles to match your custom button - smaller size, no hover animations
 const frameButtonStyles =
@@ -61,14 +60,14 @@ function PaginationLink({
   )
 
   return (
-    <Link
+    <a
       href={href}
       aria-current={isActive ? 'page' : undefined}
       className={linkStyles}
       {...props}
     >
       {children}
-    </Link>
+    </a>
   )
 }
 

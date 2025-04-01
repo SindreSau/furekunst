@@ -68,18 +68,17 @@ export default async function ArtworkPage({
   const imageHeight = fields.image.fields.file.details.image?.height || 600
 
   return (
-    <div className="container mx-auto px-4 md:px-0">
+    <div className="mx-auto px-4 md:px-0">
       <div className="grid grid-cols-1 gap-8 md:grid-cols-2">
         {/* Image container */}
-        <div className="relative">
-          <FramedImage
-            imageUrl={imageUrl}
-            alt={fields.title}
-            width={imageWidth}
-            height={imageHeight}
-            hasPassepartout={fields.passepartout}
-          />
-        </div>
+
+        <FramedImage
+          imageUrl={imageUrl}
+          alt={fields.title}
+          width={imageWidth}
+          height={imageHeight}
+          hasPassepartout={fields.passepartout}
+        />
 
         {/* Details container */}
         <ArtworkDetails artwork={artwork} />

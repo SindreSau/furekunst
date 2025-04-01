@@ -30,8 +30,8 @@ export function GalleryArtwork({
     <motion.div
       className="mb-4"
       initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      // viewport={{ once: true, margin: '0px 0px 30px 0px' }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, margin: '0px 0px 30px 0px' }}
       transition={{
         duration: 0.5,
         delay: index * 0.025,
@@ -99,7 +99,7 @@ export function GalleryArtwork({
           <div className="flex items-center justify-between p-3">
             <h2 className="mt-1 text-xl font-medium">{post.fields.title}</h2>
             {post.fields.type && (
-              <p className="rounded-md bg-[#fafafa6c] px-2 text-sm text-gray-700">
+              <p className="bg-primary-foreground/50 text-primary/80 font-didot rounded-sm px-2 text-sm md:text-[0.9125rem]">
                 {post.fields.type}
               </p>
             )}
