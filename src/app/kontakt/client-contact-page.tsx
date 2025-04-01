@@ -2,37 +2,16 @@
 
 import { CONSTANTS } from '@/lib/constants'
 import { MailIcon } from 'lucide-react'
-import { motion } from 'motion/react'
 import Image from 'next/image'
 import Link from 'next/link'
+import { FadeInSection } from '@/components/fade-in-section'
 
 const ClientContactPage = () => {
   const profilbilde = '/profilbilde.jpeg'
 
-  const baseAnimation = {
-    hidden: { opacity: 0, y: 10 },
-    visible: { opacity: 1, y: 0 },
-  }
-
-  const staggerContainer = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: {
-        staggerChildren: 0.05, // This will add 0.1s delay between each child
-        delayChildren: 0.1, // This will delay the first child by 0.1s
-      },
-    },
-  }
-
   return (
     <div className="mx-auto flex max-w-4xl flex-col-reverse items-center gap-10 md:gap-6 lg:flex-row lg:gap-8">
-      <motion.div
-        initial={{ opacity: 0, y: 15 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.25 }}
-        className="overflow-hidden rounded-md lg:rounded-none"
-      >
+      <FadeInSection className="overflow-hidden rounded-md lg:rounded-none">
         <Image
           src={profilbilde}
           alt="Elisabeth Fure Schwarz"
@@ -42,47 +21,40 @@ const ClientContactPage = () => {
           className="frame-shadow h-full max-h-[500px] w-full max-w-[50vw] rounded-sm object-cover sm:rounded-none md:max-w-none"
           priority
         />
-      </motion.div>
+      </FadeInSection>
 
-      <motion.div
-        initial="hidden"
-        whileInView="visible"
-        viewport={{ once: true }}
-        variants={staggerContainer}
-      >
-        <motion.h1
-          variants={baseAnimation}
-          className="font-didot mb-8 text-4xl text-gray-800"
-        >
-          Kontakt
-        </motion.h1>
+      <div className="flex flex-col">
+        <FadeInSection delay={100}>
+          <h1 className="font-didot mb-8 text-4xl text-gray-800">Kontakt</h1>
+        </FadeInSection>
 
-        <motion.p
-          variants={baseAnimation}
-          className="mb-6 leading-relaxed text-gray-600"
-        >
-          Har du spørsmål om kunsten min eller er du interessert i å kjøpe eit
-          bilete? Eg set pris på om du tek kontakt via e-post eller Instagram.
-        </motion.p>
+        <FadeInSection delay={150}>
+          <p className="mb-6 leading-relaxed text-gray-600">
+            Har du spørsmål om kunsten min, eller er du interessert i å kjøpe
+            eit bilete? Eg set pris på at du tek kontakt via e-post eller
+            Instagram.
+          </p>
+        </FadeInSection>
 
-        <motion.p
-          variants={baseAnimation}
-          className="mb-10 leading-relaxed text-gray-600"
-        >
-          Om du ynskjer eit personleg maleri eller har andre førespurnader, er
-          eg open for å diskutere moglegheitene.
-        </motion.p>
+        <FadeInSection delay={200}>
+          <p className="mb-10 leading-relaxed text-gray-600">
+            Viss du ynskjer eit personleg måleri eller har andre førespurnader,
+            er eg open for å diskutere moglegheitene.
+          </p>
+        </FadeInSection>
 
         <div className="flex flex-col gap-6 font-serif">
-          <motion.a
-            variants={baseAnimation}
-            href={`mailto:${CONSTANTS.email}`}
-            className="flex items-center gap-4 text-xl text-gray-500 transition-colors duration-300 hover:text-gray-800"
-          >
-            <MailIcon size={24} />
-            <span>{CONSTANTS.email}</span>
-          </motion.a>
-          <motion.div variants={baseAnimation}>
+          <FadeInSection delay={250}>
+            <a
+              href={`mailto:${CONSTANTS.email}`}
+              className="flex items-center gap-4 text-xl text-gray-500 transition-colors duration-300 hover:text-gray-800"
+            >
+              <MailIcon size={24} />
+              <span>{CONSTANTS.email}</span>
+            </a>
+          </FadeInSection>
+
+          <FadeInSection delay={300}>
             <Link
               href={CONSTANTS.instagram}
               target="_blank"
@@ -105,9 +77,9 @@ const ClientContactPage = () => {
               </svg>
               <span>fure.kunst</span>
             </Link>
-          </motion.div>
+          </FadeInSection>
         </div>
-      </motion.div>
+      </div>
     </div>
   )
 }
