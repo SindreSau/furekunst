@@ -1,15 +1,23 @@
 import { getGalleryPosts } from '@/lib/contentful-api'
 import ClientGalleryPage from './client-gallery'
 import PaginationComponent from '@/components/pagination-component'
+import { getMetadata } from '@/lib/metadata'
+import { MousePointerClick } from 'lucide-react'
+import { FadeInSection } from '@/components/fade-in-section'
 
 export const revalidate = 3600
 
 export async function generateMetadata() {
-  return {
-    title: 'Galleri | Furekunst',
-    description: "Elisabeth Fure Schwarz's kunstgalleri",
-    metadataBase: new URL('https://furekunst.no/galleri'),
-  }
+  return getMetadata({
+    title: 'Galleri',
+    description:
+      'Utforsk mi kunstsamling med maleri i akryl, akvarell, og olje, samt teikningar med tusj og penn.',
+    path: 'galleri',
+    ogImage: '/galleri/og-image.jpeg',
+    twitterImage: '/galleri/twitter.jpeg',
+    additionalKeywords:
+      'kunstgalleri, Furekunst galleri, bilder til salgs, kjøp kunst, Elisabeth Fure Schwarz kunst',
+  })
 }
 
 export default async function GalleryPage({
@@ -35,7 +43,13 @@ export default async function GalleryPage({
 
   return (
     <>
-      <h1 className="mb-6 text-3xl font-bold">Galleri</h1>
+      <FadeInSection>
+        <h1 className="mb-1">Galleri</h1>
+        <p className="text-muted-foreground mb-4 flex items-center text-sm">
+          Klikk gjerne på eit bilete for å sjå fleire detaljar
+          <MousePointerClick className="ml-1 w-4 text-gray-500" />
+        </p>
+      </FadeInSection>
       <ClientGalleryPage posts={currentPosts} />
       <PaginationComponent currentPage={currentPage} totalPages={totalPages} />
     </>

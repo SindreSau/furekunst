@@ -2,7 +2,6 @@ import type { NextConfig } from 'next'
 
 const nextConfig: NextConfig = {
   images: {
-    domains: ['images.ctfassets.net'],
     minimumCacheTTL: 60 * 60 * 24 * 7, // 1 week cache
     formats: ['image/avif', 'image/webp'], // Enable next-gen formats
     deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048], // Responsive sizes

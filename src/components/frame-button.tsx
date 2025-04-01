@@ -38,7 +38,7 @@ const FrameButton: React.FC<FrameButtonProps> = ({
   ...props
 }) => {
   const baseStyles =
-    'inline-block px-6 py-3 border-4 border-double border-gray-800 text-gray-800 font-serif font-medium md:hover:px-8 md:hover:py-3 transition-all duration-300 ease-in-out cursor-pointer ring-offset-8'
+    'inline-block px-6 py-3 border-4 border-double border-gray-800 text-gray-800 font-serif font-medium md:hover:px-7 md:hover:py-3 transition-all duration-300 ease-in-out cursor-pointer ring-offset-8'
 
   const content = (
     <>

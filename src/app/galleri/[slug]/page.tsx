@@ -4,6 +4,7 @@ import {
   getGalleryPostBySlug,
   titleToSlug,
 } from '@/lib/contentful-api'
+import { getMetadata } from '@/lib/metadata'
 import { ArtworkDetails } from './artwork-details'
 import { FramedImage } from './framed-image'
 
@@ -25,20 +26,28 @@ export async function generateMetadata({
   const artwork = await getGalleryPostBySlug(resolvedParams.slug)
 
   if (!artwork) {
-    return {
+    return getMetadata({
       title: 'Artwork Not Found',
       description: 'The requested artwork could not be found.',
-      metadataBase: new URL(
-        `https://furekunst.no/galleri/${resolvedParams.slug}`,
-      ),
-    }
+      path: `galleri/${resolvedParams.slug}`,
+    })
   }
 
-  return {
-    title: `${artwork.fields.title} | Furekunst`,
+  // Get the image URL from Contentful
+  // Add image optimization parameters for OG images
+  const imageUrl = `https:${artwork.fields.image.fields.file.url}?w=1200&h=630&fit=fill`
+
+  return getMetadata({
+    title: artwork.fields.title,
     description:
       artwork.fields.description || 'Artwork by Elisabeth Fure Schwarz',
-  }
+    path: `galleri/${resolvedParams.slug}`,
+    ogImage: imageUrl,
+    twitterImage: imageUrl,
+    additionalKeywords:
+      `${artwork.fields.title} || ''}, ${artwork.fields.type || ''}`.trim(),
+    type: 'article',
+  })
 }
 
 export default async function ArtworkPage({
@@ -59,18 +68,17 @@ export default async function ArtworkPage({
   const imageHeight = fields.image.fields.file.details.image?.height || 600
 
   return (
-    <div className="container mx-auto px-4 md:px-0">
+    <div className="mx-auto px-4 md:px-0">
       <div className="grid grid-cols-1 gap-8 md:grid-cols-2">
         {/* Image container */}
-        <div className="relative">
-          <FramedImage
-            imageUrl={imageUrl}
-            alt={fields.title}
-            width={imageWidth}
-            height={imageHeight}
-            hasPassepartout={fields.passepartout}
-          />
-        </div>
+
+        <FramedImage
+          imageUrl={imageUrl}
+          alt={fields.title}
+          width={imageWidth}
+          height={imageHeight}
+          hasPassepartout={fields.passepartout}
+        />
 
         {/* Details container */}
         <ArtworkDetails artwork={artwork} />

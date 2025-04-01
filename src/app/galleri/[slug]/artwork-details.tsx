@@ -9,15 +9,14 @@ export function ArtworkDetails({ artwork }: { artwork: GalleryPostEntry }) {
 
   return (
     <div className="flex max-w-md flex-col">
-      <h1 className="font-didot text-3xl">{title}</h1>
+      <h1 className="pb-1">{title}</h1>
 
-      {description && <p className="leading-relaxed">{description}</p>}
+      {description && <p className="pb-2 leading-relaxed">{description}</p>}
 
-      <div className="space-y-5">
-        <div className="flex items-center gap-2 text-gray-700">
-          <div className=" ">Type: </div>
-          <div className="capitalize">{type}</div>
-        </div>
+      <div className="space-y-2 pt-3">
+        <span className="bg-primary-foreground/70 text-primary/80 font-didot inline-block -translate-x-0.5 rounded-sm px-2">
+          {type}
+        </span>
 
         {/* Size and price for prints */}
         {type === 'print' && sizeAndPrice.length > 0 && (
@@ -41,7 +40,7 @@ export function ArtworkDetails({ artwork }: { artwork: GalleryPostEntry }) {
 
         {/* Size and price for originals */}
         {type === 'original' && (
-          <div className="space-y-1">
+          <div className="space-y-1 border-b border-gray-100 pb-2">
             {fields.size && (
               <div className="flex items-center gap-2">
                 <span className="text-gray-700">Størrelse:</span>

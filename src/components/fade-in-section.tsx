@@ -1,4 +1,3 @@
-// src/components/general/fade-in-section.tsx
 'use client'
 import { useEffect, useRef, useState, ReactNode } from 'react'
 
@@ -20,6 +19,10 @@ export const FadeInSection = ({
   const domRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
+    // Force document body to be scrollable
+    document.body.style.overflow = 'auto'
+    document.body.style.height = 'auto'
+
     // If we're not observing scroll, set visible after a minimal timeout
     // to ensure the initial "hidden" state is applied first
     if (!observeScroll) {
@@ -51,7 +54,11 @@ export const FadeInSection = ({
       className={`${className} transition-all duration-500 ease-out ${
         isVisible ? 'translate-y-0 opacity-100' : 'translate-y-8 opacity-0'
       }`}
-      style={{ transitionDelay: `${delay}ms` }}
+      style={{
+        transitionDelay: `${delay}ms`,
+        // Reserve the space even when not visible to prevent layout shifts
+        minHeight: isVisible ? undefined : '10px',
+      }}
     >
       {children}
     </div>

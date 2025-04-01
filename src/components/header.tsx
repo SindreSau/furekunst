@@ -41,6 +41,11 @@ const Header = () => {
     return () => window.removeEventListener('resize', handleResize)
   }, [isMenuOpen])
 
+  useEffect(() => {
+    document.body.style.overflow = ''
+    document.body.style.height = ''
+  }, [pathname])
+
   return (
     <header className="z-50 w-full">
       <div className="container mx-auto max-w-7xl py-2">
@@ -107,9 +112,9 @@ const Header = () => {
 
       {/* Mobile menu */}
       <nav
-        className={`bg-pastel-dark fixed top-[64px] right-0 bottom-0 left-0 z-40 transform pt-6 ${
+        className={`bg-background fixed top-[64px] right-0 bottom-0 left-0 z-40 transform pt-6 ${
           isMenuOpen ? 'translate-x-0' : 'translate-x-full'
-        } overflow-y-auto transition-transform duration-300 ease-in-out md:hidden`}
+        } overflow-y-auto transition-transform duration-75 ease-in-out md:hidden`}
       >
         <div className="flex h-full flex-col items-center justify-start space-y-8 pt-8 text-2xl shadow-md">
           {pages.map((page, index) => (
@@ -121,7 +126,7 @@ const Header = () => {
                   : 'translate-y-8 opacity-0'
               }`}
               style={{
-                transitionDelay: isMenuOpen ? `${index * 150}ms` : '0ms',
+                transitionDelay: isMenuOpen ? `${index * 120}ms` : '0ms',
               }}
             >
               <Link
