@@ -100,6 +100,12 @@ export default function RootLayout({
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
         />
+        <script
+          defer
+          src="https://umami.sindresau.me/script.js"
+          data-website-id="00015d30-7c72-4dc9-9bdc-74c42e1d5984"
+          data-domains="furekunst.no, www.furekunst.no"
+        ></script>
       </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} ${didot.variable} font-body text-primary flex min-h-screen flex-col antialiased`}

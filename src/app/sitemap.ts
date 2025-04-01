@@ -2,7 +2,20 @@ import type { MetadataRoute } from 'next'
 import { getGalleryPosts, titleToSlug } from '@/lib/contentful-api'
 
 // Cache the result for better performance in development
-let cachedPosts: any[] | null = null
+interface GalleryPostFields {
+  title: string
+}
+
+interface GalleryPostSys {
+  updatedAt: string
+}
+
+interface GalleryPost {
+  fields: GalleryPostFields
+  sys: GalleryPostSys
+}
+
+let cachedPosts: GalleryPost[] | null = null
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   // Get all artworks to generate their URLs
