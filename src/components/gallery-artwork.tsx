@@ -4,7 +4,7 @@ import { useState } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { cn } from '@/lib/utils'
-import { FadeInSection } from '@/components/fade-in-section'
+import { motion } from 'motion/react'
 import { GalleryPostEntry } from '@/types/gallery-post.types'
 
 export function GalleryArtwork({
@@ -27,11 +27,20 @@ export function GalleryArtwork({
     .replace(/[^\w-]+/g, '')
 
   return (
-    <FadeInSection className="mb-4" delay={index * 50} observeScroll={false}>
+    <motion.div
+      className="mb-4"
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      // viewport={{ once: true, margin: '0px 0px 30px 0px' }}
+      transition={{
+        duration: 0.5,
+        delay: index * 0.025,
+      }}
+    >
       <Link href={`/galleri/${slug}`} className="group block">
         <div className="duration-300">
           <div className="relative">
-            {/* Add these two shadow layers BEFORE your figure element */}
+            {/* Shadow layers */}
             <div className="absolute top-0 right-0 bottom-0 left-0 -z-10 translate-x-4 translate-y-4 bg-black/10 blur-md transition-transform duration-300 group-hover:translate-y-5"></div>
             <div className="absolute top-0 right-0 bottom-0 left-0 -z-10 translate-x-2 translate-y-2 bg-black/15 blur-sm transition-transform duration-300 group-hover:translate-y-3"></div>
 
@@ -39,17 +48,20 @@ export function GalleryArtwork({
             {!isLoaded && (
               <div className="absolute inset-0 z-10 flex animate-pulse items-center justify-center bg-gray-100"></div>
             )}
-            <figure
+            <motion.figure
               className={cn(
-                'relative border-[6px] border-slate-800 transition-all duration-300 group-hover:scale-[1.01]',
+                'relative border-[6px] border-slate-800',
                 'shadow-[5px_5px_4px_0px_rgba(0,0,0,0.2)]',
-                'group-hover:shadow-[6px_6px_6px_0px_rgba(0,0,0,0.25)]',
               )}
+              whileHover={{
+                scale: 1.01,
+                boxShadow: '6px 6px 6px 0px rgba(0,0,0,0.25)',
+              }}
             >
-              {/* Frame inner shadow - top edge only - smaller and tighter */}
+              {/* Frame inner shadow - top edge only */}
               <div className="pointer-events-none absolute top-0 right-0 left-0 z-10 h-1 bg-gradient-to-b from-black/30 to-transparent"></div>
 
-              {/* Frame inner shadow - left edge only - smaller and tighter */}
+              {/* Frame inner shadow - left edge only */}
               <div className="pointer-events-none absolute top-0 bottom-0 left-0 z-10 w-1 bg-gradient-to-r from-black/30 to-transparent"></div>
 
               <div
@@ -60,10 +72,10 @@ export function GalleryArtwork({
               >
                 {post.fields.passepartout && (
                   <>
-                    {/* Passepartout inner shadow - top edge only - smaller and tighter */}
+                    {/* Passepartout inner shadow - top edge only */}
                     <div className="pointer-events-none absolute top-3 right-3 left-3 z-10 h-1 bg-gradient-to-b from-black/10 to-transparent"></div>
 
-                    {/* Passepartout inner shadow - left edge only - smaller and tighter */}
+                    {/* Passepartout inner shadow - left edge only */}
                     <div className="pointer-events-none absolute top-3 bottom-3 left-3 z-10 w-1 bg-gradient-to-r from-black/10 to-transparent"></div>
                   </>
                 )}
@@ -82,7 +94,7 @@ export function GalleryArtwork({
                   )}
                 />
               </div>
-            </figure>
+            </motion.figure>
           </div>
           <div className="flex items-center justify-between p-3">
             <h2 className="mt-1 text-xl font-medium">{post.fields.title}</h2>
@@ -94,6 +106,6 @@ export function GalleryArtwork({
           </div>
         </div>
       </Link>
-    </FadeInSection>
+    </motion.div>
   )
 }

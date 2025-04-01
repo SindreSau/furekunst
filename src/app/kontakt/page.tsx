@@ -1,4 +1,3 @@
-import { FadeInSection } from '@/components/fade-in-section'
 import { CONSTANTS } from '@/lib/constants'
 import { getMetadata } from '@/lib/metadata'
 import { MailIcon } from 'lucide-react'

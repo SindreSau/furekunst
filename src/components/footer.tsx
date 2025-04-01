@@ -2,7 +2,6 @@
 'use client'
 
 import { CONSTANTS } from '@/lib/constants'
-import { Info } from 'lucide-react'
 import Link from 'next/link'
 
 const Footer = () => {

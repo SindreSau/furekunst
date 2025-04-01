@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import Image from 'next/image'
 import { cn } from '@/lib/utils'
+import { motion } from 'motion/react'
 
 interface FramedImageProps {
   imageUrl: string
@@ -22,13 +23,12 @@ export function FramedImage({
   const [isLoaded, setIsLoaded] = useState(false)
   const [imageLoading, setImageLoading] = useState(true)
 
-  // Pre-load the image before showing anything
+  // Pre-load the image
   useEffect(() => {
     const img = new window.Image()
     img.src = imageUrl
     img.onload = () => {
       setImageLoading(false)
-      // Small delay to ensure smooth transition
       setTimeout(() => setIsLoaded(true), 50)
     }
   }, [imageUrl])
@@ -52,19 +52,23 @@ export function FramedImage({
   }
 
   return (
-    <div
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: 20 }}
+      transition={{ duration: 0.5, delay: 0.1 }}
       className={cn(
-        'opacity-0 transition-opacity duration-500',
-        isLoaded && 'opacity-100',
+        isLoaded ? 'opacity-100' : 'opacity-0',
+        'transition-opacity duration-300',
       )}
     >
-      {/* Shadow layers from GalleryArtwork */}
-      <div className="absolute top-0 right-0 bottom-0 left-0 -z-10 translate-x-4 translate-y-4 bg-black/10 blur-md transition-transform duration-300"></div>
-      <div className="absolute top-0 right-0 bottom-0 left-0 -z-10 translate-x-2 translate-y-2 bg-black/15 blur-sm transition-transform duration-300"></div>
+      {/* Shadow layers */}
+      <div className="absolute top-0 right-0 bottom-0 left-0 -z-10 translate-x-4 translate-y-4 bg-black/10 blur-md"></div>
+      <div className="absolute top-0 right-0 bottom-0 left-0 -z-10 translate-x-2 translate-y-2 bg-black/15 blur-sm"></div>
 
       <figure
         className={cn(
-          'relative border-6 border-slate-800 transition-all duration-300',
+          'relative border-6 border-slate-800',
           'shadow-[5px_5px_4px_0px_rgba(0,0,0,0.2)]',
         )}
       >
@@ -101,6 +105,6 @@ export function FramedImage({
           />
         </div>
       </figure>
-    </div>
+    </motion.div>
   )
 }
