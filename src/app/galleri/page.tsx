@@ -3,6 +3,7 @@ import ClientGalleryPage from './client-gallery'
 import PaginationComponent from '@/components/pagination-component'
 import { getMetadata } from '@/lib/metadata'
 import { MousePointerClick } from 'lucide-react'
+import { FadeInSection } from '@/components/fade-in-section'
 
 export const revalidate = 3600
 
@@ -42,11 +43,13 @@ export default async function GalleryPage({
 
   return (
     <>
-      <h1 className="mb-1">Galleri</h1>
-      <p className="text-muted-foreground mb-4 flex items-center text-sm">
-        Klikk gjerne på eit bilete for å sjå fleire detaljar
-        <MousePointerClick className="ml-1 w-4 text-gray-500" />
-      </p>
+      <FadeInSection>
+        <h1 className="mb-1">Galleri</h1>
+        <p className="text-muted-foreground mb-4 flex items-center text-sm">
+          Klikk gjerne på eit bilete for å sjå fleire detaljar
+          <MousePointerClick className="ml-1 w-4 text-gray-500" />
+        </p>
+      </FadeInSection>
       <ClientGalleryPage posts={currentPosts} />
       <PaginationComponent currentPage={currentPage} totalPages={totalPages} />
     </>
