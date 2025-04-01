@@ -5,6 +5,7 @@ import FrameButton from '@/components/frame-button'
 import ImageCarousel from '@/components/image-carousel'
 import Separator from '@/components/separator'
 import { getMetadata } from '@/lib/metadata'
+import FadeImage from '@/components/fade-image'
 
 export async function generateMetadata() {
   return getMetadata({
@@ -29,15 +30,18 @@ export default function Home() {
 
   return (
     <>
-      <FadeInSection>
+      <FadeInSection observeScroll={false} initiallyVisible>
         <div className="relative mb-8 md:mb-12">
-          <Image
+          <FadeImage
             src={lazydogs}
             alt="Bilde: Lazy dogs"
             width={1754}
             height={1241}
-            quality={100}
+            quality={80}
             priority
+            sizes="(max-width: 768px) 90vw, (max-width: 1024px) 80vw, 600px"
+            placeholder="blur"
+            blurDataURL="/lazy-dogs-blur.webp"
             className="h-full w-full object-cover"
             id="heroImage"
           />
@@ -58,9 +62,9 @@ export default function Home() {
               alt="Elisabeth Fure Schwarz"
               width={2316}
               height={3088}
+              quality={50}
               sizes="(max-width: 768px) 100vw, (max-width: 1024px) 70vw, 600px"
               className="frame-shadow h-full w-full max-w-[50vw] rounded-sm object-cover sm:rounded-none md:max-w-none"
-              priority
             />
           </div>
         </FadeInSection>
@@ -128,8 +132,9 @@ export default function Home() {
                 <Image
                   src={img}
                   alt={`Image ${index + 1}`}
-                  width={370}
-                  height={370}
+                  width={384}
+                  height={536}
+                  quality={60}
                   className="frame-shadow h-full w-full object-cover"
                   loading="lazy"
                 />

@@ -89,7 +89,7 @@ export default function ImageCarousel({ images }: ImageCarouselProps) {
                   alt={`Image ${index + 1}`}
                   width={600}
                   height={400}
-                  quality={65}
+                  quality={50}
                   className="w-full object-cover"
                 />
               </div>

@@ -6,32 +6,32 @@ interface FadeInSectionProps {
   delay?: number
   className?: string
   observeScroll?: boolean // Control whether to use the IntersectionObserver
+  initiallyVisible?: boolean // New prop to force fade-in on mount
 }
 
 export const FadeInSection = ({
   children,
   delay = 0,
   className = '',
-  observeScroll = true, // Default to using scroll observation
+  observeScroll = true,
+  initiallyVisible = false,
 }: FadeInSectionProps) => {
-  // Start as not visible regardless of observeScroll setting
+  // Always start as hidden so the animation can occur
   const [isVisible, setVisible] = useState<boolean>(false)
   const domRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
-    // Force document body to be scrollable
+    // Always allow the image to load even if the animation delays overall visibility.
     document.body.style.overflow = 'auto'
     document.body.style.height = 'auto'
 
-    // If we're not observing scroll, set visible after a minimal timeout
-    // to ensure the initial "hidden" state is applied first
-    if (!observeScroll) {
+    // If we should show immediately (but still animate), schedule the fade-in.
+    if (initiallyVisible || !observeScroll) {
       const timer = setTimeout(() => {
         setVisible(true)
-      }, 10) // Small delay to ensure component mounts with hidden state first
+      }, 10) // slight delay to allow the browser to paint the initial state
       return () => clearTimeout(timer)
     } else if (domRef.current) {
-      // Normal intersection observer behavior
       const currentRef = domRef.current
       const observer = new IntersectionObserver(entries => {
         if (entries[0].isIntersecting) {
@@ -46,17 +46,16 @@ export const FadeInSection = ({
         }
       }
     }
-  }, [observeScroll])
+  }, [observeScroll, initiallyVisible])
 
   return (
     <div
       ref={domRef}
       className={`${className} transition-all duration-500 ease-out ${
-        isVisible ? 'translate-y-0 opacity-100' : 'translate-y-8 opacity-0'
+        isVisible ? 'translate-y-0 opacity-100' : 'translate-y-8 opacity-[0.01]'
       }`}
       style={{
         transitionDelay: `${delay}ms`,
-        // Reserve the space even when not visible to prevent layout shifts
         minHeight: isVisible ? undefined : '10px',
       }}
     >
