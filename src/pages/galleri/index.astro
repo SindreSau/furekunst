@@ -1,0 +1,21 @@
+---
+// FK-018/FK-024: on-demand gallery index rendering ALL posts (latest-first via
+// the loader's `order: '-sys.publishedAt'`). Filtering is client-side — the
+// filter chips hide/show cards without navigation.
+import { getLiveCollection } from 'astro:content'
+import GalleryPage from '../../components/GalleryPage.astro'
+
+const { entries, error, cacheHint } = await getLiveCollection('galleryPosts')
+
+if (Astro.cache.enabled) {
+  if (cacheHint) Astro.cache.set(cacheHint)
+  Astro.cache.set({ maxAge: 3600 })
+}
+
+if (error) {
+  console.error(`Failed to load gallery posts: ${error.message}`)
+  Astro.response.status = 500
+}
+---
+
+<GalleryPage posts={entries ?? []} />

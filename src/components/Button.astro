@@ -1,0 +1,58 @@
+---
+// Button — single button/link component (FK-030): frame CTA + gallery filter
+// chips consolidated. `type="link"` renders an <a>, `type="button"` a <button>.
+// variant="frame" — home-page CTA: double border, grows on hover (md+).
+// variant="filter" — gallery chip: blackish double border; hover = light gray
+// wash + grow; selected = purple border only (aria-pressed).
+interface Props {
+  type?: 'link' | 'button'
+  variant?: 'frame' | 'filter'
+  href?: string
+  /** type="link": add data-astro-prefetch */
+  prefetch?: boolean
+  /** variant="filter": chip key → data-filter (chip toggle JS) */
+  filterKey?: string
+  /** variant="filter": initial pressed state → aria-pressed */
+  pressed?: boolean
+  class?: string
+}
+
+const {
+  type = 'button',
+  variant = 'frame',
+  href = '#',
+  prefetch = false,
+  filterKey,
+  pressed = false,
+  class: className = '',
+} = Astro.props
+
+const variantStyles: Record<'frame' | 'filter', string> = {
+  frame:
+    'inline-block border-4 border-double border-ink px-6 py-3 font-serif font-medium text-ink transition-all duration-300 ease-in-out cursor-pointer ring-offset-8 md:hover:px-7',
+  filter:
+    'inline-flex items-center justify-center border-4 border-double border-ink px-4 py-1 text-center text-sm font-medium text-ink ring-offset-4 transition-all duration-300 ease-in-out cursor-pointer md:hover:px-5 hover:bg-ink-soft aria-pressed:border-accent aria-pressed:bg-accent/10',
+}
+
+const chipAttrs =
+  variant === 'filter'
+    ? ({
+        'data-filter': filterKey,
+        'aria-pressed': (pressed ? 'true' : 'false') as 'true' | 'false',
+      } as const)
+    : {}
+
+const cls = `${variantStyles[variant]} ${className}`.trim()
+---
+
+{
+  type === 'link' ? (
+    <a href={href} class={cls} {...(prefetch ? { 'data-astro-prefetch': '' } : {})} {...chipAttrs}>
+      <slot />
+    </a>
+  ) : (
+    <button type="button" class={cls} {...chipAttrs}>
+      <slot />
+    </button>
+  )
+}

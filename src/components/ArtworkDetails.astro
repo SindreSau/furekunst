@@ -1,0 +1,74 @@
+---
+import type { LiveDataEntry } from 'astro'
+import { priceHint } from '../lib/price'
+import type { GalleryPostData } from '../lib/gallery'
+
+interface Props {
+  post: LiveDataEntry<GalleryPostData>
+}
+
+const { post } = Astro.props
+const { data } = post
+const typeLabel = data.type === 'original' ? 'Original' : 'Print'
+const price = priceHint(data)
+---
+
+<div class="flex max-w-md flex-col">
+  <h1 class="pb-1">{data.title}</h1>
+
+  {data.description && <p class="pb-2 leading-relaxed">{data.description}</p>}
+
+  <div class="space-y-2 pt-3">
+    <span class="inline-block rounded-sm bg-primary-foreground/70 px-2 text-primary/80 font-didot">
+      {typeLabel}
+    </span>
+
+    {price && <p class="text-sm text-muted-foreground">{price}</p>}
+
+    {data.type === 'print' && data.sizeAndPrice.length > 0 && (
+      <div>
+        <span class="mb-4 block text-gray-700">Storleikar og prisar</span>
+        <div class="space-y-3">
+          {data.sizeAndPrice.map(item => (
+            <div class="flex items-center justify-between border-b border-gray-100 pb-2" data-price-row>
+              <span>{item.size}</span>
+              <span>{item.price > 0 ? `kr ${item.price},-` : 'Ikkje tilgjengeleg'}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+    )}
+
+    {data.type === 'original' && (
+      <div class="space-y-1 border-b border-gray-100 pb-2">
+        {data.size && (
+          <div class="flex items-center gap-2">
+            <span class="text-gray-700">Storleik:</span>
+            <span>{data.size}</span>
+          </div>
+        )}
+      </div>
+    )}
+
+    <div class="mt-6">
+      <p class="leading-relaxed text-gray-700">
+        Interessert i dette verket? Ta kontakt på{' '}
+        <a
+          href="mailto:fure.kunst@gmail.com"
+          class="underline decoration-red-100 underline-offset-2 transition-colors hover:text-violet-800"
+        >
+          fure.kunst@gmail.com
+        </a>{' '}
+        eller via{' '}
+        <a
+          href="https://www.instagram.com/fure.kunst"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="underline decoration-red-100 underline-offset-2 transition-colors hover:text-violet-800"
+        >
+          Instagram
+        </a>.
+      </p>
+    </div>
+  </div>
+</div>

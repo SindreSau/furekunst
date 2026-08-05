@@ -1,0 +1,115 @@
+---
+export const prerender = true
+
+import { Image } from 'astro:assets'
+import MainLayout from '../layouts/MainLayout.astro'
+import FadeInSection from '../components/FadeInSection.astro'
+import profilbilde from '../assets/img/profilbilde.jpeg'
+import { CONSTANTS } from '../lib/constants'
+
+const contactPageStructuredData = {
+  '@context': 'https://schema.org',
+  '@type': 'ContactPage',
+  name: 'Kontakt | Furekunst',
+  url: 'https://furekunst.no/kontakt',
+  email: CONSTANTS.email,
+  sameAs: [CONSTANTS.instagram, CONSTANTS.facebook],
+}
+---
+
+<MainLayout
+  title="Kontakt | Furekunst"
+  description="Ta kontakt med Elisabeth Fure Schwarz for spørsmål om kjøp av kunst eller bestilling av personlege bilete. Furekunst tilbyr originale måleri, akvarell og print."
+>
+  <Fragment slot="head">
+    <script
+      is:inline
+      type="application/ld+json"
+      set:html={JSON.stringify(contactPageStructuredData)}
+    ></script>
+  </Fragment>
+
+  <div class="mx-auto flex max-w-4xl flex-col-reverse items-center gap-10 md:gap-6 lg:flex-row lg:gap-8">
+    <FadeInSection className="overflow-hidden rounded-md lg:rounded-none">
+      <Image
+        src={profilbilde}
+        alt="Elisabeth Fure Schwarz"
+        width={800}
+        quality={70}
+        loading="eager"
+        fetchpriority="high"
+        sizes="(max-width: 768px) 100vw, (max-width: 1024px) 70vw, 600px"
+        class="frame-shadow h-full max-h-[500px] w-full max-w-[50vw] rounded-sm object-cover sm:rounded-none md:max-w-none"
+      />
+    </FadeInSection>
+
+    <div class="flex flex-col">
+      <FadeInSection delay={70}>
+        <h1 class="font-didot mb-8 text-4xl text-gray-800">Kontakt</h1>
+      </FadeInSection>
+
+      <FadeInSection delay={100}>
+        <p class="mb-6 leading-relaxed text-gray-600">
+          Har du spørsmål om kunsten min, eller er du interessert i å kjøpe eit
+          bilete? Eg set pris på at du tek kontakt via e-post eller Instagram.
+        </p>
+      </FadeInSection>
+
+      <FadeInSection delay={125}>
+        <p class="mb-10 leading-relaxed text-gray-600">
+          Viss du ynskjer eit personleg måleri eller har andre førespurnader,
+          er eg open for å diskutere moglegheitene.
+        </p>
+      </FadeInSection>
+
+      <div class="flex w-min flex-col gap-6 font-serif">
+          <FadeInSection delay={160}>
+            <a
+              href={`mailto:${CONSTANTS.email}`}
+              class="flex items-center gap-4 text-xl text-gray-500 transition-colors duration-300 hover:text-gray-800"
+            >
+              <svg
+                aria-hidden="true"
+                class="h-6 w-6"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <rect width="20" height="16" x="2" y="4" rx="2"></rect>
+                <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"></path>
+              </svg>
+              <span>{CONSTANTS.email}</span>
+            </a>
+          </FadeInSection>
+
+          <FadeInSection delay={200}>
+            <a
+              href={CONSTANTS.instagram}
+              target="_blank"
+              rel="noopener noreferrer"
+              class="flex items-center gap-4 text-xl text-gray-500 transition-colors duration-300 hover:text-gray-800"
+            >
+              <svg
+                aria-hidden="true"
+                class="h-6 w-6"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <rect width="20" height="20" x="2" y="2" rx="5"></rect>
+                <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path>
+                <line x1="17.5" x2="17.51" y1="6.5" y2="6.5"></line>
+              </svg>
+              <span>fure.kunst</span>
+            </a>
+          </FadeInSection>
+        </div>
+      </div>
+  </div>
+</MainLayout>

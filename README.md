@@ -1,36 +1,66 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Furekunst
 
-## Getting Started
+Kunstnar Elisabeth Fure Schwarz sine måleri og kunstverk.
 
-First, run the development server:
+Personal art portfolio built with [Astro](https://astro.build) (7.x), styled with
+Tailwind CSS v4 (via `@tailwindcss/vite`). Content is managed in
+[Contentful](https://www.contentful.com) and loaded **at request time** through
+an Astro 7 live content collection (`src/live.config.ts` +
+`src/loaders/contentful-gallery-live.ts`), with Vercel ISR caching (1 h) — CMS
+edits appear without rebuilds. `/kontakt` and the 404 stay static; the sitemap
+is served from the live endpoint `/sitemap.xml`. Deployed to Vercel
+(`@astrojs/vercel`).
+
+## Getting started
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
+pnpm install
 pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open `http://localhost:4321`.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Commands
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+| Command              | Description                                          |
+| -------------------- | ---------------------------------------------------- |
+| `pnpm dev`           | Start dev server (preview API — drafts visible)      |
+| `pnpm build`         | Type-check (`astro check`) + production build        |
+| `pnpm preview`       | Preview the production build locally                 |
+| `pnpm check`         | Run `astro check`                                    |
+| `pnpm format`        | Format with Prettier                                 |
+| `pnpm perf:run`      | Lighthouse CI collect + assert against local preview |
+| `pnpm perf:baseline` | Lighthouse CI mobile run against prod furekunst.no   |
 
-## Learn More
+## Environment variables
 
-To learn more about Next.js, take a look at the following resources:
+Copy `.env.example` to `.env` and fill in your Contentful credentials:
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+| Variable                    | Description                            |
+| --------------------------- | -------------------------------------- |
+| `CONTENTFUL_SPACE_ID`       | Contentful space ID                    |
+| `CONTENTFUL_DELIVERY_TOKEN` | Delivery API token (published entries) |
+| `CONTENTFUL_PREVIEW_TOKEN`  | Preview API token (draft entries)      |
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Dev mode uses the preview API, so unpublished drafts are visible locally; builds
+use the delivery API and only ship published entries.
 
-## Deploy on Vercel
+## Adding an artwork
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+1. In Contentful, create a new entry of content type `galleryPost`.
+2. Add the title and an image asset (the image asset is required — entries
+   without a usable `file.url` are skipped at build time).
+3. Rebuild and redeploy (or just refresh the dev server).
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Image optimization
+
+- Local images under `src/assets/img/` are optimized at build time by Astro's
+  asset pipeline.
+- Contentful-hosted images (`images.ctfassets.net`) are processed via
+  `image.remotePatterns` in `astro.config.mjs`.
+
+## Measurement budget
+
+Performance targets are enforced by Lighthouse CI (`lighthouserc.cjs`):
+performance score ≥ 0.85, LCP ≤ 3000 ms, CLS ≤ 0.1, TBT ≤ 200 ms, total bytes
+≤ 2.5 MB. Baseline and after-migration numbers are tracked in `docs/metrics.md`.

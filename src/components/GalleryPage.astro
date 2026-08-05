@@ -1,0 +1,174 @@
+---
+import type { LiveDataEntry } from 'astro'
+import { getImage } from 'astro:assets'
+import MainLayout from '../layouts/MainLayout.astro'
+import GalleryPost from './GalleryPost.astro'
+import Button from './Button.astro'
+import type { GalleryFilter, GalleryPostData } from '../lib/gallery'
+
+interface Props {
+  posts: LiveDataEntry<GalleryPostData>[]
+}
+
+const { posts } = Astro.props
+
+const filterChips: { label: string; key: GalleryFilter }[] = [
+  { label: 'Alle', key: 'all' },
+  { label: 'Original', key: 'original' },
+  { label: 'Print', key: 'print' },
+]
+
+// Preload the above-fold artwork images with the EXACT same optimized URL as
+// the cards' <img src> (width 700 → snapped to 750 by Vercel): the view-
+// transition snapshot of the gallery captures the page at first render —
+// before images load, the snapshot shows blank frames and every card blinks
+// back in after the transition. The preloads also warm the URL the detail
+// page uses for the morph (FK-018). Kept in sync with the eager cards in
+// GalleryPost (index < 4) — preloading further rows would waste bandwidth on
+// below-fold images (FK-030).
+const PRELOAD_IMAGES = 4
+const preloadUrls = (
+  await Promise.all(
+    posts.slice(0, PRELOAD_IMAGES).map(async post => {
+      const image = post.data.image
+      if (!image) return null
+      const width = Math.min(image.width, 700)
+      const optimized = await getImage({
+        src: image.url,
+        width,
+        height: Math.max(1, Math.round((image.height / image.width) * width)),
+        quality: 55,
+      })
+      return optimized.src
+    }),
+  )
+).filter((src): src is string => Boolean(src))
+---
+
+<MainLayout
+  title="Galleri - Kunstverk til sals | Furekunst"
+  description="Utforsk kunstsamlinga til Elisabeth Fure Schwarz med måleri i akryl, akvarell, og olje, samt teikningar med tusj og penn."
+  ogImage="/galleri/open-graph.jpeg"
+>
+  <Fragment slot="head">
+    {preloadUrls.map((url, i) => (
+      <link rel="preload" as="image" href={url} fetchpriority={i < 2 ? 'high' : 'auto'} />
+    ))}
+  </Fragment>
+
+  <section aria-labelledby="gallery-heading">
+    <!-- FK-024: on sm+ the filter chips share this header row, right-aligned
+         via flex, instead of a full-width row below the hint — saves vertical
+         space when horizontal space is available. Mobile stacks them below.
+         Filtering is client-side (all posts are rendered): chips are buttons,
+         clicking one hides/shows cards without any navigation. -->
+    <header
+      class="mb-8 flex flex-col gap-4 md:mb-10 sm:flex-row sm:items-end sm:justify-between"
+    >
+      <div>
+        <h1 id="gallery-heading" class="mb-2">Galleri</h1>
+        <p class="flex items-center gap-1 text-sm text-muted-foreground">
+          Klikk gjerne på eit bilete for å sjå fleire detaljar
+          <svg
+            aria-hidden="true"
+            viewBox="0 0 24 24"
+            class="h-4 w-4 text-gray-500"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <path d="M14 4.1 12 6"></path>
+            <path d="m5.1 8-2.9-.8"></path>
+            <path d="m6 12-1.9 2"></path>
+            <path d="M7.2 2.2 8 5.1"></path>
+            <path d="M9.037 9.69a.498.498 0 0 1 .653-.653l11 4.5a.5.5 0 0 1-.074.949l-4.349 1.041a1 1 0 0 0-.74.739l-1.04 4.35a.5.5 0 0 1-.95.074z"></path>
+          </svg>
+        </p>
+      </div>
+      <div
+        class="flex flex-wrap items-center gap-2"
+        role="group"
+        aria-label="Filtrer galleriet"
+      >
+        {filterChips.map(chip => (
+          <Button
+            type="button"
+            variant="filter"
+            filterKey={chip.key}
+            pressed={chip.key === 'all'}
+          >
+            {chip.label}
+          </Button>
+        ))}
+      </div>
+    </header>
+
+    <div class="gallery-masonry columns-1 gap-x-4 sm:columns-2 sm:gap-x-5 lg:columns-3 lg:gap-x-6">
+      {posts.map((post, index) => (
+        <GalleryPost post={post} index={index} />
+      ))}
+    </div>
+  </section>
+</MainLayout>
+
+<script>
+  // Client-side filter (FK-024 rework): all posts are server-rendered; the
+  // chips toggle which cards are visible — no navigation. The swap runs as a
+  // same-document view transition: the cards' `art-*` view-transition names
+  // (from transition:name on the frames) make the cards that stay morph to
+  // their new masonry positions, the ones leaving fade out, the ones
+  // appearing fade in. Event delegation on document: survives
+  // <ClientRouter /> navigations, no astro:page-load re-binding needed.
+  let currentFilter: string | null = null
+  // A fresh page (initial load or <ClientRouter /> navigation) always renders
+  // "Alle" as active — forget any filter chosen on the previous page.
+  document.addEventListener('astro:page-load', () => {
+    currentFilter = null
+  })
+  document.addEventListener('click', event => {
+    const chip = (event.target as Element | null)?.closest?.('[data-filter]')
+    if (!chip) return
+    const filter = chip.getAttribute('data-filter') ?? 'all'
+    if (filter === currentFilter) return
+    currentFilter = filter
+
+    for (const other of document.querySelectorAll('[data-filter]')) {
+      other.setAttribute('aria-pressed', other === chip ? 'true' : 'false')
+    }
+
+    const setVisible = () => {
+      for (const card of document.querySelectorAll<HTMLElement>('[data-filter-card]')) {
+        card.hidden = !(filter === 'all' || card.dataset.filterCard === filter)
+      }
+    }
+
+    const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    const startVT = (document as Document & {
+      startViewTransition?: (cb: () => void) => unknown
+    }).startViewTransition
+    if (!reduce && startVT) {
+      startVT.call(document, setVisible)
+    } else {
+      setVisible()
+    }
+  })
+</script>
+
+<style>
+  .gallery-masonry {
+    column-fill: balance;
+  }
+</style>
+
+<style is:global>
+  /* Slower fade-up for the gallery cards so the reveal is clearly visible
+     as cards enter the bottom of the screen (the default 300ms is over
+     before the eye registers it). Unscoped: the cards live inside the
+     GalleryPost/FadeInSection child components, so a scoped selector would
+     not match. */
+  .gallery-masonry [data-reveal] {
+    transition-duration: 500ms;
+  }
+</style>

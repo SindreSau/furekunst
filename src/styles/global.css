@@ -1,0 +1,219 @@
+@import 'tailwindcss';
+
+/*
+ * Self-hosted Geist latin subset (Norwegian text only) — replaces fontsource's
+ * `@import '@fontsource-variable/geist/wght.css'`, which hardcoded
+ * font-display: swap and declared 6 subsets. With font-display: optional the
+ * browser commits at first paint to EITHER the real font (preloaded → warm
+ * navigations) OR the fallback (cold slow loads) — it never swaps, so no
+ * navigation font flash. Non-latin chars (e.g. Cyrillic) fall back to Arial —
+ * acceptable for this site.
+ */
+@font-face {
+  font-family: 'Geist Variable';
+  font-style: normal;
+  font-display: optional;
+  font-weight: 100 900;
+  src: url('../assets/fonts/woff2/geist-latin-wght-normal.woff2')
+    format('woff2-variations');
+  unicode-range:
+    U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC,
+    U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212,
+    U+2215, U+FEFF, U+FFFD;
+}
+
+/*
+ * Furekunst design tokens + global styles.
+ * Ported from Next.js src/app/globals.css (FK-004).
+ * Fixes applied:
+ *  - B6: body font was broken (undefined --font-geist-sans). Body now uses
+ *        the self-hosted Geist family; headings use Didot.
+ *  - B13: --primary-foreground had baked-in alpha (#e9dbf49c); now solid.
+ *  - Dropped unused sidebar/chart/dark tokens and tailwindcss-animate plugin.
+ */
+
+/* Didot display font (self-hosted WOFF2, converted from OTF in FK-004;
+   subsetting/preload tuning is FK-016). font-display: optional = never swap →
+   no navigation font flash; preloads make warm navigations render the real
+   font at first paint; cold slow loads show the fallback instead of flashing. */
+@font-face {
+  font-family: 'Didot';
+  src: url('../assets/fonts/woff2/Didot.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: optional;
+}
+@font-face {
+  font-family: 'Didot';
+  src: url('../assets/fonts/woff2/Didot-Italic.woff2') format('woff2');
+  font-weight: 400;
+  font-style: italic;
+  font-display: optional;
+}
+@font-face {
+  font-family: 'Didot';
+  src: url('../assets/fonts/woff2/Didot-Bold.woff2') format('woff2');
+  font-weight: 700;
+  font-style: normal;
+  font-display: optional;
+}
+@font-face {
+  font-family: 'Didot';
+  src: url('../assets/fonts/woff2/Didot-Title.woff2') format('woff2');
+  font-weight: 800;
+  font-style: normal;
+  font-display: optional;
+}
+
+/*
+ * Token set (FK-021): trimmed to what's actually consumed.
+ * Fonts: --font-didot (headings), --font-serif, --font-body (Geist).
+ * Colors: pastel paper pair (--color-pastel / --color-pastel-dark; a third
+ * lighter paper tone was never referenced and is dropped), primary ink +
+ * primary-foreground (hex → oklch, values unchanged), background/foreground,
+ * muted-foreground (gallery meta), border, ring.
+ * Dead shadcn leftovers removed: the neutral, accent, danger and input
+ * aliases, plus the sans font token. --ring stays a violet in --primary's hue family; it is
+ * effectively unused (the focus ring draws --primary) but kept for the
+ * `* { border-border outline-ring/50 }` universal selector.
+ */
+@theme {
+  --font-didot: 'Didot', Georgia, 'Times New Roman', serif;
+  --font-serif: Georgia, 'Times New Roman', serif;
+  --font-body: 'Geist Variable', Arial, sans-serif;
+
+  --color-pastel: oklch(1 0.004 105);
+  --color-pastel-dark: oklch(0.98 0 0);
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-ink: var(--ink);
+  --color-ink-strong: var(--ink-strong);
+  --color-ink-mid: var(--ink-mid);
+  --color-ink-faint: var(--ink-faint);
+  --color-ink-line: var(--ink-line);
+  --color-ink-soft: var(--ink-soft);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-border: var(--border);
+  --color-ring: var(--ring);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+}
+
+:root {
+  --radius: 0.625rem;
+  --background: oklch(1 0 0);
+  --foreground: oklch(0.145 0 0);
+  --primary: oklch(0.307 0.066 310.646);
+  --primary-foreground: oklch(0.91 0.037 310.467);
+  /* Ink ramp (FK-030): the near-black gray family used across buttons, the
+     header and nav — previously hardcoded Tailwind gray-800/900/600/500/300/
+     100 classes, now tokens so all colors come from variables. */
+  --ink: oklch(0.278 0.033 256.848);
+  --ink-strong: oklch(0.21 0.034 264.665);
+  --ink-mid: oklch(0.446 0.03 256.802);
+  --ink-faint: oklch(0.551 0.027 264.364);
+  --ink-line: oklch(0.869 0.022 252.894);
+  --ink-soft: oklch(0.967 0.003 264.542);
+  /* Accent (FK-030): medium, low-chroma violet — the selected filter chip
+     border/tint, the nav underline, and the FUREKUNST logo. Distinct from the
+     near-black --ink and the near-black --primary. */
+  --accent: oklch(0.55 0.07 312);
+  --muted-foreground: oklch(0.556 0 0);
+  --border: oklch(0.922 0 0);
+  /* Effectively unused (focus ring draws --primary); kept for the universal
+     `* { border-border outline-ring/50 }` selector. FK-021. */
+  --ring: oklch(0.55 0.12 312);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-pastel font-body text-foreground antialiased;
+  }
+  /* html gets the same opaque pastel so the root snapshot is never
+     transparent — WebKit can paint the view-transition root snapshot
+     without the propagated body background (the gray-flash mechanism).
+     Same color as body, so visually a no-op; overscroll/rubber-band
+     also gets the pastel. */
+  html {
+    @apply bg-pastel;
+  }
+  h1 {
+    @apply font-didot text-2xl text-gray-900 md:text-3xl;
+  }
+  h2 {
+    @apply font-didot text-xl text-gray-900 md:text-2xl;
+  }
+
+  p {
+    @apply text-[1.0625rem] leading-relaxed text-gray-700;
+  }
+
+  a {
+    @apply transition-colors duration-300;
+  }
+}
+
+/* Visible keyboard focus ring everywhere (FK-029). GalleryPost/zoom buttons
+   override with their own focus-visible classes where needed. */
+:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
+@utility container {
+  margin-inline: auto;
+  padding-inline: 2rem;
+}
+
+/* Scroll lock while the mobile menu is open (no body-style hacks — B9) */
+html.menu-open {
+  overflow: hidden;
+}
+
+html.zoom-open {
+  overflow: hidden;
+}
+
+/* B5: `frame-shadow` was used but never defined in the Next.js site.
+   Same offset shadow language as the gallery frame cards. */
+@utility frame-shadow {
+  box-shadow: 5px 5px 4px 0px rgba(0, 0, 0, 0.2);
+}
+
+/*
+ * View transitions run through Astro's <ClientRouter /> on all devices:
+ * the <html> root gets transition:animate="none" (instant swap — no
+ * whole-page cross-fade, which washes gray over artwork-heavy pages), the
+ * header/footer persist, and only the named artwork frames morph
+ * (transition:name on Frame.astro). No native @view-transition rule: with
+ * the router active it would be a second, competing mechanism.
+ */
+
+/*
+ * Reduced-motion users get an instant, flash-free swap. The pseudo-element
+ * animations are killed and the named frame captures are disabled so no
+ * morph runs.
+ */
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-group(*),
+  ::view-transition-old(*),
+  ::view-transition-new(*) {
+    animation: none !important;
+    mix-blend-mode: normal !important;
+  }
+  /* Override Astro's inline view-transition-name for reduced motion */
+  [data-astro-transition-scope] {
+    view-transition-name: none !important;
+  }
+}

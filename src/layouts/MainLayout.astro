@@ -1,0 +1,114 @@
+---
+import { ClientRouter } from 'astro:transitions'
+import Header from '../components/header.astro'
+import Footer from '../components/footer.astro'
+import { canonicalUrl, renderOgTags, siteConfig } from '../lib/seo'
+import '../styles/global.css'
+// Asset imports resolve to the same hashed URLs the built CSS references, so
+// the preload dedupes with the @font-face download (no double fetch).
+import didotWoff from '../assets/fonts/woff2/Didot.woff2'
+import geistLatinWoff from '../assets/fonts/woff2/geist-latin-wght-normal.woff2'
+
+interface Props {
+  title?: string
+  description?: string
+  ogImage?: string
+  canonical?: string
+  noindex?: boolean
+  type?: string
+}
+
+const {
+  title = siteConfig.name,
+  description = siteConfig.description,
+  ogImage,
+  canonical,
+  noindex = false,
+  type,
+} = Astro.props
+
+// Canonical + OG tags (FK-027). `canonical` may be a path ('/galleri/x') or a
+// full URL; defaults to the current page's pathname.
+const canonicalHref = canonicalUrl(canonical ?? Astro.url.pathname)
+const seoTags = renderOgTags({
+  title,
+  description,
+  url: canonicalHref,
+  ogImage,
+  type,
+})
+
+// JSON-LD Person (ported from Next root layout)
+const personJsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'Person',
+  name: 'Elisabeth Fure Schwarz',
+  jobTitle: 'Kunstnar',
+  url: 'https://furekunst.no',
+  sameAs: [
+    'https://www.instagram.com/fure.kunst',
+    'https://www.facebook.com/fure.kunst/',
+  ],
+  makesOffer: {
+    '@type': 'Offer',
+    itemOffered: {
+      '@type': 'CreativeWork',
+      name: 'Måleri og kunstbilete',
+    },
+  },
+}
+---
+
+<!doctype html>
+<html lang="nn" class="light" transition:animate="none">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <!-- Preload the two faces every page paints with (Didot regular + Geist
+         latin), so warm navigations fetch them from cache in the first frame
+         instead of discovering them via @font-face. The faces use
+         font-display: optional — the browser commits at first paint to the
+         real font when it's available (preload + cache = warm navigation) or
+         to the fallback (cold slow load), never swapping, so no flash either
+         way. crossorigin is required for font fetches; the other Didot faces
+         (Bold/Italic/Title) are unused and load on demand if ever referenced. -->
+    <link rel="preload" href={didotWoff} as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href={geistLatinWoff} as="font" type="font/woff2" crossorigin />
+    <meta name="theme-color" content="#fffff9" />
+    <meta name="generator" content={Astro.generator} />
+    <link rel="sitemap" href="/sitemap.xml" />
+    <link rel="canonical" href={canonicalHref} />
+    <ClientRouter />
+    <slot name="head" />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    {noindex && <meta name="robots" content="noindex" />}
+    {seoTags.map(tag => <meta {...tag.attrs} />)}
+    <script is:inline type="application/ld+json" set:html={JSON.stringify(personJsonLd)} />
+    <script
+      is:inline
+      defer
+      src="https://umami.sindresau.me/script.js"
+      data-website-id="00015d30-7c72-4dc9-9bdc-74c42e1d5984"
+      data-domains="furekunst.no, www.furekunst.no"
+    ></script>
+  </head>
+  <!-- iOS WebKit resolves vh to the large viewport (URL bar hidden) even while
+       the bar is visible, so min-h-screen (100vh) makes the body taller than the
+       visible viewport and adds scrollable space below the footer. dvh tracks
+       the visible viewport incl. the URL bar (FK-024/iOS fix). Pre-iOS-15.4
+       falls back to no min-height, which is harmless. -->
+  <body class="font-body text-primary flex min-h-dvh flex-col antialiased">
+    <Header />
+    <!-- No transition directive on <main>: it belongs to the root snapshot, so
+         navigation swaps the content instantly while only the named artwork
+         frames morph. A transition:animate on <main> cross-fades the whole
+         content area — on artwork-heavy pages that mid-blend reads as a gray
+         flash on mobile. No z-index either: main must not create a stacking
+         context, or the zoom dialog's fixed z-[100] gets trapped inside it. -->
+    <main id="innhold" class="container mx-auto mt-8 max-w-7xl flex-grow">
+      <slot />
+    </main>
+    <Footer transition:persist />
+  </body>
+</html>

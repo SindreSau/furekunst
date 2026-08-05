@@ -1,13 +1,16 @@
-import { createClient } from 'contentful'
+import { createClient, type ContentfulClientApi } from 'contentful'
 
-export const contentfulClient = createClient({
-  space: process.env.CONTENTFUL_SPACE_ID as string,
-  accessToken:
-    process.env.NODE_ENV === 'development'
-      ? (process.env.CONTENTFUL_PREVIEW_TOKEN as string)
-      : (process.env.CONTENTFUL_DELIVERY_TOKEN as string),
-  host:
-    process.env.NODE_ENV === 'development'
-      ? 'preview.contentful.com'
-      : 'cdn.contentful.com',
-})
+// Contentful client factory (FK-006).
+// Dev/preview mode uses the preview API + preview token so draft entries show
+// up locally; builds use the delivery API + token (published entries only).
+// Astro exposes all .env vars server-side via `import.meta.env`.
+export function createContentfulClient(): ContentfulClientApi<undefined> {
+  const isPreview = import.meta.env.DEV
+  return createClient({
+    space: import.meta.env.CONTENTFUL_SPACE_ID,
+    accessToken: isPreview
+      ? import.meta.env.CONTENTFUL_PREVIEW_TOKEN
+      : import.meta.env.CONTENTFUL_DELIVERY_TOKEN,
+    host: isPreview ? 'preview.contentful.com' : 'cdn.contentful.com',
+  })
+}

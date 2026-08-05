@@ -1,0 +1,98 @@
+---
+import type { LiveDataEntry } from 'astro'
+import { Image } from 'astro:assets'
+import FadeInSection from './FadeInSection.astro'
+import Frame from './Frame.astro'
+import { priceHint } from '../lib/price'
+import type { GalleryPostData } from '../lib/gallery'
+
+interface Props {
+  post: LiveDataEntry<GalleryPostData>
+  index: number
+}
+
+const { post, index } = Astro.props
+const { data } = post
+const image = data.image
+const price = priceHint(data)
+
+// Keep gallery candidates close to their display size while preserving each
+// artwork's aspect ratio. Only Vercel-valid widths survive the adapter's
+// filter (sharedValidateOptions): [640, 750, 828, 1080, 1200, 1920, ...].
+// `imageWidth` (= 700 → snapped to 750 by Vercel) must stay the src: the
+// gallery → detail morph (FK-018) requires the card src URL to equal the
+// detail page's image URL exactly, and the preload scanner warms that URL
+// in cache. The srcset then displays the leanest candidate per viewport.
+const VERCEL_WIDTHS = [640, 750, 828, 1080, 1200, 1920, 2048, 3840]
+const imageWidth = image ? Math.min(image.width, 700) : 1
+const imageHeight = image
+  ? Math.max(1, Math.round((image.height / image.width) * imageWidth))
+  : 1
+const imageWidths = image
+  ? VERCEL_WIDTHS.filter(width => width <= Math.min(image.width, 1200))
+  : [1]
+const imageSizes =
+  '(max-width: 639px) calc(100vw - 4.75rem), (max-width: 1023px) calc(50vw - 3.25rem), (max-width: 1279px) calc(33.333vw - 3.083rem), 377px'
+---
+
+{image && (
+  <FadeInSection
+    delay={index * 25}
+    dataFilterCard={data.type}
+    className="mb-5 inline-block w-full break-inside-avoid align-top sm:mb-6"
+  >
+    <article>
+      <a
+        href={`/galleri/${data.slug}`}
+        data-astro-prefetch
+        data-artwork-click
+        data-slug={data.slug}
+        class="group block focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-primary"
+      >
+        <Frame passpartout={data.passepartout} transitionName={`art-${data.slug}`}>
+          <Image
+            src={image.url}
+            alt={data.title}
+            width={imageWidth}
+            height={imageHeight}
+            widths={imageWidths}
+            quality={55}
+            loading={index < 4 ? 'eager' : 'lazy'}
+            sizes={imageSizes}
+            data-fade-img
+            class="block h-auto w-full object-cover blur-[1px] transition-all duration-500 ease-out"
+          />
+        </Frame>
+
+        <div class="flex items-start justify-between gap-3 px-2 pt-3">
+          <div class="min-w-0">
+            <h2 class="text-lg font-medium leading-snug md:text-xl">{data.title}</h2>
+            {price && (
+              <p class="mt-0.5 text-sm leading-tight text-muted-foreground">{price}</p>
+            )}
+          </div>
+          {data.type && (
+            <p class="shrink-0 rounded-sm bg-primary-foreground/50 px-2 py-0.5 text-sm leading-tight text-primary/80 md:text-[0.9125rem]">
+              {data.type}
+            </p>
+          )}
+        </div>
+      </a>
+    </article>
+  </FadeInSection>
+)}
+
+<script>
+  import { track } from '../lib/analytics'
+
+  // Use event delegation on document — registered once globally, works across
+  // client-side navigations (no need for astro:page-load re-binding since
+  // delegation always hits the fresh DOM).
+  document.addEventListener('click', event => {
+    const card = (event.target as Element | null)?.closest?.('[data-artwork-click]')
+    if (!card) return
+    const slug = card.getAttribute('data-slug')
+    if (!slug) return
+    track('artwork_click', { slug })
+  })
+</script>
