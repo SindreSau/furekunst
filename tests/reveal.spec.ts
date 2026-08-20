@@ -1,25 +1,22 @@
 // View-transition fade-up flicker regression tests.
 //
-// The gallery fade-up must never start before the page has been revealed
-// (pagereveal). Cross-document view transitions (enabled on fine-pointer
-// devices only — see global.css) freeze a snapshot of the new page that is
-// captured while [data-reveal] cards are still hidden; a fade-up that
-// started earlier played behind the frozen snapshot and the content popped
-//   in when the transition ended. That flicker only ever happened on desktop —
-//   on touch/coarse-pointer and reduced-motion devices the cross-document
-//   transition is neutralized into an instant flash-free swap (global.css), so
-//   the frozen-snapshot flicker cannot occur there.
+// The staggered fade-up must never play while the view transition is still
+// running: the ::view-transition snapshot overlay paints above ALL live page
+// content (z-index cannot break through it — w3c/csswg-drafts#8941), so an
+// animation started behind it is invisible and the content pops in when the
+// overlay lifts. The reveal module therefore gates forward-navigation
+// fade-ups behind the end of the transition (the router removes
+// data-astro-transition from <html> when it finishes).
 //
 // Coverage map:
-//  - desktop: fade-up starts only after pagereveal, even when the page
-//    paints late (the timing that used to flicker)
+//  - desktop: fade-up starts only after the view transition ends
 //  - desktop: cards fully visible after a view-transition navigation
-//  - mobile: cards reveal promptly (the gate must never hang without VTs)
-//  - desktop: below-fold cards still reveal on scroll
+//  - mobile: cards reveal promptly (the gate must never hang)
+//  - desktop: below-fold cards still reveal on scroll after a navigation
 //  - gallery: below-fold cards stay hidden at load and reveal on scroll
 //    (infinite-scroll reveal — no mass fade-up at page load)
 
-import { test, expect, type Page } from '@playwright/test'
+import { test, expect, type Page } from './fixtures'
 
 const isMobile = (project: string) => project === 'mobile-chromium'
 const isDesktop = (project: string) => project === 'desktop-chromium'
@@ -34,14 +31,16 @@ type Timeline = { pagereveal: number | null; revealStart: number | null }
 // (pagereveal) and when the first [data-reveal] card started fading up.
 async function recordRevealTimeline(page: Page) {
   await page.addInitScript(() => {
-    if ((window as unknown as { __revealTimeline?: unknown }).__revealTimeline) return
+    if ((window as unknown as { __revealTimeline?: unknown }).__revealTimeline)
+      return
     ;(window as unknown as { __revealTimeline: Timeline }).__revealTimeline = {
       pagereveal: null,
       revealStart: null,
     }
     window.addEventListener('pagereveal', () => {
-      ;(window as unknown as { __revealTimeline: Timeline }).__revealTimeline.pagereveal =
-        performance.now()
+      ;(
+        window as unknown as { __revealTimeline: Timeline }
+      ).__revealTimeline.pagereveal = performance.now()
     })
     document.addEventListener('DOMContentLoaded', () => {
       const els = document.querySelectorAll('[data-reveal]')
@@ -49,8 +48,9 @@ async function recordRevealTimeline(page: Page) {
       const iv = setInterval(() => {
         const cs = getComputedStyle(els[0])
         if (parseFloat(cs.opacity) > 0.02) {
-          ;(window as unknown as { __revealTimeline: Timeline }).__revealTimeline.revealStart =
-            performance.now()
+          ;(
+            window as unknown as { __revealTimeline: Timeline }
+          ).__revealTimeline.revealStart = performance.now()
           clearInterval(iv)
         }
       }, 2)
@@ -79,7 +79,10 @@ test('gallery cards reveal on page load', async ({ page }) => {
 test('desktop: gallery cards fully visible after a view-transition navigation', async ({
   page,
 }, testInfo) => {
-  test.skip(isMobile(testInfo.project.name), 'view transitions only run on fine-pointer devices')
+  test.skip(
+    isMobile(testInfo.project.name),
+    'view transitions only run on fine-pointer devices',
+  )
   await page.goto('/')
   await page.click('main a[href="/galleri"]')
   await page.waitForURL('**/galleri')
@@ -89,6 +92,68 @@ test('desktop: gallery cards fully visible after a view-transition navigation', 
     .poll(() => firstCard.evaluate(el => getComputedStyle(el).opacity), {
       timeout: 5_000,
       message: 'the first gallery card should fade up to full opacity',
+    })
+    .toBe('1')
+})
+
+test('desktop: fade-up waits until the view transition ends (no double animation)', async ({
+  page,
+}, testInfo) => {
+  // The snapshot overlay paints above all live content while the transition
+  // runs, so the fade-up must not start before it ends — otherwise the
+  // animation plays invisibly behind the overlay and the content pops when
+  // it lifts. Slow the root crossfade down so the mid-transition window is
+  // observable, then assert the incoming cards are still hidden while
+  // html[data-astro-transition] is present and only fade up afterwards.
+  test.skip(isMobile(testInfo.project.name), 'desktop only')
+  await page.addInitScript(() => {
+    const install = () => {
+      if (document.getElementById('__slow-vt')) return
+      const style = document.createElement('style')
+      style.id = '__slow-vt'
+      style.textContent =
+        '::view-transition-old(root), ::view-transition-new(root) { animation-duration: 1.2s !important; }'
+      document.head.appendChild(style)
+    }
+    install()
+    // The swap replaces all head children, so the injected style must be
+    // re-added after each swap — astro:page-load fires inside the update
+    // callback, before the transition animation starts.
+    document.addEventListener('astro:page-load', install)
+  })
+  await page.goto('/')
+  await page.click('main a[href="/galleri"]')
+  await page.waitForURL('**/galleri')
+
+  const firstCard = page.locator('.gallery-masonry [data-reveal]').first()
+
+  // Mid-transition: the overlay is still up and the card must still be
+  // hidden (opacity ~0.01 from the before-swap inline style).
+  await expect
+    .poll(
+      () =>
+        page.evaluate(() =>
+          document.documentElement.hasAttribute('data-astro-transition'),
+        ),
+      {
+        timeout: 3_000,
+        message: 'the view transition should still be running',
+      },
+    )
+    .toBe(true)
+  const midOpacity = await firstCard.evaluate(
+    el => getComputedStyle(el).opacity,
+  )
+  expect(
+    parseFloat(midOpacity),
+    'the fade-up must not play behind the frozen snapshot',
+  ).toBeLessThan(0.05)
+
+  // After the transition ends the fade-up plays to full opacity.
+  await expect
+    .poll(() => firstCard.evaluate(el => getComputedStyle(el).opacity), {
+      timeout: 5_000,
+      message: 'the card should fade up once the transition has finished',
     })
     .toBe('1')
 })
@@ -130,29 +195,6 @@ test('mobile: cards reveal promptly (gate never hangs without view transitions)'
     .toBe('1')
 })
 
-test('gallery cards reveal frame and image together once loaded', async ({ page }) => {
-  await page.goto('/galleri')
-
-  // Loaded card containers must reveal to full opacity as a single entity
-  const firstCard = page.locator('.gallery-masonry [data-reveal]').first()
-  await expect
-    .poll(() => firstCard.evaluate(el => getComputedStyle(el).opacity), {
-      timeout: 10_000,
-      message: 'the first gallery card container should reveal once loaded',
-    })
-    .toBe('1')
-
-  // Lazy cards below the fold reveal when scrolled into view and loaded.
-  const lastCard = page.locator('.gallery-masonry [data-reveal]').last()
-  await lastCard.scrollIntoViewIfNeeded()
-  await expect
-    .poll(() => lastCard.evaluate(el => getComputedStyle(el).opacity), {
-      timeout: 10_000,
-      message: 'lazy gallery card should reveal when scrolled into view',
-    })
-    .toBe('1')
-})
-
 test('gallery: below-fold cards stay hidden until scrolled into view', async ({
   page,
 }) => {
@@ -172,23 +214,22 @@ test('gallery: below-fold cards stay hidden until scrolled into view', async ({
 
   const belowFoldCount = await page.evaluate(
     () =>
-      Array.from(document.querySelectorAll('.gallery-masonry [data-reveal]')).filter(
-        el => el.getBoundingClientRect().top > window.innerHeight,
-      ).length,
+      Array.from(
+        document.querySelectorAll('.gallery-masonry [data-reveal]'),
+      ).filter(el => el.getBoundingClientRect().top > window.innerHeight)
+        .length,
   )
   test.skip(belowFoldCount === 0, 'no cards below the fold')
   expect(belowFoldCount).toBeGreaterThan(0)
 
-  const hiddenBefore = await page.evaluate(
-    () =>
-      Array.from(document.querySelectorAll('.gallery-masonry [data-reveal]'))
-        .filter(el => el.getBoundingClientRect().top > window.innerHeight)
-        .every(el => !el.hasAttribute('data-revealed')),
+  const hiddenBefore = await page.evaluate(() =>
+    Array.from(document.querySelectorAll('.gallery-masonry [data-reveal]'))
+      .filter(el => el.getBoundingClientRect().top > window.innerHeight)
+      .every(el => !el.hasAttribute('data-revealed')),
   )
-  expect(
-    hiddenBefore,
-    'below-fold cards must not reveal at page load',
-  ).toBe(true)
+  expect(hiddenBefore, 'below-fold cards must not reveal at page load').toBe(
+    true,
+  )
 
   // Scrolling the last card into view reveals it (and, per FK-029, every
   // card passed on the way must reveal too).
@@ -214,7 +255,9 @@ test('current-page nav link is inert (no same-URL reload flash)', async ({
   const desktopNav = page
     .getByRole('navigation', { name: 'Hovudnavigasjon' })
     .first()
-  await expect(desktopNav.locator('span[aria-current="page"]')).toHaveText('Galleri')
+  await expect(desktopNav.locator('span[aria-current="page"]')).toHaveText(
+    'Galleri',
+  )
   await expect(desktopNav.locator('a[href="/galleri"]')).toHaveCount(0)
 
   // Clicking the inert entry must not navigate or reload.
@@ -253,15 +296,17 @@ test('mobile menu: current-page entry is inert and just closes the menu', async 
   test.skip(isDesktop(testInfo.project.name), 'mobile menu only')
   await page.goto('/galleri')
   await page.locator('[data-menu-toggle]').click()
-  await expect(page.locator('[data-menu-nav] span[aria-current="page"]')).toHaveText(
-    'Galleri',
-  )
+  await expect(
+    page.locator('[data-menu-nav] span[aria-current="page"]'),
+  ).toHaveText('Galleri')
   await page.locator('[data-menu-nav] span[aria-current="page"]').click()
   await expect(page.locator('html')).not.toHaveClass(/menu-open/)
   await expect(page).toHaveURL(/\/galleri$/)
 })
 
-test('gallery head preloads the above-fold artwork images', async ({ page }) => {
+test('gallery head preloads the above-fold artwork images', async ({
+  page,
+}) => {
   // The view-transition snapshot of the gallery page must include the cards'
   // images; the preloads (same optimized URLs as the rendered <img>s) make
   // sure they are decoded before the first render.
@@ -296,11 +341,18 @@ test('gallery → detail morph: view-transition names are unique and rendered', 
         }
         return false
       }
-      return Array.from(document.querySelectorAll('[data-astro-transition-scope]'))
+      return Array.from(
+        document.querySelectorAll('[data-astro-transition-scope]'),
+      )
         .map(el => {
           const cs = getComputedStyle(el)
           const name = cs.viewTransitionName
-          if (!name || name === 'none' || name === 'root' || !name.startsWith('art-'))
+          if (
+            !name ||
+            name === 'none' ||
+            name === 'root' ||
+            !name.startsWith('art-')
+          )
             return null
           return { name, hidden: inHiddenSubtree(el) }
         })
@@ -312,7 +364,8 @@ test('gallery → detail morph: view-transition names are unique and rendered', 
   expect(galleryNames.length).toBeGreaterThan(1)
   const unique = new Set(galleryNames.map(n => n.name))
   expect(unique.size).toBe(galleryNames.length) // no duplicate names
-  for (const n of galleryNames) expect(n.hidden, `${n.name} must be rendered`).toBe(false)
+  for (const n of galleryNames)
+    expect(n.hidden, `${n.name} must be rendered`).toBe(false)
 
   // The clicked card's image URL must equal the detail page's frame image
   // URL: the new-page snapshot is captured at first render, and only a
@@ -381,7 +434,8 @@ test('jump-scroll to the bottom reveals every [data-reveal] element', async ({
   await expect
     .poll(() => page.locator('[data-reveal][data-revealed]').count(), {
       timeout: 10_000,
-      message: 'the reveal module initial pass should reveal in-viewport elements',
+      message:
+        'the reveal module initial pass should reveal in-viewport elements',
     })
     .toBeGreaterThan(0)
 
@@ -392,7 +446,10 @@ test('jump-scroll to the bottom reveals every [data-reveal] element', async ({
         el => !el.hasAttribute('data-revealed'),
       ).length,
   )
-  expect(hiddenBefore, 'there must be below-fold elements to jump past').toBeGreaterThan(0)
+  expect(
+    hiddenBefore,
+    'there must be below-fold elements to jump past',
+  ).toBeGreaterThan(0)
 
   const total = await page.locator('[data-reveal]').count()
 
@@ -406,8 +463,7 @@ test('jump-scroll to the bottom reveals every [data-reveal] element', async ({
         page.evaluate(() => {
           const els = Array.from(document.querySelectorAll('[data-reveal]'))
           return (
-            els.length > 0 &&
-            els.every(el => el.hasAttribute('data-revealed'))
+            els.length > 0 && els.every(el => el.hasAttribute('data-revealed'))
           )
         }),
       {

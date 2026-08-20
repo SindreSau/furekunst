@@ -1,0 +1,13 @@
+{
+  "title": "Ei ku",
+  "description": "Akvarell og penn på papir",
+  "type": {
+    "discriminant": "original",
+    "value": {
+      "size": "24x32cm",
+      "price": 1800
+    }
+  },
+  "passepartout": true,
+  "image": "../../assets/artworks/ei-ku/ei-ku.jpeg"
+}

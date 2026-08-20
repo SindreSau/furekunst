@@ -18,7 +18,7 @@
 //
 // Run: pnpm exec playwright test tests/fonts.spec.ts
 
-import { test, expect, type Page } from '@playwright/test'
+import { test, expect, type Page } from './fixtures'
 
 // Artwork cards carry data-artwork-click; the filter chips are `button`s
 // (client-side filtering), so a bare `a[href^="/galleri/"]` prefix selector

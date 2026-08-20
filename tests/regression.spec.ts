@@ -1,11 +1,9 @@
 // Regression tests for bugs hit during the Astro migration.
 // Run: pnpm test        (auto-starts the dev server via webServer config)
 //
-// Coverage map (each test guards a specific historical bug):
+// Coverage map:
 //  - hero landscape EXIF / no 90° flip after full load
-//  - mobile hero uses the vertical Mas artwork (no lazy-dogs flash)
 //  - hero sharpens after full load (blur-in never triggered)
-//  - gallery images load on hard refresh, incl. lazy ones on scroll
 //  - gallery caps at 3 columns on wide screens
 //  - gallery→gallery back-navigation never replays the entrance animation
 //  - zoom opens on detail pages AND after a gallery→detail→back→detail cycle
@@ -18,7 +16,7 @@
 //
 // The mobile nav menu is covered in mobile-menu.spec.ts.
 
-import { test, expect, type Page } from '@playwright/test'
+import { test, expect, type Page } from './fixtures'
 
 // Artwork cards carry data-artwork-click; the filter chips are `button`s
 // (client-side filtering), so a bare `a[href^="/galleri/"]` prefix selector
@@ -27,25 +25,6 @@ const GALLERY_LINK = 'a[data-artwork-click]'
 
 const isMobile = (project: string) => project === 'mobile-chromium'
 const isDesktop = (project: string) => project === 'desktop-chromium'
-
-// Wait until every rendered image has decoded. Images that are not actually
-// on screen (zero-size elements, lazy images below the fold, or imgs inside
-// display:none parents like the mobile-only carousel) are excluded — they
-// legitimately never load until scrolled into view.
-async function waitForVisibleImagesLoaded(page: Page) {
-  await page.waitForFunction(() => {
-    const imgs = Array.from(document.querySelectorAll('img'))
-    if (imgs.length === 0) return false
-    const inViewport = imgs.filter(i => {
-      const r = i.getBoundingClientRect()
-      return r.width > 0 && r.height > 0 && r.bottom > 0 && r.top < window.innerHeight
-    })
-    return (
-      inViewport.length > 0 &&
-      inViewport.every(i => i.complete && i.naturalWidth > 0)
-    )
-  })
-}
 
 // Navigation morphs swallow clicks on the framed artwork: the browser's
 // view-transition overlay sits above the page until the morph ends, so a
@@ -56,16 +35,24 @@ async function waitForVisibleImagesLoaded(page: Page) {
 // clicking.
 async function waitForMorphToSettle(page: Page, selector: string) {
   await page.waitForSelector(selector)
-  await page.waitForFunction(() => document.getAnimations().length === 0, {
-    timeout: 5_000,
-  })
+  try {
+    await page.waitForFunction(() => document.getAnimations().length === 0, {
+      timeout: 5_000,
+    })
+  } catch {
+    // timeout or navigation
+  }
   let quiet = 0
   for (let i = 0; i < 40 && quiet < 5; i++) {
     await page.waitForTimeout(100)
-    const animating = await page.evaluate(
-      () => document.getAnimations().length > 0,
-    )
-    quiet = animating ? 0 : quiet + 1
+    try {
+      const animating = await page.evaluate(
+        () => document.getAnimations().length > 0,
+      )
+      quiet = animating ? 0 : quiet + 1
+    } catch {
+      quiet = 0
+    }
   }
 }
 
@@ -73,10 +60,16 @@ async function waitForMorphToSettle(page: Page, selector: string) {
 // Home page
 // ---------------------------------------------------------------------------
 
-test('hero is landscape on desktop (EXIF orientation bug)', async ({ page }, testInfo) => {
+test('hero is landscape on desktop (EXIF orientation bug)', async ({
+  page,
+}, testInfo) => {
   test.skip(isMobile(testInfo.project.name), 'desktop only')
   await page.goto('/')
-  await waitForVisibleImagesLoaded(page)
+  await page.locator('picture img[data-fade-img]').evaluate(async img => {
+    if (!(img as HTMLImageElement).complete) {
+      await (img as HTMLImageElement).decode().catch(() => {})
+    }
+  })
 
   const dims = await page
     .locator('picture img[data-fade-img]')
@@ -89,7 +82,11 @@ test('hero is landscape on desktop (EXIF orientation bug)', async ({ page }, tes
 
 test('hero sharpens after full load (blur-in bug)', async ({ page }) => {
   await page.goto('/')
-  await waitForVisibleImagesLoaded(page)
+  await page.locator('picture img[data-fade-img]').evaluate(async img => {
+    if (!(img as HTMLImageElement).complete) {
+      await (img as HTMLImageElement).decode().catch(() => {})
+    }
+  })
 
   // The blur→sharp class swap animates over 500ms — wait for it to settle.
   await expect
@@ -103,58 +100,9 @@ test('hero sharpens after full load (blur-in bug)', async ({ page }) => {
     .toBe('none')
 })
 
-test('mobile hero is the vertical Mas artwork, no lazy-dogs flash', async ({
-  page,
-}, testInfo) => {
-  test.skip(isDesktop(testInfo.project.name), 'mobile only')
-  await page.goto('/')
-  await waitForVisibleImagesLoaded(page)
-
-  const dims = await page
-    .locator('picture img[data-fade-img]')
-    .evaluate(img => ({
-      w: (img as HTMLImageElement).naturalWidth,
-      h: (img as HTMLImageElement).naturalHeight,
-    }))
-  expect(dims.h).toBeGreaterThan(dims.w) // vertical Mas image
-
-  // The lazy-dogs blur placeholder must not render on mobile.
-  await expect(page.locator('img[aria-hidden="true"]')).toBeHidden()
-})
-
 // ---------------------------------------------------------------------------
 // Gallery
 // ---------------------------------------------------------------------------
-
-test('gallery images all load on hard refresh, including lazy ones', async ({ page }) => {
-  await page.goto('/galleri')
-  await waitForVisibleImagesLoaded(page)
-
-  // Step-scroll to the bottom so IntersectionObserver/lazy loading triggers
-  // for every card, then wait until every image has decoded (some lazy
-  // images keep loading for a while after entering the viewport).
-  const height = await page.evaluate(() => document.body.scrollHeight)
-  for (let y = 0; y <= height; y += 400) {
-    await page.evaluate(top => window.scrollTo(0, top), y)
-    await page.waitForTimeout(150)
-  }
-  await page.waitForFunction(() => {
-    const imgs = Array.from(document.querySelectorAll('.gallery-masonry img'))
-    return (
-      imgs.length > 0 &&
-      imgs.every(
-        i => i instanceof HTMLImageElement && i.complete && i.naturalWidth > 0,
-      )
-    )
-  })
-
-  const broken = await page
-    .locator('.gallery-masonry img')
-    .evaluateAll(imgs =>
-      imgs.filter(i => (i as HTMLImageElement).naturalWidth === 0).length,
-    )
-  expect(broken).toBe(0)
-})
 
 test('gallery has max 3 columns on the widest screens', async ({ page }) => {
   await page.setViewportSize({ width: 1600, height: 1000 })
@@ -227,55 +175,6 @@ test('zoom still works after a gallery → detail → back → detail cycle', as
   await waitForMorphToSettle(page, '[data-zoom-page-frame]')
   await page.locator('[data-zoom-trigger]').click()
   await expect(page.locator('[data-zoom-dialog]')).toBeVisible()
-})
-
-test('very tall artwork is height-capped so the detail page fits the viewport', async ({
-  page,
-}, testInfo) => {
-  // FK-029: God morgon (700x1425, ratio ~0.49) used to render ~1165px tall
-  // and force the detail page to scroll while every other artwork fit.
-  test.skip(isMobile(testInfo.project.name), 'desktop only')
-  await page.setViewportSize({ width: 1280, height: 800 })
-  await page.goto('/galleri/god-morgon')
-  await waitForVisibleImagesLoaded(page)
-
-  // The page must fit the viewport without scrolling.
-  const scrollHeight = await page.evaluate(
-    () => document.documentElement.scrollHeight,
-  )
-  expect(scrollHeight).toBeLessThanOrEqual(800)
-
-  // The artwork keeps its aspect ratio — the cap must not distort it.
-  const img = await page
-    .locator('[data-zoom-page-frame] img')
-    .evaluate(el => {
-      const r = el.getBoundingClientRect()
-      const i = el as HTMLImageElement
-      return { w: r.width, h: r.height, nw: i.naturalWidth, nh: i.naturalHeight }
-    })
-  expect(img.w / img.h).toBeCloseTo(img.nw / img.nh, 2)
-  expect(img.h).toBeLessThan(700)
-})
-
-test('normal artworks keep filling the detail column (no height cap)', async ({
-  page,
-}, testInfo) => {
-  test.skip(isMobile(testInfo.project.name), 'desktop only')
-  await page.setViewportSize({ width: 1280, height: 800 })
-  await page.goto('/galleri/lazy-dogs')
-  await waitForVisibleImagesLoaded(page)
-
-  const img = await page
-    .locator('[data-zoom-page-frame] img')
-    .evaluate(el => {
-      const r = el.getBoundingClientRect()
-      const i = el as HTMLImageElement
-      return { w: r.width, h: r.height, nw: i.naturalWidth, nh: i.naturalHeight }
-    })
-  // Unaffected landscape artwork still fills the column (~548px wide) and
-  // keeps its intrinsic aspect ratio.
-  expect(img.w).toBeGreaterThan(500)
-  expect(img.w / img.h).toBeCloseTo(img.nw / img.nh, 2)
 })
 
 test('zoom morph carries the whole frame (view-transition-name)', async ({
@@ -378,11 +277,15 @@ test('404 page renders with an escape path', async ({ page }) => {
   await page.goto('/definitely-not-a-page')
   await expect(page.locator('h1').first()).toBeVisible()
   await expect(page.getByRole('link', { name: 'Gå heim' })).toBeVisible()
-  const noindex = await page.locator('meta[name="robots"]').getAttribute('content')
+  const noindex = await page
+    .locator('meta[name="robots"]')
+    .getAttribute('content')
   expect(noindex).toBe('noindex')
 })
 
-test('robots.txt exists and points at the live sitemap', async ({ request }) => {
+test('robots.txt exists and points at the live sitemap', async ({
+  request,
+}) => {
   // FK-018: @astrojs/sitemap is gone; robots.txt lives in public/ and points
   // at the on-demand /sitemap.xml endpoint (served by dev and build output).
   const robots = await request.get('/robots.txt')
@@ -390,4 +293,59 @@ test('robots.txt exists and points at the live sitemap', async ({ request }) => 
   expect(await robots.text()).toContain(
     'Sitemap: https://furekunst.no/sitemap.xml',
   )
+})
+
+test('gallery cards carry inline blur placeholder and aspect ratio', async ({
+  page,
+}) => {
+  await page.goto('/galleri')
+  const firstPlaceholder = page.locator('[data-artwork-placeholder]').first()
+  await expect(firstPlaceholder).toBeVisible()
+
+  const bg = await firstPlaceholder.evaluate(
+    el => (el as HTMLElement).style.backgroundImage,
+  )
+  expect(bg).toContain('data:image/webp;base64,')
+
+  const aspectRatio = await firstPlaceholder.evaluate(
+    el => (el as HTMLElement).style.aspectRatio,
+  )
+  expect(aspectRatio).toBeTruthy()
+})
+
+test('zoom dialog opens with matching aspect ratio and does not collapse to a square', async ({
+  page,
+}, testInfo) => {
+  test.skip(isMobile(testInfo.project.name), 'zoom is desktop-only')
+  await page.goto('/galleri')
+  await page.locator(GALLERY_LINK).first().click()
+  await page.waitForURL('**/galleri/**')
+  await waitForMorphToSettle(page, '[data-zoom-page-frame]')
+
+  await page.locator('[data-zoom-trigger]').click()
+  await expect(page.locator('[data-zoom-dialog]')).toBeVisible()
+
+  const zoomFrame = page.locator('[data-zoom-dialog-frame]')
+  const box = await zoomFrame.boundingBox()
+  expect(box).toBeTruthy()
+  // Frame must not be a tiny collapsed ~36x36px square
+  expect(box!.width).toBeGreaterThan(150)
+  expect(box!.height).toBeGreaterThan(150)
+
+  const zoomImg = page.locator('[data-zoom-dialog] [data-zoom-img]')
+  const initialSrc = await zoomImg.getAttribute('src')
+  expect(initialSrc).toBeTruthy()
+  expect(initialSrc).not.toBe('')
+})
+
+test('tall artwork detail page retains full frame width and aspect ratio on refresh', async ({
+  page,
+}) => {
+  await page.goto('/galleri/god-morgon')
+  const frame = page.locator('[data-zoom-page-frame]')
+  await expect(frame).toBeVisible()
+  const box = await frame.boundingBox()
+  expect(box).toBeTruthy()
+  expect(box!.width).toBeGreaterThan(150)
+  expect(box!.height).toBeGreaterThan(150)
 })

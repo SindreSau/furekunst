@@ -1,10 +1,9 @@
 ---
-import type { LiveDataEntry } from 'astro'
+import type { CollectionEntry } from 'astro:content'
 import { priceHint } from '../lib/price'
-import type { GalleryPostData } from '../lib/gallery'
 
 interface Props {
-  post: LiveDataEntry<GalleryPostData>
+  post: CollectionEntry<'gallery'>
 }
 
 const { post } = Astro.props

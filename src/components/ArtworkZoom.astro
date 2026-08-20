@@ -1,75 +1,111 @@
 ---
-// Artwork zoom lightbox — vanilla port of islands/ArtworkZoom.tsx (FK-014).
-// Desktop-only zoom: on mobile the framed image renders without the button.
-// Click image -> fullscreen dialog (`role="dialog"`, `aria-modal`), close
-// button focused on open, ESC/backdrop click close, click inside stops
-// propagation, `html.zoom-open` scroll lock, fade/scale transition.
-// Zoom uses the View Transitions API: the shared view-transition-name lives
-// on the Frame (border + passepartout included), so the whole framed artwork
-// morphs from its page position into the dialog. The morph is fine-pointer/
-// desktop-only — WebKit's same-document VT is janky on touch devices
-// (≥768px iPads included); touch devices take the CSS-transition fallback.
-// The dialog is a fixed overlay with z-[100]; it must NOT sit inside a
-// stacking context (MainLayout's <main> has no z-index / view-transition
-// name), or the header would paint over it.
+import type { ImageMetadata } from 'astro'
+import { Image } from 'astro:assets'
 import Frame from './Frame.astro'
+import { getBlurDataUrl } from '../lib/blur'
 
 interface Props {
-  src: string
+  image?: ImageMetadata
+  src?: string | ImageMetadata
   zoomSrc?: string
   alt: string
-  width: number
-  height: number
+  width?: number
+  height?: number
   passpartout?: boolean
   transitionName?: string
 }
 
 const {
-  src,
-  zoomSrc = src,
+  image,
+  src: rawSrc,
+  zoomSrc,
   alt,
-  width,
-  height,
+  width: customWidth,
+  height: customHeight,
   passpartout = false,
   transitionName,
 } = Astro.props
 
-// FK-029: very tall artworks (portrait aspect beyond 3:2) are height-capped
-// to the viewport so the desktop detail page (2-col layout) fits without
-// scrolling. Computed from each image's own dimensions, so future uploads
-// adapt automatically. The cap only applies at md+ — on mobile the artwork
-// stays full-width (scrolling is inherent there, the details sit below).
+const resolvedImage: ImageMetadata | undefined =
+  image ??
+  (typeof rawSrc === 'object' && rawSrc !== null
+    ? (rawSrc as ImageMetadata)
+    : undefined)
+
+const width = resolvedImage
+  ? Math.min(resolvedImage.width, 700)
+  : (customWidth ?? 700)
+const height = resolvedImage
+  ? Math.max(
+      1,
+      Math.round((resolvedImage.height / resolvedImage.width) * width),
+    )
+  : (customHeight ?? 500)
+
 const tallArtwork = height / width > 1.5
+const initialSrc =
+  typeof rawSrc === 'string' ? rawSrc : (resolvedImage?.src ?? '')
+const blurDataUrl = await getBlurDataUrl(resolvedImage || rawSrc)
 ---
 
-{/* One frame, one view-transition name — the zoom button overlays it on
-    desktop. Two frame variants (one per breakpoint) would render two
-    elements with the same transition:name; the hidden variant still
-    carries the name and breaks the named capture. */}
 <div class="relative">
   <Frame
     passpartout={passpartout}
     transitionName={transitionName}
     data-zoom-page-frame
-    class={tallArtwork ? 'md:mx-auto md:w-fit md:max-w-full' : undefined}
+    class={tallArtwork ? 'w-full md:mx-auto' : 'w-full'}
+    style={tallArtwork
+      ? {
+          maxWidth: `min(100%, calc((100svh - 17.5rem) * ${width} / ${height} + ${passpartout ? '36px' : '12px'}))`,
+        }
+      : undefined}
   >
-    <img
-      src={src}
-      alt={alt}
-      width={width}
-      height={height}
-      loading="eager"
-      fetchpriority="high"
-      decoding="async"
-      class={
-        tallArtwork
-          ? 'h-auto w-full object-contain md:h-auto md:w-auto md:max-h-[calc(100svh-17.5rem)] md:max-w-full'
-          : 'h-auto w-full object-contain'
+    <div
+      data-artwork-placeholder
+      class="relative w-full overflow-hidden bg-cover bg-center max-md:bg-none!"
+      style={{
+        aspectRatio: `${width} / ${height}`,
+        ...(blurDataUrl ? { backgroundImage: `url("${blurDataUrl}")` } : {}),
+      }}
+    >
+      {
+        resolvedImage ? (
+          <Image
+            src={resolvedImage}
+            alt={alt}
+            width={width}
+            quality={55}
+            loading="eager"
+            fetchpriority="high"
+            decoding="async"
+            data-fade-img
+            class={
+              tallArtwork
+                ? 'h-auto w-full object-contain blur-[1px] max-md:blur-none transition-all duration-500 ease-out md:h-auto md:w-auto md:max-h-[calc(100svh-17.5rem)] md:max-w-full'
+                : 'h-auto w-full object-contain blur-[1px] max-md:blur-none transition-all duration-500 ease-out'
+            }
+          />
+        ) : (
+          <img
+            src={typeof rawSrc === 'string' ? rawSrc : ''}
+            alt={alt}
+            width={width}
+            height={height}
+            loading="eager"
+            fetchpriority="high"
+            decoding="async"
+            data-fade-img
+            class={
+              tallArtwork
+                ? 'h-auto w-full object-contain blur-[1px] max-md:blur-none transition-all duration-500 ease-out md:h-auto md:w-auto md:max-h-[calc(100svh-17.5rem)] md:max-w-full'
+                : 'h-auto w-full object-contain blur-[1px] max-md:blur-none transition-all duration-500 ease-out'
+            }
+          />
+        )
       }
-    />
+    </div>
   </Frame>
 
-  {/* Desktop-only zoom trigger: covers the frame, invisible on touch. */}
   <button
     type="button"
     data-zoom-trigger
@@ -101,32 +137,53 @@ const tallArtwork = height / width > 1.5
 
   <div
     data-zoom-content
-    class="relative max-h-full max-w-full cursor-zoom-out scale-95 opacity-0 transition-[opacity,transform] duration-300 ease-out"
+    class="relative max-h-full max-w-full cursor-zoom-out opacity-0 transition-opacity duration-300 ease-out"
   >
-    <Frame passpartout={passpartout} class="w-fit max-w-full" data-zoom-dialog-frame>
-      {/* The src starts as the page image (same URL already cached from the
-          detail page — the preload scanner fetching it downloads nothing new,
-          and the frame has its full size the moment the dialog opens). The
-          hi-res variant replaces it on open (see script): the 1200w q85 file
-          is only fetched when the user actually zooms (FK-030). */}
-      <img
-        data-zoom-img
-        src={src}
-        alt={alt}
-        width={width}
-        height={height}
-        loading="lazy"
-        decoding="async"
-        class="block h-auto w-auto max-h-[calc(100vh-6rem)] max-w-[calc(100vw-3rem)] object-contain md:max-h-[calc(100vh-8rem)] md:max-w-[calc(100vw-5rem)]"
-      />
+    <Frame
+      passpartout={passpartout}
+      class="mx-auto w-full max-w-full"
+      style={{
+        width: `min(calc(100vw - 3rem), calc((100vh - 8rem) * ${width} / ${height} + ${passpartout ? '36px' : '12px'}))`,
+        maxWidth: `min(calc(100vw - 3rem), calc((100vh - 8rem) * ${width} / ${height} + ${passpartout ? '36px' : '12px'}))`,
+      }}
+      data-zoom-dialog-frame
+    >
+      <div
+        data-artwork-placeholder
+        class="relative flex w-full items-center justify-center overflow-hidden bg-cover bg-center"
+        style={{
+          aspectRatio: `${width} / ${height}`,
+          ...(blurDataUrl ? { backgroundImage: `url("${blurDataUrl}")` } : {}),
+        }}
+      >
+        <img
+          data-zoom-img
+          src={initialSrc}
+          alt={alt}
+          width={width}
+          height={height}
+          loading="eager"
+          decoding="async"
+          class="block h-auto w-full max-h-[calc(100vh-6rem)] object-contain md:max-h-[calc(100vh-8rem)]"
+          style={{ aspectRatio: `${width} / ${height}` }}
+        />
+        {
+          zoomSrc && (
+            <img
+              data-zoom-hires
+              alt={alt}
+              aria-hidden="true"
+              class="pointer-events-none absolute inset-0 block h-full w-full object-contain opacity-0 transition-opacity duration-300 ease-out"
+              style={{ aspectRatio: `${width} / ${height}` }}
+            />
+          )
+        }
+      </div>
     </Frame>
   </div>
 </div>
 
 <script>
-  // Re-initialize on `astro:page-load` so the zoom works after client-side
-  // navigations via <ClientRouter />. The event fires after the initial load
-  // AND after every navigation.
   let trigger: HTMLButtonElement | null = null
   let dialog: HTMLElement | null = null
   let closeBtn: HTMLButtonElement | null = null
@@ -137,19 +194,19 @@ const tallArtwork = height / width > 1.5
   let isZoomed = false
   let closeTimeout = 0
 
-  const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches
-  // The zoom morph is fine-pointer/desktop-only: WebKit's same-document VT is
-  // janky on touch devices (≥768px iPads included). Touch devices take the
-  // CSS-transition fallback below.
-  const finePointer = window.matchMedia('(hover: hover) and (pointer: fine)').matches
-  const docStartVT = (document as Document & {
-    startViewTransition?: (cb: () => void) => { finished: Promise<void> }
-  }).startViewTransition
-  // `document.startViewTransition` must be called with the document as `this`.
+  const prefersReduced = window.matchMedia(
+    '(prefers-reduced-motion: reduce)',
+  ).matches
+  const finePointer = window.matchMedia(
+    '(hover: hover) and (pointer: fine)',
+  ).matches
+  const docStartVT = (
+    document as Document & {
+      startViewTransition?: (cb: () => void) => { finished: Promise<void> }
+    }
+  ).startViewTransition
   const startViewTransition = docStartVT ? docStartVT.bind(document) : undefined
 
-  // The dialog's scale/opacity CSS transition would double-animate with the
-  // view-transition morph; disable it while the VT snapshot is being taken.
   const pauseContentTransition = () => {
     if (content) content.style.transition = 'none'
   }
@@ -167,33 +224,41 @@ const tallArtwork = height / width > 1.5
   const open = () => {
     if (!dialog || !content || !closeBtn || isZoomed) return
     isZoomed = true
-    // Upgrade to the hi-res src only now — it must not exist in the DOM
-    // before the user clicks, or the preload scanner fetches it on page load.
-    // The swap happens after the hi-res image finishes loading, so the frame
-    // never shrinks to the low-res box mid-transition: the <img> keeps the
-    // page image (already cached) until the bigger file is ready, then
-    // replaces it in one step (FK-030).
-    const zoomImg = dialog?.querySelector<HTMLImageElement>('[data-zoom-img]')
+    const zoomHires =
+      dialog?.querySelector<HTMLImageElement>('[data-zoom-hires]')
     const zoomSrc = dialog?.dataset.zoomSrc
-    if (zoomImg && zoomSrc) {
-      const hiRes = new Image()
-      hiRes.onload = () => {
-        zoomImg.src = zoomSrc
-        zoomImg.classList.add('hi-res')
+    if (zoomHires && zoomSrc) {
+      if (!zoomHires.getAttribute('src')) {
+        zoomHires.src = zoomSrc
       }
-      hiRes.src = zoomSrc
+      const showHires = () => {
+        zoomHires.classList.remove('opacity-0')
+        zoomHires.classList.add('opacity-100')
+      }
+      if (zoomHires.complete && zoomHires.naturalWidth > 0) {
+        showHires()
+      } else if (zoomHires.decode) {
+        zoomHires.decode().then(showHires).catch(showHires)
+      } else {
+        zoomHires.onload = showHires
+      }
     }
-    if (startViewTransition && !prefersReduced && finePointer && pageFrames.length > 0 && dialogFrame && vtName) {
+    if (
+      startViewTransition &&
+      !prefersReduced &&
+      finePointer &&
+      pageFrames.length > 0 &&
+      dialogFrame &&
+      vtName
+    ) {
       startViewTransition(() => {
-        // New state: the dialog frame carries the shared name (the page
-        // frames give it up) so the whole framed artwork morphs in.
         pauseContentTransition()
         clearPageFrameNames()
         dialogFrame!.style.viewTransitionName = vtName
         dialog!.hidden = false
         document.documentElement.classList.add('zoom-open')
-        content!.classList.remove('scale-95', 'opacity-0')
-        content!.classList.add('scale-100', 'opacity-100')
+        content!.classList.remove('opacity-0')
+        content!.classList.add('opacity-100')
         closeBtn!.focus()
       })?.finished.then(resumeContentTransition)
     } else {
@@ -201,8 +266,8 @@ const tallArtwork = height / width > 1.5
       document.documentElement.classList.add('zoom-open')
       requestAnimationFrame(() => {
         if (content) {
-          content.classList.remove('scale-95', 'opacity-0')
-          content.classList.add('scale-100', 'opacity-100')
+          content.classList.remove('opacity-0')
+          content.classList.add('opacity-100')
         }
       })
       closeBtn.focus()
@@ -212,21 +277,26 @@ const tallArtwork = height / width > 1.5
   const close = () => {
     if (!dialog || !content || !isZoomed) return
     isZoomed = false
-    if (startViewTransition && !prefersReduced && finePointer && pageFrames.length > 0 && dialogFrame && vtName) {
+    if (
+      startViewTransition &&
+      !prefersReduced &&
+      finePointer &&
+      pageFrames.length > 0 &&
+      dialogFrame &&
+      vtName
+    ) {
       startViewTransition(() => {
-        // Old state: dialog frame named; new state: the page frames take
-        // the name back and the dialog disappears → morph back down.
         pauseContentTransition()
         dialogFrame!.style.viewTransitionName = 'none'
         restorePageFrameNames()
-        content!.classList.add('scale-95', 'opacity-0')
-        content!.classList.remove('scale-100', 'opacity-100')
+        content!.classList.add('opacity-0')
+        content!.classList.remove('opacity-100')
         document.documentElement.classList.remove('zoom-open')
         dialog!.hidden = true
       })?.finished.then(resumeContentTransition)
     } else {
-      content.classList.add('scale-95', 'opacity-0')
-      content.classList.remove('scale-100', 'opacity-100')
+      content.classList.add('opacity-0')
+      content.classList.remove('opacity-100')
       document.documentElement.classList.remove('zoom-open')
       window.clearTimeout(closeTimeout)
       closeTimeout = window.setTimeout(() => {
@@ -254,9 +324,6 @@ const tallArtwork = height / width > 1.5
 
     trigger.addEventListener('click', open)
     closeBtn.addEventListener('click', close)
-    // Clicking the zoomed image zooms back out (matches the zoom-out hover
-    // icon). The content sits inside the dialog, so this also prevents the
-    // backdrop click handler from double-firing.
     content.addEventListener('click', event => {
       event.stopPropagation()
       close()
@@ -266,16 +333,12 @@ const tallArtwork = height / width > 1.5
     })
   }
 
-  // Initialize on every page load (initial + client-side navigations).
   document.addEventListener('astro:page-load', initZoom)
 
-  // Global listeners are registered once at module scope; they read the
-  // module state and keep working.
   document.addEventListener('keydown', event => {
     if (event.key === 'Escape' && isZoomed) close()
   })
 
-  // No zoom on small screens — close if the viewport shrinks while open.
   const smallScreen = window.matchMedia('(max-width: 767px)')
   smallScreen.addEventListener('change', () => {
     if (smallScreen.matches) close()

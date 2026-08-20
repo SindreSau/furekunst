@@ -1,0 +1,13 @@
+{
+  "title": "La det svinge",
+  "description": "Akvarell på papir",
+  "type": {
+    "discriminant": "original",
+    "value": {
+      "size": "A3 (29,7x42cm)",
+      "price": 3500
+    }
+  },
+  "passepartout": true,
+  "image": "../../assets/artworks/la-det-svinge/la-det-svinge.jpeg"
+}

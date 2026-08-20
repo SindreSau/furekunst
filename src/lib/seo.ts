@@ -1,3 +1,5 @@
+import { getEntry } from 'astro:content'
+
 // Centralized site metadata + OG/canonical helpers (FK-027).
 // Plain TS — no framework types, usable from any Astro component.
 
@@ -10,6 +12,52 @@ export const siteConfig = {
   locale: 'nn_NO',
   description:
     'Furekunst viser kunstnar Elisabeth Fure Schwarz sine måleri og kunstverk.',
+}
+
+export interface SeoSettings {
+  defaultSiteTitle: string
+  defaultSiteDescription: string
+  homeSeoTitle: string
+  homeSeoDescription: string
+  gallerySeoTitle: string
+  gallerySeoDescription: string
+  contactSeoTitle: string
+  contactSeoDescription: string
+}
+
+export async function getSeoSettings(): Promise<SeoSettings> {
+  try {
+    const entry = await getEntry('seo', 'index')
+    if (entry?.data) {
+      return {
+        defaultSiteTitle: entry.data.defaultSiteTitle ?? siteConfig.name,
+        defaultSiteDescription:
+          entry.data.defaultSiteDescription ?? siteConfig.description,
+        homeSeoTitle: entry.data.homeSeoTitle,
+        homeSeoDescription: entry.data.homeSeoDescription,
+        gallerySeoTitle: entry.data.gallerySeoTitle,
+        gallerySeoDescription: entry.data.gallerySeoDescription,
+        contactSeoTitle: entry.data.contactSeoTitle,
+        contactSeoDescription: entry.data.contactSeoDescription,
+      }
+    }
+  } catch {
+    // Fallback
+  }
+
+  return {
+    defaultSiteTitle: siteConfig.name,
+    defaultSiteDescription: siteConfig.description,
+    homeSeoTitle: 'Heim - Kunstnar Elisabeth Fure Schwarz | Furekunst',
+    homeSeoDescription:
+      'Elisabeth Fure Schwarz er kunstnaren bak Furekunst, med hovudfokus på akvarell. Utforsk galleriet med originale kunstverk og bestill personlege bilete.',
+    gallerySeoTitle: 'Galleri - Kunstverk til sals | Furekunst',
+    gallerySeoDescription:
+      'Utforsk kunstsamlinga til Elisabeth Fure Schwarz med måleri i akryl, akvarell, og olje, samt teikningar med tusj og penn.',
+    contactSeoTitle: 'Kontakt | Furekunst',
+    contactSeoDescription:
+      'Ta kontakt med Elisabeth Fure Schwarz for spørsmål om kjøp av kunst eller bestilling av personlege bilete. Furekunst tilbyr originale måleri, akvarell og print.',
+  }
 }
 
 /** Resolve a relative or absolute path to an absolute OG image URL. */

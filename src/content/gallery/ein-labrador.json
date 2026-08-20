@@ -1,0 +1,13 @@
+{
+  "title": "Ein labrador",
+  "description": "Akvarell og penn",
+  "type": {
+    "discriminant": "original",
+    "value": {
+      "size": "24x30cm",
+      "price": 1800
+    }
+  },
+  "passepartout": true,
+  "image": "../../assets/artworks/ein-labrador/ein-labrador.jpeg"
+}

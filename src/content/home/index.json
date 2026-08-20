@@ -1,0 +1,27 @@
+{
+  "heroDesktopImage": "../../assets/img/lazy-dogs.jpg",
+  "heroDesktopAlt": "Bilde: Lazy dogs",
+  "heroMobileImage": "../../assets/img/mas.jpeg",
+  "heroMobileAlt": "Bilde: Mas",
+  "aboutHeading": "Om Kunstnaren",
+  "aboutImage": "../../assets/img/profilbilde.jpeg",
+  "aboutImageAlt": "Portrett av Elisabeth Fure Schwarz",
+  "aboutText": "Hei og hå! Mitt namn er Elisabeth Fure Schwarz, og det er eg som står bak enkeltpersonforetaket Fure.kunst.\n\nFrå 2019-2021 gjekk eg på Einar Granum Kunstfagskule, der eg andre året hadde fordjupning i maleri og billedkunst. Sidan då har eg solgt både originalar og print av det eg har laga, mest gjennom marknadsføring på instagramkontoen min Fure.kunst.\n\nMitt favorittmedium å male med er akvarell, men det går også mykje i akryl og litt i olje. Elles finn du fleire tegningar laga med tusj og penn.\n\nTa gjerne kontakt om du skulle vere interessert i noko av det du finn her på nettsida, eller om du har ønske om å bestille eit personleg bilete.",
+  "featuredHeading": "Nokre utvalgte bilete",
+  "featuredItems": [
+    {
+      "image": "../../assets/img/hjort.jpeg",
+      "alt": "Bilde: Hjort"
+    },
+    {
+      "image": "../../assets/img/sjimpanse.jpeg",
+      "alt": "Bilde: Sjimpanse"
+    },
+    {
+      "image": "../../assets/img/labrador.jpeg",
+      "alt": "Bilde: Labrador"
+    }
+  ],
+  "galleryButtonText": "Galleri",
+  "contactButtonText": "Ta kontakt"
+}

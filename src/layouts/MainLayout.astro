@@ -2,7 +2,8 @@
 import { ClientRouter } from 'astro:transitions'
 import Header from '../components/header.astro'
 import Footer from '../components/footer.astro'
-import { canonicalUrl, renderOgTags, siteConfig } from '../lib/seo'
+import { canonicalUrl, renderOgTags, getSeoSettings } from '../lib/seo'
+import { getSiteSettings } from '../lib/settings'
 import '../styles/global.css'
 // Asset imports resolve to the same hashed URLs the built CSS references, so
 // the preload dedupes with the @font-face download (no double fetch).
@@ -18,9 +19,12 @@ interface Props {
   type?: string
 }
 
+const seoSettings = await getSeoSettings()
+const settings = await getSiteSettings()
+
 const {
-  title = siteConfig.name,
-  description = siteConfig.description,
+  title = seoSettings.defaultSiteTitle,
+  description = seoSettings.defaultSiteDescription,
   ogImage,
   canonical,
   noindex = false,
@@ -42,13 +46,10 @@ const seoTags = renderOgTags({
 const personJsonLd = {
   '@context': 'https://schema.org',
   '@type': 'Person',
-  name: 'Elisabeth Fure Schwarz',
+  name: settings.artistName,
   jobTitle: 'Kunstnar',
   url: 'https://furekunst.no',
-  sameAs: [
-    'https://www.instagram.com/fure.kunst',
-    'https://www.facebook.com/fure.kunst/',
-  ],
+  sameAs: [settings.instagramUrl, settings.facebookUrl].filter(Boolean),
   makesOffer: {
     '@type': 'Offer',
     itemOffered: {
@@ -60,7 +61,7 @@ const personJsonLd = {
 ---
 
 <!doctype html>
-<html lang="nn" class="light" transition:animate="none">
+<html lang="nn" class="light">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -72,40 +73,71 @@ const personJsonLd = {
          to the fallback (cold slow load), never swapping, so no flash either
          way. crossorigin is required for font fetches; the other Didot faces
          (Bold/Italic/Title) are unused and load on demand if ever referenced. -->
-    <link rel="preload" href={didotWoff} as="font" type="font/woff2" crossorigin />
-    <link rel="preload" href={geistLatinWoff} as="font" type="font/woff2" crossorigin />
+    <link
+      rel="preload"
+      href={didotWoff}
+      as="font"
+      type="font/woff2"
+      crossorigin
+    />
+    <link
+      rel="preload"
+      href={geistLatinWoff}
+      as="font"
+      type="font/woff2"
+      crossorigin
+    />
     <meta name="theme-color" content="#fffff9" />
     <meta name="generator" content={Astro.generator} />
     <link rel="sitemap" href="/sitemap.xml" />
     <link rel="canonical" href={canonicalHref} />
-    <ClientRouter />
     <slot name="head" />
     <title>{title}</title>
     <meta name="description" content={description} />
     {noindex && <meta name="robots" content="noindex" />}
     {seoTags.map(tag => <meta {...tag.attrs} />)}
-    <script is:inline type="application/ld+json" set:html={JSON.stringify(personJsonLd)} />
     <script
       is:inline
-      defer
-      src="https://umami.sindresau.me/script.js"
-      data-website-id="00015d30-7c72-4dc9-9bdc-74c42e1d5984"
-      data-domains="furekunst.no, www.furekunst.no"
-    ></script>
+      type="application/ld+json"
+      set:html={JSON.stringify(personJsonLd)}
+    />
+    <script is:inline>
+      // iOS Chrome/Edge back button fix (astro#11919): WebKit doesn't keep
+      // ClientRouter's history entries non-skippable, so pressing back jumps
+      // straight past them to a previous site or the start screen. Plant the
+      // entry synchronously inside the tap gesture with Astro-shaped state so
+      // the router's popstate handler runs on back/forward like on desktop.
+      document.addEventListener('click', e => {
+        if (!/CriOS|EdgiOS/i.test(navigator.userAgent)) return
+        if (
+          e.defaultPrevented ||
+          e.button !== 0 ||
+          e.metaKey ||
+          e.ctrlKey ||
+          e.shiftKey ||
+          e.altKey
+        )
+          return
+        const link = e.target instanceof Element ? e.target.closest('a') : null
+        if (
+          !link ||
+          link.target === '_blank' ||
+          link.hasAttribute('download') ||
+          link.hasAttribute('data-astro-reload') ||
+          !link.href.startsWith(window.location.origin) ||
+          link.href.includes('#')
+        )
+          return
+        const index =
+          (typeof history.state?.index === 'number' ? history.state.index : 0) + 1
+        history.pushState({ index, scrollX: 0, scrollY: 0 }, '', link.href)
+      })
+    </script>
+    <ClientRouter fallback="animate" />
   </head>
-  <!-- iOS WebKit resolves vh to the large viewport (URL bar hidden) even while
-       the bar is visible, so min-h-screen (100vh) makes the body taller than the
-       visible viewport and adds scrollable space below the footer. dvh tracks
-       the visible viewport incl. the URL bar (FK-024/iOS fix). Pre-iOS-15.4
-       falls back to no min-height, which is harmless. -->
+
   <body class="font-body text-primary flex min-h-dvh flex-col antialiased">
     <Header />
-    <!-- No transition directive on <main>: it belongs to the root snapshot, so
-         navigation swaps the content instantly while only the named artwork
-         frames morph. A transition:animate on <main> cross-fades the whole
-         content area — on artwork-heavy pages that mid-blend reads as a gray
-         flash on mobile. No z-index either: main must not create a stacking
-         context, or the zoom dialog's fixed z-[100] gets trapped inside it. -->
     <main id="innhold" class="container mx-auto mt-8 max-w-7xl flex-grow">
       <slot />
     </main>

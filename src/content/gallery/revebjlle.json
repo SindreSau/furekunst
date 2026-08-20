@@ -1,0 +1,13 @@
+{
+  "title": "Revebjølle",
+  "description": "Eit maleri i akryl og olje på lerret.",
+  "type": {
+    "discriminant": "original",
+    "value": {
+      "size": "100x70cm",
+      "price": 6500
+    }
+  },
+  "passepartout": false,
+  "image": "../../assets/artworks/revebjlle/revebjlle.jpeg"
+}

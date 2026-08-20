@@ -1,0 +1,17 @@
+{
+  "title": "Juleførebuingar ",
+  "description": "Akvarell på papir ",
+  "type": {
+    "discriminant": "print",
+    "value": {
+      "sizeAndPrice": [
+        {
+          "size": "Print A5 14,8x21cm",
+          "price": 250
+        }
+      ]
+    }
+  },
+  "passepartout": true,
+  "image": "../../assets/artworks/julefrebuingar/julefrebuingar.jpeg"
+}

@@ -1,153 +1,118 @@
 ---
-// Home page (ported from Next.js src/app/page.tsx, FK-007).
-// Fixes: B5 (frame-shadow via global.css), B8 (mobile carousel images never
-// fetched on desktop; grid `hidden md:grid`), B10 (descriptive alts), hero
-// CLS + LCP via astro:assets + fetchpriority. Animations (FadeInSection scroll
-// reveal, FadeImage blur-in) restored with the original delays — implemented
-// as one bundled vanilla script, no React islands.
-//
-// FK-022: the featured grid + mobile carousel are intentionally curated,
-// hard-coded local images (hjort / sjimpanse / labrador) — the live "latest 3"
-// pull from Contentful was reverted after user feedback ("Nokre utvalgte
-// bilete" looked better hard-coded). Only the mobile hero looks up the
-// vertical "Mas" artwork from the live collection. On a collection error the
-// lazy-dogs hero stays as the graceful fallback for both viewports; the
-// featured section is unaffected (only masHero may be null).
 import { Image, getImage } from 'astro:assets'
-import { getLiveCollection } from 'astro:content'
+import { getEntry } from 'astro:content'
 import MainLayout from '../layouts/MainLayout.astro'
 import Separator from '../components/Separator.astro'
 import Button from '../components/Button.astro'
 import FadeInSection from '../components/FadeInSection.astro'
 import ImageCarousel from '../components/ImageCarousel.astro'
-import lazyDogs from '../assets/img/lazy-dogs.jpg'
-import lazyDogsBlur from '../assets/img/lazy-dogs-blur.webp'
-import profilbilde from '../assets/img/profilbilde.jpeg'
-import hjort from '../assets/img/hjort.jpeg'
-import sjimpanse from '../assets/img/sjimpanse.jpeg'
-import labrador from '../assets/img/labrador.jpeg'
+import { getBlurDataUrl } from '../lib/blur'
+import { parseMarkdownParagraphs } from '../lib/markdown'
+import { getSeoSettings } from '../lib/seo'
 
-// FK-030: responsive hero — one srcset (Vercel-valid widths) + accurate
-// sizes so smaller viewports download a smaller LCP image instead of the
-// full 1754w on every screen. Quality stays 70 for the LCP candidate.
-// NOTE: the Vercel adapter only serves widths from its sizes list
-// [640, 750, 828, 1080, 1200, 1920, 2048, 3840] — other widths get snapped,
-// and width lists get filtered to that list (see sharedValidateOptions).
-const hero = await getImage({
-  src: lazyDogs,
-  width: 1920,
-  widths: [640, 750, 828, 1080, 1200, 1920],
-  quality: 70,
-})
-// The <img src> fallback must be the SMALLEST candidate: the preload scanner
-// (and non-srcset browsers) fetch `src` unconditionally — even on mobile
-// where the <picture> <source> is what actually renders. A big src would
-// mean a wasted full-size download on phones (FK-030).
-const heroFallback = hero.srcSet?.values[0]?.url ?? hero.src
+import defaultLazyDogs from '../assets/img/lazy-dogs.jpg'
+import defaultLazyDogsBlur from '../assets/img/lazy-dogs-blur.webp'
+import defaultProfilbilde from '../assets/img/profilbilde.jpeg'
+import defaultHjort from '../assets/img/hjort.jpeg'
+import defaultSjimpanse from '../assets/img/sjimpanse.jpeg'
+import defaultLabrador from '../assets/img/labrador.jpeg'
 
-const { entries, error, cacheHint } = await getLiveCollection('galleryPosts')
+const homeEntry = await getEntry('home', 'index')
+const seoSettings = await getSeoSettings()
+const homeData = homeEntry?.data
 
-if (Astro.cache.enabled) {
-  if (cacheHint) Astro.cache.set(cacheHint)
-  Astro.cache.set({ maxAge: 3600 })
-}
+const heroDesktopImage = homeData?.heroDesktopImage ?? defaultLazyDogs
+const heroDesktopAlt = homeData?.heroDesktopAlt ?? 'Bilde: Lazy dogs'
+const heroMobileImage = homeData?.heroMobileImage
 
-if (error) {
-  console.error(`Failed to load gallery posts: ${error.message}`)
-  Astro.response.status = 500
-}
+const aboutHeading = homeData?.aboutHeading ?? 'Om Kunstnaren'
+const aboutImage = homeData?.aboutImage ?? defaultProfilbilde
+const aboutImageAlt = homeData?.aboutImageAlt ?? 'Portrett av Elisabeth Fure Schwarz'
 
-// Intentionally curated (FK-022): featured art is hard-coded local assets, not
-// the latest live posts — keeps this section stable and predictable.
-const featured = [
-  { src: hjort, alt: 'Bilde: Hjort' },
-  { src: sjimpanse, alt: 'Bilde: Sjimpanse' },
-  { src: labrador, alt: 'Bilde: Labrador' },
-]
+const defaultAboutText = `Hei og hå! Mitt namn er Elisabeth Fure Schwarz, og det er eg som står bak enkeltpersonforetaket Fure.kunst.
 
-// Mobile hero: the vertical "Mas" artwork from Contentful replaces the
-// landscape lazy-dogs image on narrow screens (FK-022). Served through a
-// <picture> so each viewport fetches only its own image (B8-safe). Capped at
-// 640w q55 (~90KB): the hero is a decorative full-bleed backdrop — the full
-// 1080w/828w variants (~150-250KB) were overkill for a phone-width image
-// (FK-030).
-const masPost = (entries ?? []).find(post => post.data.slug === 'mas')
-const masHero = masPost?.data.image
+Frå 2019-2021 gjekk eg på Einar Granum Kunstfagskule, der eg andre året hadde fordjupning i maleri og billedkunst. Sidan då har eg solgt både originalar og print av det eg har laga, mest gjennom marknadsføring på instagramkontoen min Fure.kunst.
+
+Mitt favorittmedium å male med er akvarell, men det går også mykje i akryl og litt i olje. Elles finn du fleire tegningar laga med tusj og penn.
+
+Ta gjerne kontakt om du skulle vere interessert i noko av det du finn her på nettsida, eller om du har ønske om å bestille eit personleg bilete.`
+
+const rawAboutText =
+  homeData?.aboutText ||
+  (homeData?.aboutParagraphs?.length
+    ? homeData.aboutParagraphs.join('\n\n')
+    : defaultAboutText)
+const aboutParagraphsHtml = parseMarkdownParagraphs(rawAboutText)
+
+const featuredHeading = homeData?.featuredHeading ?? 'Nokre utvalgte bilete'
+const featuredItems = homeData?.featuredItems?.length
+  ? homeData.featuredItems.map(item => ({ src: item.image, alt: item.alt }))
+  : [
+      { src: defaultHjort, alt: 'Bilde: Hjort' },
+      { src: defaultSjimpanse, alt: 'Bilde: Sjimpanse' },
+      { src: defaultLabrador, alt: 'Bilde: Labrador' },
+    ]
+
+const galleryBtnText = homeData?.galleryButtonText ?? 'Galleri'
+const contactBtnText = homeData?.contactButtonText ?? 'Ta kontakt'
+const pageTitle = seoSettings.homeSeoTitle
+const pageDescription = seoSettings.homeSeoDescription
+
+// Mobile hero image (if configured)
+const mobileHeroOptimized = heroMobileImage
   ? await getImage({
-      src: masPost.data.image.url,
+      src: heroMobileImage,
       width: 640,
       quality: 55,
     })
   : null
 
-// Carousel copy (mobile, full width): srcset 640/750/828 at a leaner quality
-// 50 — small phones get a smaller file than the old fixed 600w. Grid copy
-// (md+, ~1/3 container): srcset 640/750/828 at quality 55, so each column
-// width fetches a matched size (FK-030). All widths are Vercel-valid
-// (see sharedValidateOptions filter in the Vercel adapter).
-const CAROUSEL_SIZES = 'calc(100vw - 4.5rem)'
-const GRID_SIZES = '(max-width: 1279px) calc(33.333vw - 2.75rem), 384px'
-
-const featuredImages = await Promise.all(
-  featured.map(item =>
-    getImage({ src: item.src, width: 828, widths: [640, 750, 828], quality: 50 }).then(r => ({
-      src: r.srcSet?.values[0]?.url ?? r.src,
-      srcSet: r.srcSet?.attribute,
-      sizes: CAROUSEL_SIZES,
-      alt: item.alt,
-      width: r.attributes.width,
-      height: r.attributes.height,
-    })),
-  ),
-)
-
-const gridImages = await Promise.all(
-  featured.map(item =>
-    getImage({ src: item.src, width: 750, widths: [640, 750, 828], quality: 55 }).then(r => ({
-      src: r.srcSet?.values[0]?.url ?? r.src,
-      srcSet: r.srcSet?.attribute,
-      sizes: GRID_SIZES,
-      alt: item.alt,
-      width: r.attributes.width,
-      height: r.attributes.height,
-    })),
-  ),
-)
+// Desktop hero placeholder
+const blurDataUrl = await getBlurDataUrl(heroDesktopImage)
 ---
 
 <MainLayout
-  title="Heim - Kunstnar Elisabeth Fure Schwarz | Furekunst"
-  description="Elisabeth Fure Schwarz er kunstnaren bak Furekunst, med hovudfokus på akvarell. Utforsk galleriet med originale kunstverk og bestill personlege bilete."
+  title={pageTitle}
+  description={pageDescription}
 >
   <FadeInSection initiallyVisible>
     <div class="relative mb-8 aspect-[3/4] w-full overflow-hidden bg-pastel-dark md:mb-12 md:aspect-[1754/1241]">
-      <img
-        src={lazyDogsBlur.src}
-        alt=""
-        aria-hidden="true"
-        width={1754}
-        height={1241}
-        loading="eager"
-        fetchpriority="low"
-        decoding="async"
-        class="absolute inset-0 hidden h-full w-full object-cover blur-[1px] md:block"
-      />
+      {blurDataUrl ? (
+        <img
+          src={blurDataUrl}
+          alt=""
+          aria-hidden="true"
+          class="absolute inset-0 hidden h-full w-full object-cover blur-[1px] md:block"
+        />
+      ) : (
+        <Image
+          src={defaultLazyDogsBlur}
+          alt=""
+          aria-hidden="true"
+          width={1754}
+          height={1241}
+          loading="eager"
+          fetchpriority="low"
+          decoding="async"
+          class="absolute inset-0 hidden h-full w-full object-cover blur-[1px] md:block"
+        />
+      )}
       <picture class="absolute inset-0 h-full w-full">
-        {masHero && (
+        {mobileHeroOptimized && (
           <source
             media="(max-width: 767px)"
-            srcset={masHero.srcSet?.attribute || masHero.src}
-            width={masHero.attributes.width}
-            height={masHero.attributes.height}
+            srcset={mobileHeroOptimized.srcSet?.attribute || mobileHeroOptimized.src}
+            width={mobileHeroOptimized.attributes.width}
+            height={mobileHeroOptimized.attributes.height}
           />
         )}
-        <img
-          src={heroFallback}
-          srcset={hero.srcSet?.attribute}
+        <Image
+          src={heroDesktopImage}
           sizes="(min-width: 1280px) 1216px, calc(100vw - 4rem)"
-          alt="Bilde: Lazy dogs"
-          width={hero.attributes.width}
-          height={hero.attributes.height}
+          alt={heroDesktopAlt}
+          width={1920}
+          widths={[640, 750, 828, 1080, 1200, 1920]}
+          quality={70}
           loading="eager"
           fetchpriority="high"
           decoding="async"
@@ -168,8 +133,8 @@ const gridImages = await Promise.all(
     <FadeInSection delay={100} className="md:w-1/3">
       <div class="overflow-hidden">
         <Image
-          src={profilbilde}
-          alt="Portrett av Elisabeth Fure Schwarz"
+          src={aboutImage}
+          alt={aboutImageAlt}
           width={828}
           widths={[640, 750, 828]}
           sizes="(min-width: 768px) calc(33.333vw - 1.4rem), 50vw"
@@ -187,34 +152,14 @@ const gridImages = await Promise.all(
 
     <div class="flex flex-col md:w-2/3">
       <FadeInSection delay={70}>
-        <h1 class="font-didot mb-6">Om Kunstnaren</h1>
+        <h1 class="font-didot mb-6">{aboutHeading}</h1>
       </FadeInSection>
 
       <FadeInSection delay={125}>
         <div class="flex flex-col gap-4 tracking-wider text-gray-700">
-          <p>
-            Hei og hå! Mitt namn er Elisabeth Fure Schwarz, og det er eg som
-            står bak enkeltpersonforetaket Fure.kunst.
-          </p>
-
-          <p>
-            Frå 2019-2021 gjekk eg på Einar Granum Kunstfagskule, der eg andre
-            året hadde fordjupning i maleri og billedkunst. Sidan då har eg
-            solgt både originalar og print av det eg har laga, mest gjennom
-            marknadsføring på instagramkontoen min Fure.kunst.
-          </p>
-
-          <p>
-            Mitt favorittmedium å male med er akvarell, men det går også mykje
-            i akryl og litt i olje. Elles finn du fleire tegningar laga med
-            tusj og penn.
-          </p>
-
-          <p>
-            Ta gjerne kontakt om du skulle vere interessert i noko av det du
-            finn her på nettsida, eller om du har ønske om å bestille eit
-            personleg bilete.
-          </p>
+          {aboutParagraphsHtml.map(paragraphHtml => (
+            <p set:html={paragraphHtml} />
+          ))}
         </div>
       </FadeInSection>
     </div>
@@ -226,26 +171,26 @@ const gridImages = await Promise.all(
 
   <section class="py-12">
     <FadeInSection delay={70}>
-      <h2 class="font-didot mb-8 text-center">Nokre utvalgte bilete</h2>
+      <h2 class="font-didot mb-8 text-center">{featuredHeading}</h2>
     </FadeInSection>
 
     <FadeInSection delay={125} className="md:hidden">
       <div class="px-1 md:px-0">
-        <ImageCarousel images={featuredImages} />
+        <ImageCarousel images={featuredItems} />
       </div>
     </FadeInSection>
 
     <div class="hidden gap-8 md:grid md:grid-cols-3">
-      {gridImages.map((image, index) => (
+      {featuredItems.map((item, index) => (
         <FadeInSection delay={125 + index * 70}>
           <div class="aspect-auto h-full overflow-hidden">
-            <img
-              src={image.src}
-              srcset={image.srcSet}
-              sizes={image.sizes}
-              alt={image.alt}
-              width={image.width}
-              height={image.height}
+            <Image
+              src={item.src}
+              alt={item.alt}
+              width={750}
+              widths={[640, 750, 828]}
+              sizes="(max-width: 1279px) calc(33.333vw - 2.75rem), 384px"
+              quality={55}
               loading="lazy"
               data-fade-img
               class="frame-shadow h-full w-full object-cover blur-[1px] transition-all duration-500 ease-out"
@@ -258,12 +203,13 @@ const gridImages = await Promise.all(
     <FadeInSection delay={40}>
       <div class="mt-12 flex justify-center gap-12">
         <Button type="link" href="/galleri">
-          Galleri
+          {galleryBtnText}
         </Button>
         <Button type="link" href="/kontakt">
-          Ta kontakt
+          {contactBtnText}
         </Button>
       </div>
     </FadeInSection>
   </section>
 </MainLayout>
+

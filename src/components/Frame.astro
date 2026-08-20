@@ -16,10 +16,24 @@ const {
   transitionName,
   ...rest
 } = Astro.props
+
+// Custom animation object: `animation-name: none` stops Astro's default
+// `astroFadeIn/astroFadeOut` from overriding the browser's native
+// view-transition morph (position + size interpolation between old/new).
+const morphAnim = {
+  forwards: {
+    old: { name: 'none' },
+    new: { name: 'none' },
+  },
+  backwards: {
+    old: { name: 'none' },
+    new: { name: 'none' },
+  },
+}
 const frameClass = [
   'relative isolate border-[6px] border-slate-800',
   'shadow-[5px_5px_4px_0px_rgba(0,0,0,0.2)]',
-  'transition-[box-shadow,transform] duration-300 ease-out',
+  'transition-all duration-300 ease-out',
   'group-hover:scale-[1.01] group-hover:shadow-[6px_6px_6px_0px_rgba(0,0,0,0.25)]',
   className,
 ]
@@ -31,6 +45,7 @@ const frameClass = [
 <figure
   class={frameClass}
   transition:name={transitionName}
+  transition:animate={morphAnim}
   {...rest}
 >
   <div

@@ -1,0 +1,13 @@
+{
+  "title": "Anatomisk hjarte",
+  "description": "Penn på papir",
+  "type": {
+    "discriminant": "original",
+    "value": {
+      "size": "A3",
+      "price": 2500
+    }
+  },
+  "passepartout": true,
+  "image": "../../assets/artworks/anatomisk-hjarte/anatomisk-hjarte.jpeg"
+}

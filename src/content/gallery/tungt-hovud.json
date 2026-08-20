@@ -1,0 +1,13 @@
+{
+  "title": "Tungt hovud",
+  "description": "Akvarell på papir",
+  "type": {
+    "discriminant": "original",
+    "value": {
+      "size": "30x40cm",
+      "price": 0
+    }
+  },
+  "passepartout": true,
+  "image": "../../assets/artworks/tungt-hovud/tungt-hovud.jpeg"
+}

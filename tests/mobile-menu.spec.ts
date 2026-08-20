@@ -1,4 +1,4 @@
-import { expect, test, type Page } from '@playwright/test'
+import { expect, test, type Page } from './fixtures'
 
 // Mobile nav menu regression tests for src/components/MobileMenu.astro.
 //
@@ -12,12 +12,10 @@ import { expect, test, type Page } from '@playwright/test'
 const TOGGLE = '[data-menu-toggle]'
 const NAV = '#mobilmeny'
 
-test.beforeEach(async ({ page, viewport }, testInfo) => {
+test.beforeEach(async ({ viewport }, testInfo) => {
   // These tests exercise the mobile menu; skip when running on a desktop
   // viewport (the toggle is md:hidden there).
   test.skip((viewport?.width ?? 0) >= 768, 'mobile viewport only')
-  // Keep the suite hermetic: umami analytics is external and irrelevant here.
-  await page.route('https://umami.sindresau.me/**', route => route.abort())
 })
 
 async function expectMenuOpen(page: Page) {
@@ -53,34 +51,75 @@ async function expectMenuClosed(page: Page) {
 // Click the toggle and wait for the menu to reach the desired state. The
 // menu binds its click listener on astro:page-load, which can fire slightly
 // after a navigation/load settles — so a click may be lost before the
-// listener exists. We retry, but only while the toggle is in the *wrong*
-// state, which makes the retries safe (a successful click flips the state
-// synchronously, so we never click a second time on a menu that just opened).
-async function clickToggleUntil(page: Page, expected: 'true' | 'false') {
+// listener exists. And a click can land on the page just BEFORE the
+// ClientRouter swap replaces the DOM (the URL changes on pushState, which
+// happens before the swap) — the menu then opens on the old page and the
+// swap wipes the state. Both are handled by polling the FULL menu state and
+// re-clicking while it is wrong: a state wipe flips aria-expanded back to
+// false on the fresh DOM, and the next iteration clicks again on the
+// settled page. Never click while a view transition is running: the router
+// keeps data-astro-transition on <html> until the transition finishes.
+async function openMenu(page: Page) {
   const toggle = page.locator(TOGGLE)
   await expect
     .poll(
       async () => {
-        if ((await toggle.getAttribute('aria-expanded')) === expected)
-          return true
-        await toggle.click()
-        return (await toggle.getAttribute('aria-expanded')) === expected
+        if (
+          await page.evaluate(() =>
+            document.documentElement.hasAttribute('data-astro-transition'),
+          )
+        )
+          return false
+        if ((await toggle.getAttribute('aria-expanded')) !== 'true') {
+          await toggle.click()
+          return false
+        }
+        // aria-expanded is true — verify the rest of the open state on the
+        // same page so a swap that wiped the menu-open class (but left a
+        // stale true behind) forces a re-click on the fresh DOM.
+        const htmlOpen = await page.evaluate(() =>
+          document.documentElement.classList.contains('menu-open'),
+        )
+        if (!htmlOpen) {
+          await toggle.click()
+          return false
+        }
+        const x = (await page.locator(NAV).boundingBox())?.x ?? -1
+        return x < 1
       },
-      {
-        message: `menu should be ${expected === 'true' ? 'open' : 'closed'} after clicking the toggle`,
-      },
+      { message: 'mobile menu should be fully open', timeout: 10_000 },
     )
     .toBe(true)
 }
 
-async function openMenu(page: Page) {
-  await clickToggleUntil(page, 'true')
-  await expectMenuOpen(page)
-}
-
 async function closeMenu(page: Page) {
-  await clickToggleUntil(page, 'false')
-  await expectMenuClosed(page)
+  const toggle = page.locator(TOGGLE)
+  await expect
+    .poll(
+      async () => {
+        if (
+          await page.evaluate(() =>
+            document.documentElement.hasAttribute('data-astro-transition'),
+          )
+        )
+          return false
+        if ((await toggle.getAttribute('aria-expanded')) !== 'false') {
+          await toggle.click()
+          return false
+        }
+        const htmlOpen = await page.evaluate(() =>
+          document.documentElement.classList.contains('menu-open'),
+        )
+        if (htmlOpen) return false
+        const width = page.viewportSize()?.width ?? 390
+        const x =
+          (await page.locator(NAV).boundingBox())?.x ??
+          Number.POSITIVE_INFINITY
+        return x >= width
+      },
+      { message: 'mobile menu should be fully closed', timeout: 10_000 },
+    )
+    .toBe(true)
 }
 
 test.describe('mobile nav menu', () => {
@@ -160,5 +199,40 @@ test.describe('mobile nav menu', () => {
       .getByRole('link', { name: 'Kontakt' })
       .click({ modifiers: ['Meta'] })
     await expectMenuClosed(page)
+  })
+
+  test('menu keeps covering the page until navigation swaps it (no flash)', async ({
+    page,
+  }) => {
+    // Regression: the menu used to slide away on link click, revealing the
+    // current page while the ClientRouter fetched the next one — a visible
+    // flash. It must stay covering the screen until the view transition swaps
+    // the page.
+    await page.goto('/')
+    await openMenu(page)
+
+    // Hold the /kontakt document request so the navigation is pending while
+    // we assert the menu is still covering the current page.
+    let release: (() => void) | undefined
+    const gate = new Promise<void>(r => {
+      release = r
+    })
+    await page.route('**/kontakt', async route => {
+      await gate
+      await route.continue()
+    })
+
+    await page.locator(NAV).getByRole('link', { name: 'Kontakt' }).click()
+
+    // While the next page is still loading the menu must remain open and on
+    // screen (aria-expanded stays true, left edge still at 0).
+    await expect(page.locator(TOGGLE)).toHaveAttribute('aria-expanded', 'true')
+    await expect
+      .poll(async () => (await page.locator(NAV).boundingBox())?.x ?? -1)
+      .toBeLessThan(1)
+
+    release!()
+    await expect(page).toHaveURL(/\/kontakt$/)
+    await expectMenuClosed(page) // fresh page renders a closed menu
   })
 })

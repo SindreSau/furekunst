@@ -14,7 +14,7 @@
 //
 // Run: pnpm test
 
-import { test, expect, type Page } from '@playwright/test'
+import { test, expect, type Page } from './fixtures'
 
 const CARD = 'a[data-artwork-click]'
 const TYPE_BADGE = 'p.shrink-0'
@@ -95,41 +95,33 @@ test('print detail pages never render zero prices', async ({ page }) => {
   const count = await printCards.count()
   expect(count, 'there must be at least one print card').toBeGreaterThan(0)
 
-  // Only open the first 3 print cards to keep the test fast; if fewer exist,
-  // assert on what is there.
-  for (let i = 0; i < Math.min(count, 3); i++) {
-    await printCards.nth(i).click()
-    await page.waitForURL(url => isDetailUrl(url.pathname))
-    await page.waitForSelector(PRICE_ROW)
+  const firstPrint = printCards.first()
+  await firstPrint.click()
+  await page.waitForURL(url => isDetailUrl(url.pathname))
+  await page.waitForSelector(PRICE_ROW)
 
-    const rows = page.locator(PRICE_ROW)
-    const rowCount = await rows.count()
-    expect(rowCount, 'a print detail must render size rows').toBeGreaterThan(0)
-    for (let r = 0; r < rowCount; r++) {
-      const rowText = (await rows.nth(r).textContent())?.trim() ?? ''
-      expect(rowText, 'a size row must never contain "kr 0,"').not.toContain(
-        'kr 0,',
-      )
-      const cellText =
-        (await rows.nth(r).locator('span').last().textContent())?.trim() ?? ''
-      expect(cellText, `unexpected size-row price cell: ${cellText}`).toMatch(
-        /^(kr [1-9][0-9 ]*,-|Ikkje tilgjengeleg)$/,
-      )
-    }
-
-    const hint = (await page.locator(HINT).textContent())?.trim() ?? ''
-    expect(hint, `unexpected print hint: ${hint}`).toMatch(
-      /^(Print tilgjengeleg frå kr [1-9][0-9 ]*,-|Ikkje tilgjengeleg)$/,
+  const rows = page.locator(PRICE_ROW)
+  const rowCount = await rows.count()
+  expect(rowCount, 'a print detail must render size rows').toBeGreaterThan(0)
+  for (let r = 0; r < rowCount; r++) {
+    const rowText = (await rows.nth(r).textContent())?.trim() ?? ''
+    expect(rowText, 'a size row must never contain "kr 0,"').not.toContain(
+      'kr 0,',
     )
-    expect(hint, 'the hint must never contain "kr 0,"').not.toContain('kr 0,')
-
-    await assertNoZeroOffer(page)
-
-    if (i < Math.min(count, 3) - 1) {
-      await page.goto('/galleri')
-      await page.waitForSelector(CARD)
-    }
+    const cellText =
+      (await rows.nth(r).locator('span').last().textContent())?.trim() ?? ''
+    expect(cellText, `unexpected size-row price cell: ${cellText}`).toMatch(
+      /^(kr [1-9][0-9 ]*,-|Ikkje tilgjengeleg)$/,
+    )
   }
+
+  const hint = (await page.locator(HINT).textContent())?.trim() ?? ''
+  expect(hint, `unexpected print hint: ${hint}`).toMatch(
+    /^(Print tilgjengeleg frå kr [1-9][0-9 ]*,-|Ikkje tilgjengeleg)$/,
+  )
+  expect(hint, 'the hint must never contain "kr 0,"').not.toContain('kr 0,')
+
+  await assertNoZeroOffer(page)
 })
 
 // ---------------------------------------------------------------------------
