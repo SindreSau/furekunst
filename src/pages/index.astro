@@ -1,20 +1,6 @@
 ---
-// Home page (ported from Next.js src/app/page.tsx, FK-007).
-// Fixes: B5 (frame-shadow via global.css), B8 (mobile carousel images never
-// fetched on desktop; grid `hidden md:grid`), B10 (descriptive alts), hero
-// CLS + LCP via astro:assets + fetchpriority. Animations (FadeInSection scroll
-// reveal, FadeImage blur-in) restored with the original delays — implemented
-// as one bundled vanilla script, no React islands.
-//
-// FK-022: the featured grid + mobile carousel are intentionally curated,
-// hard-coded local images (hjort / sjimpanse / labrador) — the live "latest 3"
-// pull from Contentful was reverted after user feedback ("Nokre utvalgte
-// bilete" looked better hard-coded). Only the mobile hero looks up the
-// vertical "Mas" artwork from the live collection. On a collection error the
-// lazy-dogs hero stays as the graceful fallback for both viewports; the
-// featured section is unaffected (only masHero may be null).
 import { Image, getImage } from 'astro:assets'
-import { getLiveCollection } from 'astro:content'
+import { getCollection } from 'astro:content'
 import MainLayout from '../layouts/MainLayout.astro'
 import Separator from '../components/Separator.astro'
 import Button from '../components/Button.astro'
@@ -27,92 +13,24 @@ import hjort from '../assets/img/hjort.jpeg'
 import sjimpanse from '../assets/img/sjimpanse.jpeg'
 import labrador from '../assets/img/labrador.jpeg'
 
-// FK-030: responsive hero — one srcset (Vercel-valid widths) + accurate
-// sizes so smaller viewports download a smaller LCP image instead of the
-// full 1754w on every screen. Quality stays 70 for the LCP candidate.
-// NOTE: the Vercel adapter only serves widths from its sizes list
-// [640, 750, 828, 1080, 1200, 1920, 2048, 3840] — other widths get snapped,
-// and width lists get filtered to that list (see sharedValidateOptions).
-const hero = await getImage({
-  src: lazyDogs,
-  width: 1920,
-  widths: [640, 750, 828, 1080, 1200, 1920],
-  quality: 70,
-})
-// The <img src> fallback must be the SMALLEST candidate: the preload scanner
-// (and non-srcset browsers) fetch `src` unconditionally — even on mobile
-// where the <picture> <source> is what actually renders. A big src would
-// mean a wasted full-size download on phones (FK-030).
-const heroFallback = hero.srcSet?.values[0]?.url ?? hero.src
+const entries = await getCollection('gallery')
 
-const { entries, error, cacheHint } = await getLiveCollection('galleryPosts')
-
-if (Astro.cache.enabled) {
-  if (cacheHint) Astro.cache.set(cacheHint)
-  Astro.cache.set({ maxAge: 3600 })
-}
-
-if (error) {
-  console.error(`Failed to load gallery posts: ${error.message}`)
-  Astro.response.status = 500
-}
-
-// Intentionally curated (FK-022): featured art is hard-coded local assets, not
-// the latest live posts — keeps this section stable and predictable.
 const featured = [
   { src: hjort, alt: 'Bilde: Hjort' },
   { src: sjimpanse, alt: 'Bilde: Sjimpanse' },
   { src: labrador, alt: 'Bilde: Labrador' },
 ]
 
-// Mobile hero: the vertical "Mas" artwork from Contentful replaces the
-// landscape lazy-dogs image on narrow screens (FK-022). Served through a
-// <picture> so each viewport fetches only its own image (B8-safe). Capped at
-// 640w q55 (~90KB): the hero is a decorative full-bleed backdrop — the full
-// 1080w/828w variants (~150-250KB) were overkill for a phone-width image
-// (FK-030).
-const masPost = (entries ?? []).find(post => post.data.slug === 'mas')
+// Mobile hero: the vertical "Mas" artwork replaces the landscape lazy-dogs image on narrow screens
+const masPost = entries.find(post => (post.data.slug || post.id) === 'mas')
 const masHero = masPost?.data.image
   ? await getImage({
-      src: masPost.data.image.url,
+      src: masPost.data.image,
       width: 640,
       quality: 55,
     })
   : null
 
-// Carousel copy (mobile, full width): srcset 640/750/828 at a leaner quality
-// 50 — small phones get a smaller file than the old fixed 600w. Grid copy
-// (md+, ~1/3 container): srcset 640/750/828 at quality 55, so each column
-// width fetches a matched size (FK-030). All widths are Vercel-valid
-// (see sharedValidateOptions filter in the Vercel adapter).
-const CAROUSEL_SIZES = 'calc(100vw - 4.5rem)'
-const GRID_SIZES = '(max-width: 1279px) calc(33.333vw - 2.75rem), 384px'
-
-const featuredImages = await Promise.all(
-  featured.map(item =>
-    getImage({ src: item.src, width: 828, widths: [640, 750, 828], quality: 50 }).then(r => ({
-      src: r.srcSet?.values[0]?.url ?? r.src,
-      srcSet: r.srcSet?.attribute,
-      sizes: CAROUSEL_SIZES,
-      alt: item.alt,
-      width: r.attributes.width,
-      height: r.attributes.height,
-    })),
-  ),
-)
-
-const gridImages = await Promise.all(
-  featured.map(item =>
-    getImage({ src: item.src, width: 750, widths: [640, 750, 828], quality: 55 }).then(r => ({
-      src: r.srcSet?.values[0]?.url ?? r.src,
-      srcSet: r.srcSet?.attribute,
-      sizes: GRID_SIZES,
-      alt: item.alt,
-      width: r.attributes.width,
-      height: r.attributes.height,
-    })),
-  ),
-)
 ---
 
 <MainLayout
@@ -121,8 +39,8 @@ const gridImages = await Promise.all(
 >
   <FadeInSection initiallyVisible>
     <div class="relative mb-8 aspect-[3/4] w-full overflow-hidden bg-pastel-dark md:mb-12 md:aspect-[1754/1241]">
-      <img
-        src={lazyDogsBlur.src}
+      <Image
+        src={lazyDogsBlur}
         alt=""
         aria-hidden="true"
         width={1754}
@@ -141,13 +59,13 @@ const gridImages = await Promise.all(
             height={masHero.attributes.height}
           />
         )}
-        <img
-          src={heroFallback}
-          srcset={hero.srcSet?.attribute}
+        <Image
+          src={lazyDogs}
           sizes="(min-width: 1280px) 1216px, calc(100vw - 4rem)"
           alt="Bilde: Lazy dogs"
-          width={hero.attributes.width}
-          height={hero.attributes.height}
+          width={1920}
+          widths={[640, 750, 828, 1080, 1200, 1920]}
+          quality={70}
           loading="eager"
           fetchpriority="high"
           decoding="async"
@@ -231,21 +149,21 @@ const gridImages = await Promise.all(
 
     <FadeInSection delay={125} className="md:hidden">
       <div class="px-1 md:px-0">
-        <ImageCarousel images={featuredImages} />
+        <ImageCarousel images={featured} />
       </div>
     </FadeInSection>
 
     <div class="hidden gap-8 md:grid md:grid-cols-3">
-      {gridImages.map((image, index) => (
+      {featured.map((item, index) => (
         <FadeInSection delay={125 + index * 70}>
           <div class="aspect-auto h-full overflow-hidden">
-            <img
-              src={image.src}
-              srcset={image.srcSet}
-              sizes={image.sizes}
-              alt={image.alt}
-              width={image.width}
-              height={image.height}
+            <Image
+              src={item.src}
+              alt={item.alt}
+              width={750}
+              widths={[640, 750, 828]}
+              sizes="(max-width: 1279px) calc(33.333vw - 2.75rem), 384px"
+              quality={55}
               loading="lazy"
               data-fade-img
               class="frame-shadow h-full w-full object-cover blur-[1px] transition-all duration-500 ease-out"

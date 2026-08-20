@@ -1,0 +1,18 @@
+{
+  "title": "Fredrik",
+  "description": "Tusj og penn på papir",
+  "type": "print",
+  "passepartout": true,
+  "price": 500,
+  "sizeAndPrice": [
+    {
+      "size": "Print A4 (21x29cm)",
+      "price": 500
+    },
+    {
+      "size": "Print A3 (29,7x42cm)",
+      "price": 700
+    }
+  ],
+  "image": "../../assets/artworks/fredrik.jpeg"
+}

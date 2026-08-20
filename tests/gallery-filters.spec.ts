@@ -9,10 +9,11 @@
 //
 // Run: pnpm test
 
-import { test, expect } from '@playwright/test'
+import { test, expect } from './fixtures'
 
 const FILTER_GROUP = '[aria-label="Filtrer galleriet"]'
-const CHIP = (filter: string) => `${FILTER_GROUP} button[data-filter="${filter}"]`
+const CHIP = (filter: string) =>
+  `${FILTER_GROUP} button[data-filter="${filter}"]`
 // The type badge is the <p> with the shrink-0 utility; a plain
 // `[data-artwork-click] p` would also match the price-hint paragraph.
 const TYPE_BADGE = '[data-artwork-click] p.shrink-0'
@@ -30,21 +31,25 @@ test('chips filter the cards in place — no navigation', async ({ page }) => {
   // Click "Original": no navigation, only original cards stay visible.
   await page.locator(CHIP('original')).click()
   expect(page.url()).toContain('/galleri')
-  expect(await page.locator(CHIP('original')).getAttribute('aria-pressed')).toBe(
-    'true',
-  )
+  expect(
+    await page.locator(CHIP('original')).getAttribute('aria-pressed'),
+  ).toBe('true')
   expect(await page.locator(CHIP('all')).getAttribute('aria-pressed')).toBe(
     'false',
   )
 
   // The fade-out takes 200ms before cards leave the layout.
-  const originalCount = await page.locator('[data-filter-card="original"]').count()
+  const originalCount = await page
+    .locator('[data-filter-card="original"]')
+    .count()
   await expect
     .poll(
       () =>
         page
           .locator('[data-filter-card]:not([hidden])')
-          .evaluateAll(els => els.map(el => el.getAttribute('data-filter-card'))),
+          .evaluateAll(els =>
+            els.map(el => el.getAttribute('data-filter-card')),
+          ),
       { timeout: 3_000, message: 'originals-only after the fade-out' },
     )
     .toEqual(Array(originalCount).fill('original'))
@@ -64,7 +69,9 @@ test('chips filter the cards in place — no navigation', async ({ page }) => {
       () =>
         page
           .locator('[data-filter-card]:not([hidden])')
-          .evaluateAll(els => els.map(el => el.getAttribute('data-filter-card'))),
+          .evaluateAll(els =>
+            els.map(el => el.getAttribute('data-filter-card')),
+          ),
       { timeout: 3_000, message: 'prints-only after the fade-out' },
     )
     .toEqual(Array(printCount).fill('print'))
@@ -72,10 +79,10 @@ test('chips filter the cards in place — no navigation', async ({ page }) => {
   // "Alle" restores every card.
   await page.locator(CHIP('all')).click()
   await expect
-    .poll(
-      () => page.locator('[data-filter-card][hidden]').count(),
-      { timeout: 3_000, message: 'all cards visible again' },
-    )
+    .poll(() => page.locator('[data-filter-card][hidden]').count(), {
+      timeout: 3_000,
+      message: 'all cards visible again',
+    })
     .toBe(0)
   expect(await page.locator('[data-filter-card]').count()).toBe(allCards)
 })

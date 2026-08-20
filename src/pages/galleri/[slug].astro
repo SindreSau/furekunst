@@ -1,37 +1,24 @@
 ---
-import type { GetImageResult, LiveDataEntry } from 'astro'
-import { getLiveCollection } from 'astro:content'
+import type { GetImageResult } from 'astro'
+import { getCollection, type CollectionEntry } from 'astro:content'
 import { getImage } from 'astro:assets'
 import MainLayout from '../../layouts/MainLayout.astro'
 import ArtworkDetails from '../../components/ArtworkDetails.astro'
 import ArtworkZoom from '../../components/ArtworkZoom.astro'
 import Button from '../../components/Button.astro'
 import { priceHint } from '../../lib/price'
-import type { GalleryPostData } from '../../lib/gallery'
 
-// FK-018: artwork detail is on-demand — no getStaticPaths, looked up from the
-// live collection. NOTE: this dynamic route is shadowed by the static
-// original.astro / print.astro routes for any artwork whose slug is literally
-// "original" or "print" (static routes win in Astro's route precedence).
-const { entries, error, cacheHint } = await getLiveCollection('galleryPosts')
+const posts = await getCollection('gallery')
+const post = posts.find(
+  entry => (entry.data.slug || entry.id) === Astro.params.slug,
+)
 
-if (Astro.cache.enabled) {
-  if (cacheHint) Astro.cache.set(cacheHint)
-  Astro.cache.set({ maxAge: 3600 })
-}
-
-if (error) {
-  console.error(`Failed to load gallery posts: ${error.message}`)
-  Astro.response.status = 500
-}
-
-const post = (entries ?? []).find(entry => entry.data.slug === Astro.params.slug)
-if (!post && !error) {
+if (!post) {
   Astro.response.status = 404
 }
 
 interface DetailRender {
-  post: LiveDataEntry<GalleryPostData>
+  post: CollectionEntry<'gallery'>
   image: GetImageResult
   zoomImage: GetImageResult
   metaDescription: string
@@ -48,23 +35,21 @@ if (post && imageAsset) {
   // The page image must use the EXACT same optimized URL as the gallery card
   // (width 700, quality 55): the gallery → detail morph captures the new
   // page's snapshot at first render, and only a URL the browser already has
-  // in cache (from the card the user just clicked) decodes in time. A
-  // different URL would show a blank frame and the image would pop back in.
-  // The zoom dialog gets its own hi-res variant (see zoomImage).
+  // in cache (from the card the user just clicked) decodes in time.
   const imageWidth = Math.min(imageAsset.width, 700)
   const imageHeight = Math.max(
     1,
     Math.round((imageAsset.height / imageAsset.width) * imageWidth),
   )
   const image = await getImage({
-    src: imageAsset.url,
+    src: imageAsset,
     width: imageWidth,
     height: imageHeight,
     quality: 55,
   })
   // Hi-res variant for the fullscreen zoom dialog (displayed much larger).
   const zoomImage = await getImage({
-    src: imageAsset.url,
+    src: imageAsset,
     width: Math.min(imageAsset.width, 1500),
     height: Math.max(
       1,
@@ -109,7 +94,7 @@ if (post && imageAsset) {
     description: data.description || 'Kunstverk av Elisabeth Fure Schwarz',
     artMedium: data.description.trim().split(/\s+/)[0] || 'Måleri',
     artform: typeLabel,
-    image: imageAsset.url,
+    image: image.src,
     url: new URL(Astro.url.pathname, Astro.site ?? 'https://furekunst.no').toString(),
     ...(data.size ? { size: data.size } : {}),
     creator: {
@@ -125,7 +110,7 @@ if (post && imageAsset) {
     image,
     zoomImage,
     metaDescription,
-    ogImage: `${imageAsset.url}?w=1200&h=630&fit=fill`,
+    ogImage: image.src,
     structuredData,
   }
 }
@@ -136,7 +121,7 @@ if (post && imageAsset) {
     title={`${detail.post.data.title} | Furekunst`}
     description={detail.metaDescription}
     ogImage={detail.ogImage}
-    canonical={`/galleri/${detail.post.data.slug}`}
+    canonical={`/galleri/${detail.post.data.slug || detail.post.id}`}
   >
     <Fragment slot="head">
       <link rel="preload" as="image" href={detail.image.src} fetchpriority="high" />
@@ -167,13 +152,14 @@ if (post && imageAsset) {
       <div class="grid grid-cols-1 gap-8 md:grid-cols-2">
         <div class="overflow-visible p-1">
           <ArtworkZoom
+            image={imageAsset}
             src={detail.image.src}
             zoomSrc={detail.zoomImage.src}
             alt={detail.post.data.title}
             width={detail.image.attributes.width}
             height={detail.image.attributes.height}
             passpartout={detail.post.data.passepartout}
-            transitionName={`art-${detail.post.data.slug}`}
+            transitionName={`art-${detail.post.data.slug || detail.post.id}`}
           />
         </div>
 
@@ -183,22 +169,16 @@ if (post && imageAsset) {
   </MainLayout>
 ) : (
   <MainLayout
-    title={error ? 'Noko gjekk gale | Furekunst' : 'Sida ikkje funnen | Furekunst'}
-    description={
-      error
-        ? 'Kunne ikkje laste kunstverket. Prøv igjen om ei stund.'
-        : 'Sida du leita etter finst ikkje.'
-    }
+    title="Sida ikkje funnen | Furekunst"
+    description="Sida du leita etter finst ikkje."
     noindex
   >
     <div class="flex min-h-[50vh] flex-col items-center justify-center text-center">
       <h1 class="mb-4 text-3xl font-bold">
-        {error ? 'Noko gjekk gale' : 'Ikkje funnen'}
+        Ikkje funnen
       </h1>
       <p class="mb-8 max-w-md text-gray-600">
-        {error
-          ? 'Kunne ikkje laste kunstverket akkurat no. Prøv igjen om ei stund.'
-          : 'Kunstverket du leita etter finst ikkje.'}
+        Kunstverket du leita etter finst ikkje.
       </p>
       <Button type="link" href="/galleri" prefetch class="px-4 py-1 text-sm">
         Sjå galleriet

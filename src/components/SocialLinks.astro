@@ -1,0 +1,147 @@
+---
+import { CONSTANTS } from '../lib/constants'
+
+interface Props {
+  variant?: 'footer' | 'contact'
+  class?: string
+}
+
+const { variant = 'footer', class: className = '' } = Astro.props
+
+const links = [
+  {
+    href: `mailto:${CONSTANTS.email}`,
+    label: CONSTANTS.email,
+    ariaLabel: `E-post: ${CONSTANTS.email}`,
+    target: undefined,
+    rel: undefined,
+    icon: 'mail',
+  },
+  {
+    href: CONSTANTS.instagram,
+    label: 'fure.kunst',
+    ariaLabel: 'Instagram',
+    target: '_blank',
+    rel: 'noopener noreferrer',
+    icon: 'instagram',
+  },
+  ...(variant === 'footer'
+    ? [
+        {
+          href: CONSTANTS.facebook,
+          label: 'Facebook',
+          ariaLabel: 'Facebook',
+          target: '_blank',
+          rel: 'noopener noreferrer',
+          icon: 'facebook',
+        },
+      ]
+    : []),
+]
+---
+
+{
+  variant === 'footer' ? (
+    <div class={`flex space-x-4 ${className}`}>
+      {links.map(link => (
+        <a
+          href={link.href}
+          target={link.target}
+          rel={link.rel}
+          class="text-gray-700 transition-colors duration-300 hover:text-gray-900"
+          aria-label={link.ariaLabel}
+        >
+          {link.icon === 'mail' && (
+            <svg
+              class="h-6 w-6"
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <rect width="20" height="16" x="2" y="4" rx="2" />
+              <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" />
+            </svg>
+          )}
+          {link.icon === 'instagram' && (
+            <svg
+              class="h-6 w-6"
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <rect width="20" height="20" x="2" y="2" rx="5" ry="5" />
+              <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" />
+              <line x1="17.5" x2="17.51" y1="6.5" y2="6.5" />
+            </svg>
+          )}
+          {link.icon === 'facebook' && (
+            <svg
+              class="h-6 w-6"
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z" />
+            </svg>
+          )}
+        </a>
+      ))}
+    </div>
+  ) : (
+    <div class={`flex w-min flex-col gap-6 font-serif ${className}`}>
+      {links.map(link => (
+        <a
+          href={link.href}
+          target={link.target}
+          rel={link.rel}
+          class="flex items-center gap-4 text-xl text-gray-500 transition-colors duration-300 hover:text-gray-800"
+        >
+          {link.icon === 'mail' && (
+            <svg
+              aria-hidden="true"
+              class="h-6 w-6"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <rect width="20" height="16" x="2" y="4" rx="2" />
+              <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" />
+            </svg>
+          )}
+          {link.icon === 'instagram' && (
+            <svg
+              aria-hidden="true"
+              class="h-6 w-6"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <rect width="20" height="20" x="2" y="2" rx="5" />
+              <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" />
+              <line x1="17.5" x2="17.51" y1="6.5" y2="6.5" />
+            </svg>
+          )}
+          <span>{link.label}</span>
+        </a>
+      ))}
+    </div>
+  )
+}

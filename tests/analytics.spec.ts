@@ -8,7 +8,7 @@
 //
 // Run: pnpm test
 
-import { test, expect } from '@playwright/test'
+import { test, expect } from './fixtures'
 
 test.beforeEach(async ({ page }) => {
   // Hermetic suite: umami is external and irrelevant here (the real tracker
@@ -16,7 +16,9 @@ test.beforeEach(async ({ page }) => {
   await page.route('https://umami.sindresau.me/**', route => route.abort())
 })
 
-test('card clicks fire the artwork_click event with the card slug', async ({ page }) => {
+test('card clicks fire the artwork_click event with the card slug', async ({
+  page,
+}) => {
   await page.goto('/galleri')
 
   const realSlug = await page
@@ -30,10 +32,18 @@ test('card clicks fire the artwork_click event with the card slug', async ({ pag
   // page load would wipe the window state before we can read it back).
   await page.evaluate(slug => {
     const events: Array<{ event: string; data?: Record<string, unknown> }> = []
-    ;(window as unknown as { umami?: { track?: (event: string, data?: Record<string, unknown>) => void } }).umami = {
+    ;(
+      window as unknown as {
+        umami?: {
+          track?: (event: string, data?: Record<string, unknown>) => void
+        }
+      }
+    ).umami = {
       track: (event, data) => events.push({ event, data }),
     }
-    ;(window as unknown as { __furekunstUmamiEvents?: typeof events }).__furekunstUmamiEvents = events
+    ;(
+      window as unknown as { __furekunstUmamiEvents?: typeof events }
+    ).__furekunstUmamiEvents = events
 
     const card = document.createElement('a')
     card.setAttribute('data-artwork-click', '')
@@ -44,7 +54,15 @@ test('card clicks fire the artwork_click event with the card slug', async ({ pag
   }, realSlug)
 
   const events = await page.evaluate(
-    () => (window as unknown as { __furekunstUmamiEvents?: Array<{ event: string; data?: Record<string, unknown> }> }).__furekunstUmamiEvents,
+    () =>
+      (
+        window as unknown as {
+          __furekunstUmamiEvents?: Array<{
+            event: string
+            data?: Record<string, unknown>
+          }>
+        }
+      ).__furekunstUmamiEvents,
   )
   expect(events).toEqual([{ event: 'artwork_click', data: { slug: realSlug } }])
 })

@@ -1,13 +1,13 @@
 ---
-import type { LiveDataEntry } from 'astro'
+import type { CollectionEntry } from 'astro:content'
 import { getImage } from 'astro:assets'
 import MainLayout from '../layouts/MainLayout.astro'
 import GalleryPost from './GalleryPost.astro'
 import Button from './Button.astro'
-import type { GalleryFilter, GalleryPostData } from '../lib/gallery'
+import type { GalleryFilter } from '../lib/gallery'
 
 interface Props {
-  posts: LiveDataEntry<GalleryPostData>[]
+  posts: CollectionEntry<'gallery'>[]
 }
 
 const { posts } = Astro.props
@@ -22,10 +22,7 @@ const filterChips: { label: string; key: GalleryFilter }[] = [
 // the cards' <img src> (width 700 → snapped to 750 by Vercel): the view-
 // transition snapshot of the gallery captures the page at first render —
 // before images load, the snapshot shows blank frames and every card blinks
-// back in after the transition. The preloads also warm the URL the detail
-// page uses for the morph (FK-018). Kept in sync with the eager cards in
-// GalleryPost (index < 4) — preloading further rows would waste bandwidth on
-// below-fold images (FK-030).
+// back in after the transition.
 const PRELOAD_IMAGES = 4
 const preloadUrls = (
   await Promise.all(
@@ -34,7 +31,7 @@ const preloadUrls = (
       if (!image) return null
       const width = Math.min(image.width, 700)
       const optimized = await getImage({
-        src: image.url,
+        src: image,
         width,
         height: Math.max(1, Math.round((image.height / image.width) * width)),
         quality: 55,
@@ -57,11 +54,6 @@ const preloadUrls = (
   </Fragment>
 
   <section aria-labelledby="gallery-heading">
-    <!-- FK-024: on sm+ the filter chips share this header row, right-aligned
-         via flex, instead of a full-width row below the hint — saves vertical
-         space when horizontal space is available. Mobile stacks them below.
-         Filtering is client-side (all posts are rendered): chips are buttons,
-         clicking one hides/shows cards without any navigation. -->
     <header
       class="mb-8 flex flex-col gap-4 md:mb-10 sm:flex-row sm:items-end sm:justify-between"
     >
@@ -105,7 +97,7 @@ const preloadUrls = (
       </div>
     </header>
 
-    <div class="gallery-masonry columns-1 gap-x-4 sm:columns-2 sm:gap-x-5 lg:columns-3 lg:gap-x-6">
+    <div class="gallery-masonry columns-1 gap-x-4 [column-fill:balance] sm:columns-2 sm:gap-x-5 lg:columns-3 lg:gap-x-6 [&_[data-reveal]]:duration-500">
       {posts.map((post, index) => (
         <GalleryPost post={post} index={index} />
       ))}
@@ -114,16 +106,7 @@ const preloadUrls = (
 </MainLayout>
 
 <script>
-  // Client-side filter (FK-024 rework): all posts are server-rendered; the
-  // chips toggle which cards are visible — no navigation. The swap runs as a
-  // same-document view transition: the cards' `art-*` view-transition names
-  // (from transition:name on the frames) make the cards that stay morph to
-  // their new masonry positions, the ones leaving fade out, the ones
-  // appearing fade in. Event delegation on document: survives
-  // <ClientRouter /> navigations, no astro:page-load re-binding needed.
   let currentFilter: string | null = null
-  // A fresh page (initial load or <ClientRouter /> navigation) always renders
-  // "Alle" as active — forget any filter chosen on the previous page.
   document.addEventListener('astro:page-load', () => {
     currentFilter = null
   })
@@ -155,20 +138,3 @@ const preloadUrls = (
     }
   })
 </script>
-
-<style>
-  .gallery-masonry {
-    column-fill: balance;
-  }
-</style>
-
-<style is:global>
-  /* Slower fade-up for the gallery cards so the reveal is clearly visible
-     as cards enter the bottom of the screen (the default 300ms is over
-     before the eye registers it). Unscoped: the cards live inside the
-     GalleryPost/FadeInSection child components, so a scoped selector would
-     not match. */
-  .gallery-masonry [data-reveal] {
-    transition-duration: 500ms;
-  }
-</style>

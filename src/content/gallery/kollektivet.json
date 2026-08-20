@@ -1,0 +1,13 @@
+{
+  "title": "Kollektivet",
+  "description": "Tusj og penn på papir",
+  "type": "print",
+  "passepartout": true,
+  "sizeAndPrice": [
+    {
+      "size": "Print A3 (29,7x42cm)",
+      "price": 700
+    }
+  ],
+  "image": "../../assets/artworks/kollektivet.jpeg"
+}

@@ -1,6 +1,8 @@
 type RevealEl = HTMLElement & { _revealed?: boolean }
 
-const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+const prefersReduced = window.matchMedia(
+  '(prefers-reduced-motion: reduce)',
+).matches
 const observerRootMargin = '0px 0px 20% 0px'
 
 // A reveal must not force-load its image when the section is not actually
@@ -26,7 +28,9 @@ function reveal(el: RevealEl) {
   // gallery cascade sets its own inline delay before calling reveal — only
   // apply the data-delay when the caller hasn't.
   if (!el.style.transitionDelay) {
-    el.style.transitionDelay = el.dataset.delay ? `${el.dataset.delay}ms` : '0ms'
+    el.style.transitionDelay = el.dataset.delay
+      ? `${el.dataset.delay}ms`
+      : '0ms'
   }
   // Clear the hidden state forced inline by the astro:before-swap handler
   // (see below) — on the wrapper AND on the named frames inside it (the
@@ -34,7 +38,9 @@ function reveal(el: RevealEl) {
   // snapshot even while the wrapper is transparent). The CSS classes take
   // over and the transition animates opacity 0.01 → 1.
   el.style.opacity = ''
-  for (const named of el.querySelectorAll<HTMLElement>('[data-astro-transition-scope]')) {
+  for (const named of el.querySelectorAll<HTMLElement>(
+    '[data-astro-transition-scope]',
+  )) {
     named.style.opacity = ''
   }
   el.classList.remove('translate-y-8', 'opacity-[0.01]')
@@ -43,7 +49,12 @@ function reveal(el: RevealEl) {
 
 function revealWhenReady(el: RevealEl) {
   const img = el.querySelector<HTMLImageElement>('img')
-  if (!img || prefersReduced || isHidden(el) || (img.complete && img.naturalWidth > 0)) {
+  if (
+    !img ||
+    prefersReduced ||
+    isHidden(el) ||
+    (img.complete && img.naturalWidth > 0)
+  ) {
     requestAnimationFrame(() => reveal(el))
     return
   }
@@ -78,7 +89,11 @@ function inViewport(el: Element): boolean {
  * passes '0px' so its fade-up plays exactly as the card appears at the
  * bottom of the screen (see revealGallery).
  */
-function observeInView(el: RevealEl, onEnter: () => void, rootMargin = observerRootMargin) {
+function observeInView(
+  el: RevealEl,
+  onEnter: () => void,
+  rootMargin = observerRootMargin,
+) {
   if (inViewport(el)) {
     onEnter()
     return
@@ -157,7 +172,10 @@ function revealGallery(els: RevealEl[], skipAnimation: boolean) {
       return card.el.getBoundingClientRect().top < window.innerHeight
     })
     const index = visible.findIndex(card => card.el === el)
-    return Math.min(Math.max(index, 0) * CASCADE_SPACING_MS, CASCADE_WAVE_CAP_MS)
+    return Math.min(
+      Math.max(index, 0) * CASCADE_SPACING_MS,
+      CASCADE_WAVE_CAP_MS,
+    )
   }
 
   for (const [index, { el }] of cards.entries()) {
@@ -207,7 +225,9 @@ function revealGallery(els: RevealEl[], skipAnimation: boolean) {
 }
 
 function initReveal(skipAnimation = false) {
-  const revealEls = Array.from(document.querySelectorAll<RevealEl>('[data-reveal]'))
+  const revealEls = Array.from(
+    document.querySelectorAll<RevealEl>('[data-reveal]'),
+  )
 
   const galleryEls: RevealEl[] = []
   const otherEls: RevealEl[] = []
@@ -239,7 +259,9 @@ function initReveal(skipAnimation = false) {
 
   // Fade-in images (data-fade-img). Reduced-motion users skip the animation
   // but must still get the sharp image — blur-none is applied immediately.
-  const fadeImgs = Array.from(document.querySelectorAll<HTMLImageElement>('[data-fade-img]'))
+  const fadeImgs = Array.from(
+    document.querySelectorAll<HTMLImageElement>('[data-fade-img]'),
+  )
   for (const img of fadeImgs) {
     const sharpen = () => img.classList.add('blur-none')
     if (prefersReduced || (img.complete && img.naturalWidth > 0)) {
@@ -275,7 +297,11 @@ let navDirection = ''
 let navFromPath = ''
 
 document.addEventListener('astro:before-swap', event => {
-  const e = event as Event & { direction?: string; from?: URL; newDocument?: Document }
+  const e = event as Event & {
+    direction?: string
+    from?: URL
+    newDocument?: Document
+  }
   navDirection = e.direction ?? ''
   navFromPath = e.from?.pathname ?? ''
 
@@ -292,7 +318,9 @@ document.addEventListener('astro:before-swap', event => {
   if (!newDocument) return
   for (const el of newDocument.querySelectorAll<HTMLElement>('[data-reveal]')) {
     el.style.opacity = '0.01'
-    for (const named of el.querySelectorAll<HTMLElement>('[data-astro-transition-scope]')) {
+    for (const named of el.querySelectorAll<HTMLElement>(
+      '[data-astro-transition-scope]',
+    )) {
       named.style.opacity = '0.01'
     }
   }

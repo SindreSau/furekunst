@@ -1,4 +1,4 @@
-import { expect, test, type Page } from '@playwright/test'
+import { expect, test, type Page } from './fixtures'
 
 // Mobile nav menu regression tests for src/components/MobileMenu.astro.
 //

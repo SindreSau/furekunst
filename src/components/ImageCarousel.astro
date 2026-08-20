@@ -1,21 +1,14 @@
 ---
-// Mobile-only image carousel — vanilla port of islands/ImageCarousel.tsx
-// (FK-014). CSS scroll-snap + one bundled script (embla-core is not
-// installed; only the React variants). Preserves the embla behavior exactly:
-// autoplay every 4s that stops permanently on interaction/hover/focus,
-// prev/next arrows, dot indicators, keyboard arrows, aria slide roles.
-// Desktop keeps the grid instead (wrapper is `md:hidden` in index.astro).
-interface CarouselImage {
-  src: string
-  srcSet?: string
-  sizes?: string
+import type { ImageMetadata } from 'astro'
+import { Image } from 'astro:assets'
+
+export interface CarouselItem {
+  src: ImageMetadata
   alt: string
-  width: number
-  height: number
 }
 
 interface Props {
-  images: CarouselImage[]
+  images: CarouselItem[]
 }
 
 const { images } = Astro.props
@@ -23,7 +16,10 @@ const { images } = Astro.props
 
 <div class="relative" data-carousel>
   <div class="overflow-hidden">
-    <div class="no-scrollbar -ml-4 flex snap-x snap-mandatory overflow-x-auto" data-carousel-track>
+    <div
+      class="-ml-4 flex snap-x snap-mandatory overflow-x-auto [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+      data-carousel-track
+    >
       {images.map((image, index) => (
         <div
           class="min-w-0 shrink-0 grow-0 basis-full snap-start pl-4"
@@ -32,13 +28,13 @@ const { images } = Astro.props
           aria-label={`${index + 1} av ${images.length}`}
         >
           <div class="overflow-hidden rounded-sm">
-            <img
+            <Image
               src={image.src}
-              srcset={image.srcSet}
-              sizes={image.sizes}
               alt={image.alt}
-              width={image.width}
-              height={image.height}
+              width={828}
+              widths={[640, 750, 828]}
+              sizes="calc(100vw - 4.5rem)"
+              quality={55}
               loading="lazy"
               data-fade-img
               class="h-auto w-full object-cover blur-[1px] transition-all duration-500 ease-out"
@@ -91,7 +87,7 @@ const { images } = Astro.props
   </button>
 
   <div class="mt-4 flex justify-center gap-2" data-carousel-dots>
-    {images.map((image, index) => (
+    {images.map((_image, index) => (
       <button
         type="button"
         data-carousel-dot={index}
@@ -105,20 +101,7 @@ const { images } = Astro.props
   </div>
 </div>
 
-<style>
-  .no-scrollbar {
-    scrollbar-width: none;
-    -ms-overflow-style: none;
-  }
-  .no-scrollbar::-webkit-scrollbar {
-    display: none;
-  }
-</style>
-
 <script>
-  // Full-page navigation (no ClientRouter — see global.css) runs this module
-  // fresh on every page load, so the carousel hooks itself up directly at
-  // module scope below (initCarousel()); no `astro:page-load` re-init needed.
   let root: HTMLElement | null = null
   let track: HTMLElement | null = null
   let prevBtn: HTMLButtonElement | null = null
@@ -127,10 +110,6 @@ const { images } = Astro.props
   let slides: HTMLElement[] = []
   let initialized = false
   let desktop: MediaQueryList | null = null
-  // Named click handlers registered in init() and removed in teardown():
-  // init()/teardown() run again on every matchMedia crossing below/above
-  // 768px, and anonymous handlers can never be removed (duplicate-listener
-  // bug — one click advancing several slides).
   let clickHandlers: Array<{ el: HTMLElement; handler: () => void }> = []
 
   let current = 0
@@ -149,143 +128,158 @@ const { images } = Astro.props
     autoplayTimer = window.setInterval(() => goTo(current + 1), 4000)
   }
 
-  const positions = () => {
-    const trackLeft = track?.offsetLeft ?? 0
-    return slides.map(slide => slide.offsetLeft - trackLeft)
-  }
-
-  const updateDots = () => {
-    dots.forEach((dot, index) => {
-      const active = index === current
-      dot.classList.toggle('w-4', active)
-      dot.classList.toggle('bg-primary', active)
-      dot.classList.toggle('bg-primary/50', !active)
-      if (active) dot.setAttribute('aria-current', 'true')
-      else dot.removeAttribute('aria-current')
+  const updateDots = (index: number) => {
+    dots.forEach((dot, i) => {
+      if (i === index) {
+        dot.classList.add('w-4', 'bg-primary')
+        dot.classList.remove('w-2', 'bg-primary/50')
+        dot.setAttribute('aria-current', 'true')
+      } else {
+        dot.classList.remove('w-4', 'bg-primary')
+        dot.classList.add('w-2', 'bg-primary/50')
+        dot.removeAttribute('aria-current')
+      }
     })
   }
 
   const goTo = (index: number) => {
     if (!track || slides.length === 0) return
-    current = ((index % slides.length) + slides.length) % slides.length
-    track.scrollTo({ left: positions()[current], behavior: 'smooth' })
-    updateDots()
+    const target = (index + slides.length) % slides.length
+    current = target
+    const slide = slides[target]
+    if (slide) {
+      track.scrollTo({
+        left: slide.offsetLeft - track.offsetLeft,
+        behavior: 'smooth',
+      })
+    }
+    updateDots(target)
   }
 
   const onScroll = () => {
-    if (scrollRaf || !track) return
-    // The `!track` guard does not narrow inside the rAF callback (`track` is
-    // module-scope mutable), so capture the non-null ref in a const here.
-    const trackEl = track
-    scrollRaf = requestAnimationFrame(() => {
-      scrollRaf = 0
-      const pos = positions()
-      let nearest = current
-      for (let i = 0; i < pos.length; i++) {
-        if (Math.abs(trackEl.scrollLeft - pos[i]) < Math.abs(trackEl.scrollLeft - pos[nearest])) {
-          nearest = i
+    if (!track || slides.length === 0) return
+    window.cancelAnimationFrame(scrollRaf)
+    scrollRaf = window.requestAnimationFrame(() => {
+      if (!track) return
+      const scrollLeft = track.scrollLeft
+      let closestIndex = 0
+      let closestDistance = Infinity
+      slides.forEach((slide, i) => {
+        const dist = Math.abs(slide.offsetLeft - track!.offsetLeft - scrollLeft)
+        if (dist < closestDistance) {
+          closestDistance = dist
+          closestIndex = i
         }
-      }
-      if (nearest !== current) {
-        current = nearest
-        updateDots()
+      })
+      if (closestIndex !== current) {
+        current = closestIndex
+        updateDots(current)
       }
     })
   }
 
-  const onKeyDown = (event: KeyboardEvent) => {
-    if (event.key === 'ArrowLeft') goTo(current - 1)
-    else if (event.key === 'ArrowRight') goTo(current + 1)
+  const onKeyDown = (e: KeyboardEvent) => {
+    if (e.key === 'ArrowLeft') {
+      stopAutoplay()
+      goTo(current - 1)
+    } else if (e.key === 'ArrowRight') {
+      stopAutoplay()
+      goTo(current + 1)
+    }
   }
 
-  const onVisibility = () => {
+  const onVisibilityChange = () => {
     if (document.hidden) {
       wasPlayingOnHide = autoplayActive
       stopAutoplay()
     } else if (wasPlayingOnHide) {
-      wasPlayingOnHide = false
       startAutoplay()
     }
   }
 
+  const addClick = (el: HTMLElement | null, handler: () => void) => {
+    if (!el) return
+    el.addEventListener('click', handler)
+    clickHandlers.push({ el, handler })
+  }
+
   const init = () => {
-    if (!root || !track || !prevBtn || !nextBtn) return
-    current = 0
-    updateDots()
-    startAutoplay()
-    track.addEventListener('scroll', onScroll)
-    root.addEventListener('pointerdown', stopAutoplay)
-    root.addEventListener('mouseenter', stopAutoplay)
-    root.addEventListener('focusin', stopAutoplay)
-    const onPrev = () => {
-      stopAutoplay()
-      goTo(current - 1)
-    }
-    prevBtn.addEventListener('click', onPrev)
-    clickHandlers.push({ el: prevBtn, handler: onPrev })
-    const onNext = () => {
-      stopAutoplay()
-      goTo(current + 1)
-    }
-    nextBtn.addEventListener('click', onNext)
-    clickHandlers.push({ el: nextBtn, handler: onNext })
-    dots.forEach(dot => {
-      const handler = () => {
-        stopAutoplay()
-        goTo(Number(dot.dataset.carouselDot))
-      }
-      dot.addEventListener('click', handler)
-      clickHandlers.push({ el: dot, handler })
-    })
-  }
-
-  const teardown = () => {
-    stopAutoplay()
-    track?.removeEventListener('scroll', onScroll)
-    root?.removeEventListener('pointerdown', stopAutoplay)
-    root?.removeEventListener('mouseenter', stopAutoplay)
-    root?.removeEventListener('focusin', stopAutoplay)
-    for (const { el, handler } of clickHandlers) {
-      el.removeEventListener('click', handler)
-    }
-    clickHandlers.length = 0
-  }
-
-  const initCarousel = () => {
     root = document.querySelector<HTMLElement>('[data-carousel]')
     if (!root) return
     track = root.querySelector<HTMLElement>('[data-carousel-track]')
     prevBtn = root.querySelector<HTMLButtonElement>('[data-carousel-prev]')
     nextBtn = root.querySelector<HTMLButtonElement>('[data-carousel-next]')
     dots = Array.from(root.querySelectorAll<HTMLButtonElement>('[data-carousel-dot]'))
-    slides = track ? Array.from(track.children) as HTMLElement[] : []
+    slides = Array.from(root.querySelectorAll<HTMLElement>('[data-carousel-track] > [role="group"]'))
+    if (!track || slides.length === 0) return
 
-    // The component is hidden with `md:hidden` on desktop, where the grid
-    // replaces it — only initialize (and autoplay) when actually visible.
-    if (!desktop) {
-      desktop = window.matchMedia('(min-width: 768px)')
-      desktop.addEventListener('change', () => {
-        if (desktop!.matches && initialized) {
+    current = 0
+    updateDots(0)
+
+    addClick(prevBtn, () => {
+      stopAutoplay()
+      goTo(current - 1)
+    })
+    addClick(nextBtn, () => {
+      stopAutoplay()
+      goTo(current + 1)
+    })
+    dots.forEach((dot, i) => {
+      addClick(dot, () => {
+        stopAutoplay()
+        goTo(i)
+      })
+    })
+
+    track.addEventListener('scroll', onScroll, { passive: true })
+    root.addEventListener('keydown', onKeyDown)
+    root.addEventListener('mouseenter', stopAutoplay)
+    root.addEventListener('mouseleave', startAutoplay)
+    root.addEventListener('focusin', stopAutoplay)
+    root.addEventListener('focusout', startAutoplay)
+    root.addEventListener('touchstart', stopAutoplay, { passive: true })
+    document.addEventListener('visibilitychange', onVisibilityChange)
+
+    startAutoplay()
+  }
+
+  const teardown = () => {
+    stopAutoplay()
+    window.cancelAnimationFrame(scrollRaf)
+    for (const { el, handler } of clickHandlers) {
+      el.removeEventListener('click', handler)
+    }
+    clickHandlers = []
+    if (track) track.removeEventListener('scroll', onScroll)
+    if (root) {
+      root.removeEventListener('keydown', onKeyDown)
+      root.removeEventListener('mouseenter', stopAutoplay)
+      root.removeEventListener('mouseleave', startAutoplay)
+      root.removeEventListener('focusin', stopAutoplay)
+      root.removeEventListener('focusout', startAutoplay)
+      root.removeEventListener('touchstart', stopAutoplay)
+    }
+    document.removeEventListener('visibilitychange', onVisibilityChange)
+  }
+
+  const initCarousel = () => {
+    desktop = window.matchMedia('(min-width: 768px)')
+    const update = () => {
+      if (desktop?.matches) {
+        if (initialized) {
           teardown()
           initialized = false
-        } else if (!desktop!.matches && !initialized) {
+        }
+      } else {
+        if (!initialized) {
           init()
           initialized = true
         }
-      })
+      }
     }
-    if (!desktop.matches) {
-      init()
-      initialized = true
-    }
+    desktop.addEventListener('change', update)
+    update()
   }
 
-  // Plain full-page navigation (no ClientRouter — see global.css) means this
-  // script runs fresh on every page load; init directly.
   initCarousel()
-
-  // Global listeners registered once at module scope.
-  document.addEventListener('keydown', onKeyDown)
-  document.addEventListener('visibilitychange', onVisibility)
-  window.addEventListener('resize', onScroll)
 </script>

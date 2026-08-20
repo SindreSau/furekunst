@@ -5,7 +5,7 @@
 // screen sizes, carrying Astro's transition scope.
 // Gating only applies to reduced-motion users (`prefers-reduced-motion: reduce`).
 
-import { test, expect } from '@playwright/test'
+import { test, expect } from './fixtures'
 
 const GALLERY_LINK = 'a[data-artwork-click]'
 
@@ -72,14 +72,13 @@ test('mobile: gallery artwork cards keep their view-transition names', async ({
 
   const cardNames = await page
     .locator('figure[data-astro-transition-scope]')
-    .evaluateAll(els =>
-      els.map(el => getComputedStyle(el).viewTransitionName),
-    )
+    .evaluateAll(els => els.map(el => getComputedStyle(el).viewTransitionName))
   expect(cardNames.length).toBeGreaterThan(0)
   for (const name of cardNames) {
-    expect(name, 'each card frame must carry its art-* transition name').toMatch(
-      /^art-/,
-    )
+    expect(
+      name,
+      'each card frame must carry its art-* transition name',
+    ).toMatch(/^art-/)
   }
 })
 
@@ -121,7 +120,8 @@ test('navigation is client-side: no full-page reload, astro:page-load fires', as
   await page.evaluate(() => {
     document.addEventListener('astro:page-load', () => {
       ;(window as unknown as { __pageLoadCount?: number }).__pageLoadCount =
-        ((window as unknown as { __pageLoadCount?: number }).__pageLoadCount ?? 0) + 1
+        ((window as unknown as { __pageLoadCount?: number }).__pageLoadCount ??
+          0) + 1
     })
   })
 
@@ -129,7 +129,9 @@ test('navigation is client-side: no full-page reload, astro:page-load fires', as
   await page.waitForURL('**/galleri/**')
 
   expect(
-    await page.evaluate(() => (window as unknown as { __spaNav?: boolean }).__spaNav),
+    await page.evaluate(
+      () => (window as unknown as { __spaNav?: boolean }).__spaNav,
+    ),
   ).toBe(true)
   // waitForURL resolves on pushState, which happens before the DOM swap —
   // astro:page-load fires after it. Poll for the event itself.
@@ -137,7 +139,8 @@ test('navigation is client-side: no full-page reload, astro:page-load fires', as
     .poll(
       () =>
         page.evaluate(
-          () => (window as unknown as { __pageLoadCount?: number }).__pageLoadCount,
+          () =>
+            (window as unknown as { __pageLoadCount?: number }).__pageLoadCount,
         ),
       { timeout: 5_000 },
     )
@@ -193,7 +196,9 @@ test('the gallery → detail artwork morph carries its names on every device', a
       }
       return false
     }
-    return Array.from(document.querySelectorAll('figure[data-astro-transition-scope]'))
+    return Array.from(
+      document.querySelectorAll('figure[data-astro-transition-scope]'),
+    )
       .map(el => ({
         name: getComputedStyle(el).viewTransitionName,
         hidden: inHiddenSubtree(el),

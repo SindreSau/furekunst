@@ -10,9 +10,11 @@
 //
 // Run: pnpm test
 
-import { test, expect } from '@playwright/test'
+import { test, expect } from './fixtures'
 
-test('sitemap.xml lists the home, gallery, kontakt and every artwork slug', async ({ request }) => {
+test('sitemap.xml lists the home, gallery, kontakt and every artwork slug', async ({
+  request,
+}) => {
   const response = await request.get('/sitemap.xml')
   expect(response.ok()).toBe(true)
   expect(response.headers()['content-type']).toContain('application/xml')
@@ -37,5 +39,7 @@ test('sitemap-index.xml is no longer served', async ({ request }) => {
 test('robots.txt points at the live sitemap', async ({ request }) => {
   const robots = await request.get('/robots.txt')
   expect(robots.ok()).toBe(true)
-  expect(await robots.text()).toContain('Sitemap: https://furekunst.no/sitemap.xml')
+  expect(await robots.text()).toContain(
+    'Sitemap: https://furekunst.no/sitemap.xml',
+  )
 })

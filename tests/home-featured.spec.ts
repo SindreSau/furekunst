@@ -10,7 +10,7 @@
 //
 // Run: pnpm test
 
-import { test, expect } from '@playwright/test'
+import { test, expect } from './fixtures'
 
 const isMobile = (project: string) => project === 'mobile-chromium'
 
@@ -20,7 +20,9 @@ const featuredAltPattern = /Hjort|Sjimpanse|Labrador/
 // Desktop featured grid
 // ---------------------------------------------------------------------------
 
-test('home featured grid shows the 3 curated artworks', async ({ page }, testInfo) => {
+test('home featured grid shows the 3 curated artworks', async ({
+  page,
+}, testInfo) => {
   test.skip(isMobile(testInfo.project.name), 'desktop only')
 
   await page.goto('/')
@@ -30,9 +32,13 @@ test('home featured grid shows the 3 curated artworks', async ({ page }, testInf
 
   const imgs = grid.locator('img')
   await expect(imgs).toHaveCount(3)
-  const alts = await imgs.evaluateAll(elems => elems.map(e => e.getAttribute('alt')))
+  const alts = await imgs.evaluateAll(elems =>
+    elems.map(e => e.getAttribute('alt')),
+  )
   for (const alt of alts) {
-    expect(alt, 'featured alt must be "Bilde: {animal}"').toMatch(featuredAltPattern)
+    expect(alt, 'featured alt must be "Bilde: {animal}"').toMatch(
+      featuredAltPattern,
+    )
   }
 
   await expect(grid.locator('a[href^="/galleri/"]')).toHaveCount(0)
@@ -42,7 +48,9 @@ test('home featured grid shows the 3 curated artworks', async ({ page }, testInf
 // Mobile carousel
 // ---------------------------------------------------------------------------
 
-test('home mobile carousel shows the 3 curated artworks', async ({ page }, testInfo) => {
+test('home mobile carousel shows the 3 curated artworks', async ({
+  page,
+}, testInfo) => {
   test.skip(!isMobile(testInfo.project.name), 'mobile only')
 
   await page.goto('/')

@@ -4,6 +4,7 @@ export const prerender = true
 import { Image } from 'astro:assets'
 import MainLayout from '../layouts/MainLayout.astro'
 import FadeInSection from '../components/FadeInSection.astro'
+import SocialLinks from '../components/SocialLinks.astro'
 import profilbilde from '../assets/img/profilbilde.jpeg'
 import { CONSTANTS } from '../lib/constants'
 
@@ -62,54 +63,9 @@ const contactPageStructuredData = {
         </p>
       </FadeInSection>
 
-      <div class="flex w-min flex-col gap-6 font-serif">
-          <FadeInSection delay={160}>
-            <a
-              href={`mailto:${CONSTANTS.email}`}
-              class="flex items-center gap-4 text-xl text-gray-500 transition-colors duration-300 hover:text-gray-800"
-            >
-              <svg
-                aria-hidden="true"
-                class="h-6 w-6"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-              >
-                <rect width="20" height="16" x="2" y="4" rx="2"></rect>
-                <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"></path>
-              </svg>
-              <span>{CONSTANTS.email}</span>
-            </a>
-          </FadeInSection>
-
-          <FadeInSection delay={200}>
-            <a
-              href={CONSTANTS.instagram}
-              target="_blank"
-              rel="noopener noreferrer"
-              class="flex items-center gap-4 text-xl text-gray-500 transition-colors duration-300 hover:text-gray-800"
-            >
-              <svg
-                aria-hidden="true"
-                class="h-6 w-6"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-              >
-                <rect width="20" height="20" x="2" y="2" rx="5"></rect>
-                <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path>
-                <line x1="17.5" x2="17.51" y1="6.5" y2="6.5"></line>
-              </svg>
-              <span>fure.kunst</span>
-            </a>
-          </FadeInSection>
-        </div>
-      </div>
+      <FadeInSection delay={160}>
+        <SocialLinks variant="contact" />
+      </FadeInSection>
+    </div>
   </div>
 </MainLayout>
