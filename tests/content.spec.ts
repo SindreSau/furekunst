@@ -15,7 +15,9 @@ test.describe('Content Singletons', () => {
     await expect(aboutSection).toContainText('Einar Granum Kunstfagskule')
 
     // Profile image
-    const profileImg = aboutSection.locator('img[alt="Portrett av Elisabeth Fure Schwarz"]')
+    const profileImg = aboutSection.locator(
+      'img[alt="Portrett av Elisabeth Fure Schwarz"]',
+    )
     await expect(profileImg).toBeVisible()
 
     // CTA buttons in main section
@@ -44,28 +46,38 @@ test.describe('Content Singletons', () => {
 
     // Social links and email in main content
     const mainArea = page.locator('main')
-    const mailLink = mainArea.locator('a[href="mailto:fure.kunst@gmail.com"]').first()
+    const mailLink = mainArea
+      .locator('a[href="mailto:fure.kunst@gmail.com"]')
+      .first()
     await expect(mailLink).toBeVisible()
 
-    const igLink = mainArea.locator('a[href="https://www.instagram.com/fure.kunst"]').first()
+    const igLink = mainArea
+      .locator('a[href="https://www.instagram.com/fure.kunst"]')
+      .first()
     await expect(igLink).toBeVisible()
 
     // Structured data
     const jsonLd = await page
       .locator('script[type="application/ld+json"]')
-      .evaluateAll(scripts => scripts.map(s => JSON.parse(s.textContent ?? '{}')))
+      .evaluateAll(scripts =>
+        scripts.map(s => JSON.parse(s.textContent ?? '{}')),
+      )
 
     const contactSchema = jsonLd.find(ld => ld['@type'] === 'ContactPage')
     expect(contactSchema).toBeTruthy()
     expect(contactSchema.email).toBe('fure.kunst@gmail.com')
-    expect(contactSchema.sameAs).toContain('https://www.instagram.com/fure.kunst')
+    expect(contactSchema.sameAs).toContain(
+      'https://www.instagram.com/fure.kunst',
+    )
   })
 
   test('SEO singleton provides meta title and description across pages', async ({
     page,
   }) => {
     await page.goto('/')
-    await expect(page).toHaveTitle('Heim - Kunstnar Elisabeth Fure Schwarz | Furekunst')
+    await expect(page).toHaveTitle(
+      'Heim - Kunstnar Elisabeth Fure Schwarz | Furekunst',
+    )
 
     const homeMetaDesc = page.locator('meta[name="description"]')
     await expect(homeMetaDesc).toHaveAttribute(
@@ -91,6 +103,9 @@ test.describe('Content Singletons', () => {
 
     const igLink = footer.locator('a[aria-label="Instagram"]')
     await expect(igLink).toBeVisible()
-    await expect(igLink).toHaveAttribute('href', 'https://www.instagram.com/fure.kunst')
+    await expect(igLink).toHaveAttribute(
+      'href',
+      'https://www.instagram.com/fure.kunst',
+    )
   })
 })

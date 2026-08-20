@@ -9,6 +9,7 @@ const gallery = defineCollection({
       .object({
         title: z.string(),
         slug: z.string().optional(),
+        published: z.boolean().default(true),
         description: z.string().optional().default(''),
         type: z
           .object({
@@ -66,6 +67,7 @@ const gallery = defineCollection({
         return {
           title: raw.title,
           slug: raw.slug,
+          published: raw.published,
           description: raw.description,
           passepartout: raw.passepartout,
           image: raw.image,

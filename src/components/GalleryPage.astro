@@ -19,13 +19,7 @@ const filterChips: { label: string; key: GalleryFilter }[] = [
   { label: 'Original', key: 'original' },
   { label: 'Print', key: 'print' },
 ]
-
-// Preload the above-fold artwork images with the EXACT same optimized URL as
-// the cards' <img src> (width 700 → snapped to 750 by Vercel): the view-
-// transition snapshot of the gallery captures the page at first render —
-// before images load, the snapshot shows blank frames and every card blinks
-// back in after the transition.
-const PRELOAD_IMAGES = 4
+const PRELOAD_IMAGES = 2
 const preloadUrls = (
   await Promise.all(
     posts.slice(0, PRELOAD_IMAGES).map(async post => {
@@ -50,9 +44,16 @@ const preloadUrls = (
   ogImage="/galleri/open-graph.jpeg"
 >
   <Fragment slot="head">
-    {preloadUrls.map((url, i) => (
-      <link rel="preload" as="image" href={url} fetchpriority={i < 2 ? 'high' : 'auto'} />
-    ))}
+    {
+      preloadUrls.map((url, i) => (
+        <link
+          rel="preload"
+          as="image"
+          href={url}
+          fetchpriority={i < 2 ? 'high' : 'auto'}
+        />
+      ))
+    }
   </Fragment>
 
   <section aria-labelledby="gallery-heading">
@@ -77,7 +78,9 @@ const preloadUrls = (
             <path d="m5.1 8-2.9-.8"></path>
             <path d="m6 12-1.9 2"></path>
             <path d="M7.2 2.2 8 5.1"></path>
-            <path d="M9.037 9.69a.498.498 0 0 1 .653-.653l11 4.5a.5.5 0 0 1-.074.949l-4.349 1.041a1 1 0 0 0-.74.739l-1.04 4.35a.5.5 0 0 1-.95.074z"></path>
+            <path
+              d="M9.037 9.69a.498.498 0 0 1 .653-.653l11 4.5a.5.5 0 0 1-.074.949l-4.349 1.041a1 1 0 0 0-.74.739l-1.04 4.35a.5.5 0 0 1-.95.074z"
+            ></path>
           </svg>
         </p>
       </div>
@@ -86,28 +89,40 @@ const preloadUrls = (
         role="group"
         aria-label="Filtrer galleriet"
       >
-        {filterChips.map(chip => (
-          <Button
-            type="button"
-            variant="filter"
-            filterKey={chip.key}
-            pressed={chip.key === 'all'}
-          >
-            {chip.label}
-          </Button>
-        ))}
+        {
+          filterChips.map(chip => (
+            <Button
+              type="button"
+              variant="filter"
+              filterKey={chip.key}
+              pressed={chip.key === 'all'}
+            >
+              {chip.label}
+            </Button>
+          ))
+        }
       </div>
     </header>
 
-    <div class="gallery-masonry columns-1 gap-x-4 [column-fill:balance] sm:columns-2 sm:gap-x-5 lg:columns-3 lg:gap-x-6 [&_[data-reveal]]:duration-500">
-      {posts.map((post, index) => (
-        <GalleryPost post={post} index={index} />
-      ))}
+    <div
+      class="gallery-masonry columns-1 gap-x-4 [column-fill:balance] sm:columns-2 sm:gap-x-5 lg:columns-3 lg:gap-x-6 [&_[data-reveal]]:duration-500"
+    >
+      {posts.map((post, index) => <GalleryPost post={post} index={index} />)}
     </div>
   </section>
 </MainLayout>
 
 <script>
+  // Remember that the gallery was visited this session: the detail-page
+  // "← Galleri" button then history.back()s (preserving the scroll position)
+  // instead of re-entering the gallery at the top. Idempotent, so it is safe
+  // that this module re-runs on every navigation into the page.
+  try {
+    sessionStorage.setItem('furekunst:gallery-visited', '1')
+  } catch {
+    // sessionStorage unavailable (private mode) — the button falls back to a
+    // plain link.
+  }
   let currentFilter: string | null = null
   document.addEventListener('astro:page-load', () => {
     currentFilter = null
@@ -131,10 +146,18 @@ const preloadUrls = (
 
     const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches
     const startVT = (document as Document & {
-      startViewTransition?: (cb: () => void) => unknown
+      startViewTransition?: (cb: () => void) => { finished: Promise<void> }
     }).startViewTransition
     if (!reduce && startVT) {
-      startVT.call(document, setVisible)
+      // While filtering, each card link becomes ONE named view-transition
+      // entity (image + title + price + pill glide together — see
+      // global.css); the frame's art-<slug> name is suppressed at the same
+      // time so the image doesn't morph separately from its text.
+      document.documentElement.setAttribute('data-filtering', '')
+      const vt = startVT.call(document, setVisible)
+      void vt.finished.finally(() => {
+        document.documentElement.removeAttribute('data-filtering')
+      })
     } else {
       setVisible()
     }

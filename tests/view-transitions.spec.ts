@@ -112,6 +112,39 @@ test('page content is not separately animated (no gray-wash cross-fade)', async 
   expect(htmlName.length).toBeGreaterThan(0)
 })
 
+test('nav underline morphs between tabs (no fade-out/fade-in)', async ({
+  page,
+}) => {
+  // Regression: the nav underline used Astro's default animation for named
+  // elements (astroFadeOut/astroFadeIn), so the bar faded out and faded in at
+  // the new position instead of sliding. It must use `animation-name: none` so
+  // the browser's native view-transition morph interpolates its position/size.
+  await page.goto('/galleri')
+  await page.waitForSelector('[data-artwork-click]')
+
+  const navUnderlineAnim = await page.evaluate(() => {
+    const rules = Array.from(document.styleSheets).flatMap(s => {
+      try {
+        return Array.from(s.cssRules).map(r => r.cssText)
+      } catch {
+        return []
+      }
+    })
+    const oldRule = rules.find(t =>
+      t.includes('::view-transition-old(nav-underline)'),
+    )
+    const newRule = rules.find(t =>
+      t.includes('::view-transition-new(nav-underline)'),
+    )
+    return { oldRule, newRule }
+  })
+
+  expect(navUnderlineAnim.oldRule).toBeTruthy()
+  expect(navUnderlineAnim.newRule).toBeTruthy()
+  expect(navUnderlineAnim.oldRule).toContain('animation-name: none')
+  expect(navUnderlineAnim.newRule).toContain('animation-name: none')
+})
+
 test('navigation is client-side: no full-page reload, astro:page-load fires', async ({
   page,
 }) => {
@@ -158,8 +191,10 @@ test('navigation is client-side: no full-page reload, astro:page-load fires', as
 test('forward navigation to the gallery plays the fade-up cascade', async ({
   page,
 }) => {
-  // The row-by-row cascade plays on forward navigations (heim → galleri) and
-  // on reload. Only back-navigations from detail pages skip the stagger.
+  // The staggered fade-up plays after a forward navigation — but only once
+  // the view transition has finished (never behind the frozen snapshot,
+  // which would pop when the overlay lifts). The cards must start hidden
+  // right after the swap and fade up to full opacity.
   await page.goto('/')
   await page.click('main a[href="/galleri"]')
   await page.waitForURL('**/galleri')

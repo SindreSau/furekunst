@@ -91,7 +91,10 @@ export async function getBlurDataUrl(
     blurCache.set(cacheKey, dataUrl)
     return dataUrl
   } catch (error) {
-    console.warn(`[getBlurDataUrl] Failed to generate blur placeholder for ${cacheKey}:`, error)
+    console.warn(
+      `[getBlurDataUrl] Failed to generate blur placeholder for ${cacheKey}:`,
+      error,
+    )
     return null
   }
 }

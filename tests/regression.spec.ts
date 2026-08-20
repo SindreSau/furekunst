@@ -299,9 +299,7 @@ test('gallery cards carry inline blur placeholder and aspect ratio', async ({
   page,
 }) => {
   await page.goto('/galleri')
-  const firstPlaceholder = page
-    .locator('[data-artwork-placeholder]')
-    .first()
+  const firstPlaceholder = page.locator('[data-artwork-placeholder]').first()
   await expect(firstPlaceholder).toBeVisible()
 
   const bg = await firstPlaceholder.evaluate(

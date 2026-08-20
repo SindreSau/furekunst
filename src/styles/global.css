@@ -43,6 +43,7 @@
   font-style: normal;
   font-display: optional;
 }
+
 @font-face {
   font-family: 'Didot';
   src: url('../assets/fonts/woff2/Didot-Italic.woff2') format('woff2');
@@ -50,6 +51,7 @@
   font-style: italic;
   font-display: optional;
 }
+
 @font-face {
   font-family: 'Didot';
   src: url('../assets/fonts/woff2/Didot-Bold.woff2') format('woff2');
@@ -57,6 +59,7 @@
   font-style: normal;
   font-display: optional;
 }
+
 @font-face {
   font-family: 'Didot';
   src: url('../assets/fonts/woff2/Didot-Title.woff2') format('woff2');
@@ -137,9 +140,11 @@
   * {
     @apply border-border outline-ring/50;
   }
+
   body {
     @apply bg-pastel font-body text-foreground antialiased;
   }
+
   /* html gets the same opaque pastel so the root snapshot is never
      transparent — WebKit can paint the view-transition root snapshot
      without the propagated body background (the gray-flash mechanism).
@@ -148,9 +153,11 @@
   html {
     @apply bg-pastel;
   }
+
   h1 {
     @apply font-didot text-2xl text-gray-900 md:text-3xl;
   }
+
   h2 {
     @apply font-didot text-xl text-gray-900 md:text-2xl;
   }
@@ -193,12 +200,44 @@ html.zoom-open {
 
 /*
  * View transitions run through Astro's <ClientRouter /> on all devices:
- * the <html> root gets transition:animate="none" (instant swap — no
- * whole-page cross-fade, which washes gray over artwork-heavy pages), the
- * header/footer persist, and only the named artwork frames morph
- * (transition:name on Frame.astro). No native @view-transition rule: with
- * the router active it would be a second, competing mechanism.
+ * - Root cross-fade is smooth and subtle (200ms) with normal mix-blend-mode over
+ *   the solid pastel canvas, eliminating any gray flashes.
+ * - Header/Footer persist smoothly, nav underline bar morphs between tabs.
+ * - Artwork frames morph seamlessly between gallery card and detail views.
  */
+::view-transition-group(*) {
+  animation-duration: 250ms;
+  animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation-duration: 200ms;
+  animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  mix-blend-mode: normal;
+}
+
+::view-transition-old(*),
+::view-transition-new(*) {
+  mix-blend-mode: normal;
+}
+
+/*
+ * Gallery filter transitions (same page, document.startViewTransition):
+ * while `data-filtering` is on the html element, each card link is ONE named
+ * entity — image, title, price and type pill glide together to the card's new
+ * position. The frame's own art-<slug> name is suppressed at the same time so
+ * the image doesn't morph separately from its text. Outside filtering (page
+ * navigation, reduced motion, no native support) the card carries no name and
+ * the frame keeps art-<slug> for the gallery ⇄ detail morph.
+ */
+html[data-filtering] a[data-artwork-card] {
+  view-transition-name: var(--card-vt-name);
+}
+
+html[data-filtering] a[data-artwork-card] figure[data-astro-transition-scope] {
+  view-transition-name: none !important;
+}
 
 /*
  * Reduced-motion users get an instant, flash-free swap. The pseudo-element
@@ -212,8 +251,15 @@ html.zoom-open {
     animation: none !important;
     mix-blend-mode: normal !important;
   }
+
   /* Override Astro's inline view-transition-name for reduced motion */
   [data-astro-transition-scope] {
+    view-transition-name: none !important;
+  }
+
+  /* Card filter entities are inert under reduced motion (the filter script
+     skips the view transition, but keep the names off as a CSS-level guard) */
+  html[data-filtering] a[data-artwork-card] {
     view-transition-name: none !important;
   }
 }

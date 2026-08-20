@@ -1,21 +1,18 @@
 // View-transition fade-up flicker regression tests.
 //
-// The gallery fade-up must never start before the page has been revealed
-// (pagereveal). Cross-document view transitions (enabled on fine-pointer
-// devices only — see global.css) freeze a snapshot of the new page that is
-// captured while [data-reveal] cards are still hidden; a fade-up that
-// started earlier played behind the frozen snapshot and the content popped
-//   in when the transition ended. That flicker only ever happened on desktop —
-//   on touch/coarse-pointer and reduced-motion devices the cross-document
-//   transition is neutralized into an instant flash-free swap (global.css), so
-//   the frozen-snapshot flicker cannot occur there.
+// The staggered fade-up must never play while the view transition is still
+// running: the ::view-transition snapshot overlay paints above ALL live page
+// content (z-index cannot break through it — w3c/csswg-drafts#8941), so an
+// animation started behind it is invisible and the content pops in when the
+// overlay lifts. The reveal module therefore gates forward-navigation
+// fade-ups behind the end of the transition (the router removes
+// data-astro-transition from <html> when it finishes).
 //
 // Coverage map:
-//  - desktop: fade-up starts only after pagereveal, even when the page
-//    paints late (the timing that used to flicker)
+//  - desktop: fade-up starts only after the view transition ends
 //  - desktop: cards fully visible after a view-transition navigation
-//  - mobile: cards reveal promptly (the gate must never hang without VTs)
-//  - desktop: below-fold cards still reveal on scroll
+//  - mobile: cards reveal promptly (the gate must never hang)
+//  - desktop: below-fold cards still reveal on scroll after a navigation
 //  - gallery: below-fold cards stay hidden at load and reveal on scroll
 //    (infinite-scroll reveal — no mass fade-up at page load)
 
@@ -95,6 +92,68 @@ test('desktop: gallery cards fully visible after a view-transition navigation', 
     .poll(() => firstCard.evaluate(el => getComputedStyle(el).opacity), {
       timeout: 5_000,
       message: 'the first gallery card should fade up to full opacity',
+    })
+    .toBe('1')
+})
+
+test('desktop: fade-up waits until the view transition ends (no double animation)', async ({
+  page,
+}, testInfo) => {
+  // The snapshot overlay paints above all live content while the transition
+  // runs, so the fade-up must not start before it ends — otherwise the
+  // animation plays invisibly behind the overlay and the content pops when
+  // it lifts. Slow the root crossfade down so the mid-transition window is
+  // observable, then assert the incoming cards are still hidden while
+  // html[data-astro-transition] is present and only fade up afterwards.
+  test.skip(isMobile(testInfo.project.name), 'desktop only')
+  await page.addInitScript(() => {
+    const install = () => {
+      if (document.getElementById('__slow-vt')) return
+      const style = document.createElement('style')
+      style.id = '__slow-vt'
+      style.textContent =
+        '::view-transition-old(root), ::view-transition-new(root) { animation-duration: 1.2s !important; }'
+      document.head.appendChild(style)
+    }
+    install()
+    // The swap replaces all head children, so the injected style must be
+    // re-added after each swap — astro:page-load fires inside the update
+    // callback, before the transition animation starts.
+    document.addEventListener('astro:page-load', install)
+  })
+  await page.goto('/')
+  await page.click('main a[href="/galleri"]')
+  await page.waitForURL('**/galleri')
+
+  const firstCard = page.locator('.gallery-masonry [data-reveal]').first()
+
+  // Mid-transition: the overlay is still up and the card must still be
+  // hidden (opacity ~0.01 from the before-swap inline style).
+  await expect
+    .poll(
+      () =>
+        page.evaluate(() =>
+          document.documentElement.hasAttribute('data-astro-transition'),
+        ),
+      {
+        timeout: 3_000,
+        message: 'the view transition should still be running',
+      },
+    )
+    .toBe(true)
+  const midOpacity = await firstCard.evaluate(
+    el => getComputedStyle(el).opacity,
+  )
+  expect(
+    parseFloat(midOpacity),
+    'the fade-up must not play behind the frozen snapshot',
+  ).toBeLessThan(0.05)
+
+  // After the transition ends the fade-up plays to full opacity.
+  await expect
+    .poll(() => firstCard.evaluate(el => getComputedStyle(el).opacity), {
+      timeout: 5_000,
+      message: 'the card should fade up once the transition has finished',
     })
     .toBe('1')
 })

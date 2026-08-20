@@ -27,6 +27,12 @@ export default config({
       format: { data: 'json' },
       schema: {
         title: fields.slug({ name: { label: 'Tittel på kunstverket' } }),
+        published: fields.checkbox({
+          label: 'Publisert (vis kunstverket i galleriet)',
+          description:
+            'Slå av for å skjule kunstverket frå galleriet utan å slette det.',
+          defaultValue: true,
+        }),
         description: fields.text({
           label: 'Beskriving (Medium/Teknikk, t.d. "Akvarell på papir")',
           multiline: true,

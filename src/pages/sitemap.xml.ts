@@ -10,6 +10,7 @@ export async function GET(context: APIContext): Promise<Response> {
 
   const paths = ['/', '/galleri', '/kontakt']
   for (const entry of entries) {
+    if (entry.data.published === false) continue
     paths.push(`/galleri/${entry.data.slug || entry.id}`)
   }
 

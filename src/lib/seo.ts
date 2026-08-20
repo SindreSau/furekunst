@@ -117,4 +117,3 @@ export function renderOgTags({
     { attrs: { name: 'twitter:creator', content: siteConfig.twitterHandle } },
   ]
 }
-

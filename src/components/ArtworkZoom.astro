@@ -54,17 +54,15 @@ const blurDataUrl = await getBlurDataUrl(resolvedImage || rawSrc)
     transitionName={transitionName}
     data-zoom-page-frame
     class={tallArtwork ? 'w-full md:mx-auto' : 'w-full'}
-    style={
-      tallArtwork
-        ? {
-            maxWidth: `min(100%, calc((100svh - 17.5rem) * ${width} / ${height} + ${passpartout ? '36px' : '12px'}))`,
-          }
-        : undefined
-    }
+    style={tallArtwork
+      ? {
+          maxWidth: `min(100%, calc((100svh - 17.5rem) * ${width} / ${height} + ${passpartout ? '36px' : '12px'}))`,
+        }
+      : undefined}
   >
     <div
       data-artwork-placeholder
-      class="relative w-full overflow-hidden bg-cover bg-center"
+      class="relative w-full overflow-hidden bg-cover bg-center max-md:bg-none!"
       style={{
         aspectRatio: `${width} / ${height}`,
         ...(blurDataUrl ? { backgroundImage: `url("${blurDataUrl}")` } : {}),
@@ -83,8 +81,8 @@ const blurDataUrl = await getBlurDataUrl(resolvedImage || rawSrc)
             data-fade-img
             class={
               tallArtwork
-                ? 'h-auto w-full object-contain blur-[1px] transition-all duration-500 ease-out md:h-auto md:w-auto md:max-h-[calc(100svh-17.5rem)] md:max-w-full'
-                : 'h-auto w-full object-contain blur-[1px] transition-all duration-500 ease-out'
+                ? 'h-auto w-full object-contain blur-[1px] max-md:blur-none transition-all duration-500 ease-out md:h-auto md:w-auto md:max-h-[calc(100svh-17.5rem)] md:max-w-full'
+                : 'h-auto w-full object-contain blur-[1px] max-md:blur-none transition-all duration-500 ease-out'
             }
           />
         ) : (
@@ -99,8 +97,8 @@ const blurDataUrl = await getBlurDataUrl(resolvedImage || rawSrc)
             data-fade-img
             class={
               tallArtwork
-                ? 'h-auto w-full object-contain blur-[1px] transition-all duration-500 ease-out md:h-auto md:w-auto md:max-h-[calc(100svh-17.5rem)] md:max-w-full'
-                : 'h-auto w-full object-contain blur-[1px] transition-all duration-500 ease-out'
+                ? 'h-auto w-full object-contain blur-[1px] max-md:blur-none transition-all duration-500 ease-out md:h-auto md:w-auto md:max-h-[calc(100svh-17.5rem)] md:max-w-full'
+                : 'h-auto w-full object-contain blur-[1px] max-md:blur-none transition-all duration-500 ease-out'
             }
           />
         )
@@ -226,7 +224,8 @@ const blurDataUrl = await getBlurDataUrl(resolvedImage || rawSrc)
   const open = () => {
     if (!dialog || !content || !closeBtn || isZoomed) return
     isZoomed = true
-    const zoomHires = dialog?.querySelector<HTMLImageElement>('[data-zoom-hires]')
+    const zoomHires =
+      dialog?.querySelector<HTMLImageElement>('[data-zoom-hires]')
     const zoomSrc = dialog?.dataset.zoomSrc
     if (zoomHires && zoomSrc) {
       if (!zoomHires.getAttribute('src')) {

@@ -10,11 +10,38 @@
 //
 // Run: pnpm test
 
-import { test, expect } from './fixtures'
+import { test, expect, type Locator, type Page } from './fixtures'
 
 const isMobile = (project: string) => project === 'mobile-chromium'
 
 const featuredAltPattern = /Hjort|Sjimpanse|Labrador/
+
+// Navigate to a slide by clicking the button until the target dot is
+// current. The autoplay (4s interval) can advance a slide between load and
+// the first click under load, so the fixed "click once then expect dot N"
+// pattern flakes; goTo wraps around, so re-clicking converges in at most a
+// couple of iterations (autoplay stops on the first registered click).
+async function clickUntilDot(
+  page: Page,
+  btn: Locator,
+  dots: Locator,
+  target: number,
+) {
+  await expect
+    .poll(
+      async () => {
+        const current =
+          (await dots.nth(target).getAttribute('aria-current')) === 'true'
+        if (current) return true
+        await btn.click()
+        return (
+          (await dots.nth(target).getAttribute('aria-current')) === 'true'
+        )
+      },
+      { timeout: 10_000 },
+    )
+    .toBe(true)
+}
 
 // ---------------------------------------------------------------------------
 // Desktop featured grid
@@ -78,11 +105,8 @@ test('home mobile carousel next and prev buttons navigate slides', async ({
 
   await expect(dots.nth(0)).toHaveAttribute('aria-current', 'true')
 
-  await nextBtn.click()
-  await expect(dots.nth(1)).toHaveAttribute('aria-current', 'true')
-
-  await prevBtn.click()
-  await expect(dots.nth(0)).toHaveAttribute('aria-current', 'true')
+  await clickUntilDot(page, nextBtn, dots, 1)
+  await clickUntilDot(page, prevBtn, dots, 0)
 })
 
 test('home mobile carousel buttons work after client-side navigation', async ({
@@ -98,6 +122,5 @@ test('home mobile carousel buttons work after client-side navigation', async ({
   const dots = page.locator('[data-carousel-dot]')
 
   await expect(dots.nth(0)).toHaveAttribute('aria-current', 'true')
-  await nextBtn.click()
-  await expect(dots.nth(1)).toHaveAttribute('aria-current', 'true')
+  await clickUntilDot(page, nextBtn, dots, 1)
 })

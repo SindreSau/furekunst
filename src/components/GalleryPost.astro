@@ -46,7 +46,8 @@ const blurDataUrl = await getBlurDataUrl(image)
           href={`/galleri/${slug}`}
           data-astro-prefetch
           data-artwork-click
-          data-slug={slug}
+          data-artwork-card
+          style={`--card-vt-name: card-${slug}`}
           class="group block focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-primary"
         >
           <Frame passpartout={data.passepartout} transitionName={`art-${slug}`}>
@@ -97,20 +98,3 @@ const blurDataUrl = await getBlurDataUrl(image)
     </FadeInSection>
   )
 }
-
-<script>
-  import { track } from '../lib/analytics'
-
-  // Use event delegation on document — registered once globally, works across
-  // client-side navigations (no need for astro:page-load re-binding since
-  // delegation always hits the fresh DOM).
-  document.addEventListener('click', event => {
-    const card = (event.target as Element | null)?.closest?.(
-      '[data-artwork-click]',
-    )
-    if (!card) return
-    const slug = card.getAttribute('data-slug')
-    if (!slug) return
-    track('artwork_click', { slug })
-  })
-</script>
