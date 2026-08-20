@@ -16,7 +16,7 @@ export default config({
     brand: { name: 'Furekunst Admin' },
     navigation: {
       'Sider og innhald': ['home', 'contact', 'gallery'],
-      'Innstillingar': ['settings', 'seo'],
+      Innstillingar: ['settings', 'seo'],
     },
   },
   collections: {
@@ -120,7 +120,8 @@ export default config({
           defaultValue: 'Portrett av Elisabeth Fure Schwarz',
         }),
         aboutText: fields.mdx.inline({
-          label: 'Tekst om kunstnaren (med feit skrift, kursiv, lenkjer og linjeskift)',
+          label:
+            'Tekst om kunstnaren (med feit skrift, kursiv, lenkjer og linjeskift)',
           options: {
             bold: true,
             italic: true,
@@ -143,7 +144,8 @@ export default config({
             }),
           }),
           {
-            label: 'Utvalgte kunstverk på framsida (karusell på mobil, rutenett på desktop)',
+            label:
+              'Utvalgte kunstverk på framsida (karusell på mobil, rutenett på desktop)',
             itemLabel: props => props.fields.alt.value || 'Utvalgt bilete',
           },
         ),
@@ -176,7 +178,8 @@ export default config({
           defaultValue: 'Elisabeth Fure Schwarz',
         }),
         introText: fields.mdx.inline({
-          label: 'Kontakttekst (med feit skrift, kursiv, lenkjer og linjeskift)',
+          label:
+            'Kontakttekst (med feit skrift, kursiv, lenkjer og linjeskift)',
           options: {
             bold: true,
             italic: true,
@@ -222,11 +225,13 @@ export default config({
       format: { data: 'json' },
       schema: {
         defaultSiteTitle: fields.text({
-          label: 'Standard sidetittel (visast i Google og nettlesarfane dersom sida manglar eigen tittel)',
+          label:
+            'Standard sidetittel (visast i Google og nettlesarfane dersom sida manglar eigen tittel)',
           defaultValue: 'Furekunst',
         }),
         defaultSiteDescription: fields.text({
-          label: 'Standard sidebeskriving (brukt i Google-søk og førehandsvising ved deling på sosiale medium dersom sida manglar eigen tekst)',
+          label:
+            'Standard sidebeskriving (brukt i Google-søk og førehandsvising ved deling på sosiale medium dersom sida manglar eigen tekst)',
           multiline: true,
           defaultValue:
             'Furekunst viser kunstnar Elisabeth Fure Schwarz sine måleri og kunstverk.',

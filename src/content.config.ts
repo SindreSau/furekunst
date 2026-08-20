@@ -46,19 +46,21 @@ const gallery = defineCollection({
         const isPrint = typeDiscriminant === 'print'
 
         const size: string | undefined = isOriginal
-          ? (typeof typeValue.size === 'string' && typeValue.size.trim() !== ''
-              ? typeValue.size
-              : raw.size)
+          ? typeof typeValue.size === 'string' && typeValue.size.trim() !== ''
+            ? typeValue.size
+            : raw.size
           : undefined
 
         const price: number | undefined = isOriginal
-          ? (typeof typeValue.price === 'number' ? typeValue.price : raw.price)
+          ? typeof typeValue.price === 'number'
+            ? typeValue.price
+            : raw.price
           : undefined
 
         const sizeAndPrice: { size: string; price: number }[] = isPrint
-          ? (Array.isArray(typeValue.sizeAndPrice)
-              ? typeValue.sizeAndPrice
-              : (raw.sizeAndPrice ?? []))
+          ? Array.isArray(typeValue.sizeAndPrice)
+            ? typeValue.sizeAndPrice
+            : (raw.sizeAndPrice ?? [])
           : []
 
         return {
@@ -169,5 +171,3 @@ const seo = defineCollection({
 })
 
 export const collections = { gallery, home, contact, settings, seo }
-
-
