@@ -1,10 +1,13 @@
 {
   "title": "God morgon",
   "description": "Akryl på lerret",
-  "type": "original",
+  "type": {
+    "discriminant": "original",
+    "value": {
+      "size": "35x70cm",
+      "price": 4000
+    }
+  },
   "passepartout": false,
-  "size": "35x70cm",
-  "price": 4000,
-  "sizeAndPrice": [],
-  "image": "../../assets/artworks/god-morgon.jpeg"
+  "image": "../../assets/artworks/god-morgon/god-morgon.jpeg"
 }

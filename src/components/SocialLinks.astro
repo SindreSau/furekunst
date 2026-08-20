@@ -1,25 +1,42 @@
 ---
-import { CONSTANTS } from '../lib/constants'
+import { getSiteSettings } from '../lib/settings'
 
 interface Props {
   variant?: 'footer' | 'contact'
   class?: string
+  email?: string
+  instagramUrl?: string
+  instagramHandle?: string
+  facebookUrl?: string
 }
 
-const { variant = 'footer', class: className = '' } = Astro.props
+const {
+  variant = 'footer',
+  class: className = '',
+  email: emailProp,
+  instagramUrl: instagramUrlProp,
+  instagramHandle: instagramHandleProp,
+  facebookUrl: facebookUrlProp,
+} = Astro.props
+
+const settings = await getSiteSettings()
+const email = emailProp ?? settings.email
+const instagramUrl = instagramUrlProp ?? settings.instagramUrl
+const instagramHandle = instagramHandleProp ?? settings.instagramHandle
+const facebookUrl = facebookUrlProp ?? settings.facebookUrl
 
 const links = [
   {
-    href: `mailto:${CONSTANTS.email}`,
-    label: CONSTANTS.email,
-    ariaLabel: `E-post: ${CONSTANTS.email}`,
+    href: `mailto:${email}`,
+    label: email,
+    ariaLabel: `E-post: ${email}`,
     target: undefined,
     rel: undefined,
     icon: 'mail',
   },
   {
-    href: CONSTANTS.instagram,
-    label: 'fure.kunst',
+    href: instagramUrl,
+    label: instagramHandle,
     ariaLabel: 'Instagram',
     target: '_blank',
     rel: 'noopener noreferrer',
@@ -28,7 +45,7 @@ const links = [
   ...(variant === 'footer'
     ? [
         {
-          href: CONSTANTS.facebook,
+          href: facebookUrl,
           label: 'Facebook',
           ariaLabel: 'Facebook',
           target: '_blank',

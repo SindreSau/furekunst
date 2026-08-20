@@ -1,14 +1,17 @@
 {
   "title": "Julekort",
   "description": "Akvarell på papir",
-  "type": "print",
-  "passepartout": true,
-  "price": 500,
-  "sizeAndPrice": [
-    {
-      "size": "10,5x14,8cm",
-      "price": 200
+  "type": {
+    "discriminant": "print",
+    "value": {
+      "sizeAndPrice": [
+        {
+          "size": "10,5x14,8cm",
+          "price": 200
+        }
+      ]
     }
-  ],
-  "image": "../../assets/artworks/julekort.jpeg"
+  },
+  "passepartout": true,
+  "image": "../../assets/artworks/julekort/julekort.jpeg"
 }

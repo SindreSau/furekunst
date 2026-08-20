@@ -26,16 +26,24 @@ async function waitForMorphToSettle(
   selector: string,
 ) {
   await page.waitForSelector(selector)
-  await page.waitForFunction(() => document.getAnimations().length === 0, {
-    timeout: 5_000,
-  })
+  try {
+    await page.waitForFunction(() => document.getAnimations().length === 0, {
+      timeout: 5_000,
+    })
+  } catch {
+    // timeout or navigation
+  }
   let quiet = 0
   for (let i = 0; i < 40 && quiet < 5; i++) {
     await page.waitForTimeout(100)
-    const animating = await page.evaluate(
-      () => document.getAnimations().length > 0,
-    )
-    quiet = animating ? 0 : quiet + 1
+    try {
+      const animating = await page.evaluate(
+        () => document.getAnimations().length > 0,
+      )
+      quiet = animating ? 0 : quiet + 1
+    } catch {
+      quiet = 0
+    }
   }
 }
 

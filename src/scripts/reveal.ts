@@ -65,7 +65,7 @@ function revealWhenReady(el: RevealEl) {
     requestAnimationFrame(() => reveal(el))
   }
 
-  timer = window.setTimeout(triggerReveal, 500)
+  timer = window.setTimeout(triggerReveal, 10000)
 
   if (typeof img.decode === 'function') {
     img.decode().then(triggerReveal).catch(triggerReveal)
@@ -150,7 +150,7 @@ function observeInView(
  * and is fully visible while it plays.
  */
 const CASCADE_SPACING_MS = 100
-const CASCADE_IMAGE_CAP_MS = 700
+const CASCADE_IMAGE_CAP_MS = 10000
 const CASCADE_WAVE_CAP_MS = 600
 
 function revealGallery(els: RevealEl[], skipAnimation: boolean) {
@@ -190,34 +190,13 @@ function revealGallery(els: RevealEl[], skipAnimation: boolean) {
       continue
     }
 
-    const img = el.querySelector<HTMLImageElement>('img')
-
     const enter = () => {
       const wave = wasInViewport ? baseWave : waveFor(el)
       const play = () => {
         el.style.transitionDelay = '0ms'
         reveal(el)
       }
-      if (!img || isHidden(el) || (img.complete && img.naturalWidth > 0)) {
-        window.setTimeout(play, wave)
-        return
-      }
-
-      let timer = 0
-      const trigger = () => {
-        window.clearTimeout(timer)
-        window.setTimeout(play, wave)
-      }
-      timer = window.setTimeout(trigger, CASCADE_IMAGE_CAP_MS)
-
-      if (typeof img.decode === 'function') {
-        // No chaining: the visible cards' decodes all start at once, so the
-        // previous card's load never stalls the ones behind it.
-        img.decode().then(trigger).catch(trigger)
-      } else {
-        img.addEventListener('load', trigger, { once: true })
-        img.addEventListener('error', trigger, { once: true })
-      }
+      window.setTimeout(play, wave)
     }
 
     observeInView(el, enter, '0px')
@@ -267,7 +246,12 @@ function initReveal(skipAnimation = false) {
     if (prefersReduced || (img.complete && img.naturalWidth > 0)) {
       sharpen()
     } else {
-      img.addEventListener('load', sharpen)
+      if (typeof img.decode === 'function') {
+        img.decode().then(sharpen).catch(sharpen)
+      } else {
+        img.addEventListener('load', sharpen, { once: true })
+        img.addEventListener('error', sharpen, { once: true })
+      }
     }
   }
 }

@@ -2,25 +2,51 @@
 export const prerender = true
 
 import { Image } from 'astro:assets'
+import { getEntry } from 'astro:content'
 import MainLayout from '../layouts/MainLayout.astro'
 import FadeInSection from '../components/FadeInSection.astro'
 import SocialLinks from '../components/SocialLinks.astro'
-import profilbilde from '../assets/img/profilbilde.jpeg'
-import { CONSTANTS } from '../lib/constants'
+import defaultProfilbilde from '../assets/img/profilbilde.jpeg'
+import { getSiteSettings } from '../lib/settings'
+import { getSeoSettings } from '../lib/seo'
+import { parseMarkdownParagraphs } from '../lib/markdown'
+
+const contactEntry = await getEntry('contact', 'index')
+const settings = await getSiteSettings()
+const seoSettings = await getSeoSettings()
+
+const contactData = contactEntry?.data
+const heading = contactData?.heading ?? 'Kontakt'
+const profileImage = contactData?.image ?? defaultProfilbilde
+const imageAlt = contactData?.imageAlt ?? settings.artistName
+
+const defaultIntroText = `Har du spørsmål om kunsten min, eller er du interessert i å kjøpe eit bilete? Eg set pris på at du tek kontakt via e-post eller Instagram.
+
+Viss du ynskjer eit personleg måleri eller har andre førespurnader, er eg open for å diskutere moglegheitene.`
+
+const rawIntroText =
+  contactData?.introText ||
+  (contactData?.paragraphs?.length
+    ? contactData.paragraphs.join('\n\n')
+    : defaultIntroText)
+const paragraphsHtml = parseMarkdownParagraphs(rawIntroText)
+
+const pageTitle = seoSettings.contactSeoTitle
+const pageDescription = seoSettings.contactSeoDescription
 
 const contactPageStructuredData = {
   '@context': 'https://schema.org',
   '@type': 'ContactPage',
-  name: 'Kontakt | Furekunst',
+  name: pageTitle,
   url: 'https://furekunst.no/kontakt',
-  email: CONSTANTS.email,
-  sameAs: [CONSTANTS.instagram, CONSTANTS.facebook],
+  email: settings.email,
+  sameAs: [settings.instagramUrl, settings.facebookUrl].filter(Boolean),
 }
 ---
 
 <MainLayout
-  title="Kontakt | Furekunst"
-  description="Ta kontakt med Elisabeth Fure Schwarz for spørsmål om kjøp av kunst eller bestilling av personlege bilete. Furekunst tilbyr originale måleri, akvarell og print."
+  title={pageTitle}
+  description={pageDescription}
 >
   <Fragment slot="head">
     <script
@@ -33,8 +59,8 @@ const contactPageStructuredData = {
   <div class="mx-auto flex max-w-4xl flex-col-reverse items-center gap-10 md:gap-6 lg:flex-row lg:gap-8">
     <FadeInSection className="overflow-hidden rounded-md lg:rounded-none">
       <Image
-        src={profilbilde}
-        alt="Elisabeth Fure Schwarz"
+        src={profileImage}
+        alt={imageAlt}
         width={800}
         quality={70}
         loading="eager"
@@ -46,26 +72,23 @@ const contactPageStructuredData = {
 
     <div class="flex flex-col">
       <FadeInSection delay={70}>
-        <h1 class="font-didot mb-8 text-4xl text-gray-800">Kontakt</h1>
+        <h1 class="font-didot mb-8 text-4xl text-gray-800">{heading}</h1>
       </FadeInSection>
 
-      <FadeInSection delay={100}>
-        <p class="mb-6 leading-relaxed text-gray-600">
-          Har du spørsmål om kunsten min, eller er du interessert i å kjøpe eit
-          bilete? Eg set pris på at du tek kontakt via e-post eller Instagram.
-        </p>
-      </FadeInSection>
+      {paragraphsHtml.map((paragraphHtml, idx) => (
+        <FadeInSection delay={100 + idx * 25}>
+          <p
+            class={idx === paragraphsHtml.length - 1 ? 'mb-10 leading-relaxed text-gray-600' : 'mb-6 leading-relaxed text-gray-600'}
+            set:html={paragraphHtml}
+          />
+        </FadeInSection>
+      ))}
 
-      <FadeInSection delay={125}>
-        <p class="mb-10 leading-relaxed text-gray-600">
-          Viss du ynskjer eit personleg måleri eller har andre førespurnader,
-          er eg open for å diskutere moglegheitene.
-        </p>
-      </FadeInSection>
-
-      <FadeInSection delay={160}>
+      <FadeInSection delay={100 + paragraphsHtml.length * 25 + 35}>
         <SocialLinks variant="contact" />
       </FadeInSection>
     </div>
   </div>
 </MainLayout>
+
+

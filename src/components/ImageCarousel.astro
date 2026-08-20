@@ -49,7 +49,7 @@ const { images } = Astro.props
     type="button"
     data-carousel-prev
     aria-label="Forrige bilete"
-    class="absolute top-1/2 left-2 flex size-8 -translate-y-1/2 cursor-pointer items-center justify-center rounded-full bg-white/80 text-gray-800 shadow transition-colors duration-300 hover:bg-white"
+    class="absolute top-1/2 left-2 z-10 flex size-8 -translate-y-1/2 cursor-pointer items-center justify-center rounded-full bg-white/80 text-gray-800 shadow transition-colors duration-300 hover:bg-white focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-primary"
   >
     <svg
       class="size-4"
@@ -69,7 +69,7 @@ const { images } = Astro.props
     type="button"
     data-carousel-next
     aria-label="Neste bilete"
-    class="absolute top-1/2 right-2 flex size-8 -translate-y-1/2 cursor-pointer items-center justify-center rounded-full bg-white/80 text-gray-800 shadow transition-colors duration-300 hover:bg-white"
+    class="absolute top-1/2 right-2 z-10 flex size-8 -translate-y-1/2 cursor-pointer items-center justify-center rounded-full bg-white/80 text-gray-800 shadow transition-colors duration-300 hover:bg-white focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-primary"
   >
     <svg
       class="size-4"
@@ -86,7 +86,7 @@ const { images } = Astro.props
     <span class="sr-only">Neste bilete</span>
   </button>
 
-  <div class="mt-4 flex justify-center gap-2" data-carousel-dots>
+  <div class="relative z-10 mt-4 flex justify-center gap-2" data-carousel-dots>
     {images.map((_image, index) => (
       <button
         type="button"
@@ -263,6 +263,8 @@ const { images } = Astro.props
   }
 
   const initCarousel = () => {
+    teardown()
+    initialized = false
     desktop = window.matchMedia('(min-width: 768px)')
     const update = () => {
       if (desktop?.matches) {
@@ -277,9 +279,10 @@ const { images } = Astro.props
         }
       }
     }
+    desktop.removeEventListener('change', update)
     desktop.addEventListener('change', update)
     update()
   }
 
-  initCarousel()
+  document.addEventListener('astro:page-load', initCarousel)
 </script>

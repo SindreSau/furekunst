@@ -4,6 +4,7 @@ import { Image } from 'astro:assets'
 import FadeInSection from './FadeInSection.astro'
 import Frame from './Frame.astro'
 import { priceHint } from '../lib/price'
+import { getBlurDataUrl } from '../lib/blur'
 
 interface Props {
   post: CollectionEntry<'gallery'>
@@ -29,54 +30,73 @@ const imageWidths = image
   : [1]
 const imageSizes =
   '(max-width: 639px) calc(100vw - 4.75rem), (max-width: 1023px) calc(50vw - 3.25rem), (max-width: 1279px) calc(33.333vw - 3.083rem), 377px'
+
+const blurDataUrl = await getBlurDataUrl(image)
 ---
 
-{image && (
-  <FadeInSection
-    delay={index * 25}
-    dataFilterCard={data.type}
-    className="mb-5 inline-block w-full break-inside-avoid align-top sm:mb-6"
-  >
-    <article>
-      <a
-        href={`/galleri/${slug}`}
-        data-astro-prefetch
-        data-artwork-click
-        data-slug={slug}
-        class="group block focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-primary"
-      >
-        <Frame passpartout={data.passepartout} transitionName={`art-${slug}`}>
-          <Image
-            src={image}
-            alt={data.title}
-            width={imageWidth}
-            height={imageHeight}
-            widths={imageWidths}
-            quality={55}
-            loading={index < 4 ? 'eager' : 'lazy'}
-            sizes={imageSizes}
-            data-fade-img
-            class="block h-auto w-full object-cover blur-[1px] transition-all duration-500 ease-out"
-          />
-        </Frame>
+{
+  image && (
+    <FadeInSection
+      delay={index * 25}
+      dataFilterCard={data.type}
+      className="mb-5 inline-block w-full break-inside-avoid align-top sm:mb-6"
+    >
+      <article>
+        <a
+          href={`/galleri/${slug}`}
+          data-astro-prefetch
+          data-artwork-click
+          data-slug={slug}
+          class="group block focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-primary"
+        >
+          <Frame passpartout={data.passepartout} transitionName={`art-${slug}`}>
+            <div
+              data-artwork-placeholder
+              class="relative w-full overflow-hidden bg-cover bg-center"
+              style={{
+                aspectRatio: `${imageWidth} / ${imageHeight}`,
+                ...(blurDataUrl
+                  ? { backgroundImage: `url("${blurDataUrl}")` }
+                  : {}),
+              }}
+            >
+              <Image
+                src={image}
+                alt={data.title}
+                width={imageWidth}
+                height={imageHeight}
+                widths={imageWidths}
+                quality={55}
+                loading={index < 4 ? 'eager' : 'lazy'}
+                sizes={imageSizes}
+                data-fade-img
+                class="block h-auto w-full object-cover blur-[1px] transition-all duration-500 ease-out"
+              />
+            </div>
+          </Frame>
 
-        <div class="flex items-start justify-between gap-3 px-2 pt-3">
-          <div class="min-w-0">
-            <h2 class="text-lg font-medium leading-snug md:text-xl">{data.title}</h2>
-            {price && (
-              <p class="mt-0.5 text-sm leading-tight text-muted-foreground">{price}</p>
+          <div class="flex items-start justify-between gap-3 px-2 pt-3">
+            <div class="min-w-0">
+              <h2 class="text-lg font-medium leading-snug md:text-xl">
+                {data.title}
+              </h2>
+              {price && (
+                <p class="mt-0.5 text-sm leading-tight text-muted-foreground">
+                  {price}
+                </p>
+              )}
+            </div>
+            {data.type && (
+              <p class="shrink-0 rounded-sm bg-primary-foreground/50 px-2 py-0.5 text-sm leading-tight text-primary/80 md:text-[0.9125rem]">
+                {data.type}
+              </p>
             )}
           </div>
-          {data.type && (
-            <p class="shrink-0 rounded-sm bg-primary-foreground/50 px-2 py-0.5 text-sm leading-tight text-primary/80 md:text-[0.9125rem]">
-              {data.type}
-            </p>
-          )}
-        </div>
-      </a>
-    </article>
-  </FadeInSection>
-)}
+        </a>
+      </article>
+    </FadeInSection>
+  )
+}
 
 <script>
   import { track } from '../lib/analytics'
@@ -85,7 +105,9 @@ const imageSizes =
   // client-side navigations (no need for astro:page-load re-binding since
   // delegation always hits the fresh DOM).
   document.addEventListener('click', event => {
-    const card = (event.target as Element | null)?.closest?.('[data-artwork-click]')
+    const card = (event.target as Element | null)?.closest?.(
+      '[data-artwork-click]',
+    )
     if (!card) return
     const slug = card.getAttribute('data-slug')
     if (!slug) return

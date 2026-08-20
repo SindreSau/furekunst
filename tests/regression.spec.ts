@@ -35,16 +35,24 @@ const isDesktop = (project: string) => project === 'desktop-chromium'
 // clicking.
 async function waitForMorphToSettle(page: Page, selector: string) {
   await page.waitForSelector(selector)
-  await page.waitForFunction(() => document.getAnimations().length === 0, {
-    timeout: 5_000,
-  })
+  try {
+    await page.waitForFunction(() => document.getAnimations().length === 0, {
+      timeout: 5_000,
+    })
+  } catch {
+    // timeout or navigation
+  }
   let quiet = 0
   for (let i = 0; i < 40 && quiet < 5; i++) {
     await page.waitForTimeout(100)
-    const animating = await page.evaluate(
-      () => document.getAnimations().length > 0,
-    )
-    quiet = animating ? 0 : quiet + 1
+    try {
+      const animating = await page.evaluate(
+        () => document.getAnimations().length > 0,
+      )
+      quiet = animating ? 0 : quiet + 1
+    } catch {
+      quiet = 0
+    }
   }
 }
 
@@ -285,4 +293,61 @@ test('robots.txt exists and points at the live sitemap', async ({
   expect(await robots.text()).toContain(
     'Sitemap: https://furekunst.no/sitemap.xml',
   )
+})
+
+test('gallery cards carry inline blur placeholder and aspect ratio', async ({
+  page,
+}) => {
+  await page.goto('/galleri')
+  const firstPlaceholder = page
+    .locator('[data-artwork-placeholder]')
+    .first()
+  await expect(firstPlaceholder).toBeVisible()
+
+  const bg = await firstPlaceholder.evaluate(
+    el => (el as HTMLElement).style.backgroundImage,
+  )
+  expect(bg).toContain('data:image/webp;base64,')
+
+  const aspectRatio = await firstPlaceholder.evaluate(
+    el => (el as HTMLElement).style.aspectRatio,
+  )
+  expect(aspectRatio).toBeTruthy()
+})
+
+test('zoom dialog opens with matching aspect ratio and does not collapse to a square', async ({
+  page,
+}, testInfo) => {
+  test.skip(isMobile(testInfo.project.name), 'zoom is desktop-only')
+  await page.goto('/galleri')
+  await page.locator(GALLERY_LINK).first().click()
+  await page.waitForURL('**/galleri/**')
+  await waitForMorphToSettle(page, '[data-zoom-page-frame]')
+
+  await page.locator('[data-zoom-trigger]').click()
+  await expect(page.locator('[data-zoom-dialog]')).toBeVisible()
+
+  const zoomFrame = page.locator('[data-zoom-dialog-frame]')
+  const box = await zoomFrame.boundingBox()
+  expect(box).toBeTruthy()
+  // Frame must not be a tiny collapsed ~36x36px square
+  expect(box!.width).toBeGreaterThan(150)
+  expect(box!.height).toBeGreaterThan(150)
+
+  const zoomImg = page.locator('[data-zoom-dialog] [data-zoom-img]')
+  const initialSrc = await zoomImg.getAttribute('src')
+  expect(initialSrc).toBeTruthy()
+  expect(initialSrc).not.toBe('')
+})
+
+test('tall artwork detail page retains full frame width and aspect ratio on refresh', async ({
+  page,
+}) => {
+  await page.goto('/galleri/god-morgon')
+  const frame = page.locator('[data-zoom-page-frame]')
+  await expect(frame).toBeVisible()
+  const box = await frame.boundingBox()
+  expect(box).toBeTruthy()
+  expect(box!.width).toBeGreaterThan(150)
+  expect(box!.height).toBeGreaterThan(150)
 })

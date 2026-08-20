@@ -2,6 +2,7 @@
 import type { ImageMetadata } from 'astro'
 import { Image } from 'astro:assets'
 import Frame from './Frame.astro'
+import { getBlurDataUrl } from '../lib/blur'
 
 interface Props {
   image?: ImageMetadata
@@ -26,14 +27,25 @@ const {
 } = Astro.props
 
 const resolvedImage: ImageMetadata | undefined =
-  image ?? (typeof rawSrc === 'object' && rawSrc !== null ? (rawSrc as ImageMetadata) : undefined)
+  image ??
+  (typeof rawSrc === 'object' && rawSrc !== null
+    ? (rawSrc as ImageMetadata)
+    : undefined)
 
-const width = resolvedImage ? Math.min(resolvedImage.width, 700) : (customWidth ?? 700)
+const width = resolvedImage
+  ? Math.min(resolvedImage.width, 700)
+  : (customWidth ?? 700)
 const height = resolvedImage
-  ? Math.max(1, Math.round((resolvedImage.height / resolvedImage.width) * width))
+  ? Math.max(
+      1,
+      Math.round((resolvedImage.height / resolvedImage.width) * width),
+    )
   : (customHeight ?? 500)
 
 const tallArtwork = height / width > 1.5
+const initialSrc =
+  typeof rawSrc === 'string' ? rawSrc : (resolvedImage?.src ?? '')
+const blurDataUrl = await getBlurDataUrl(resolvedImage || rawSrc)
 ---
 
 <div class="relative">
@@ -41,39 +53,59 @@ const tallArtwork = height / width > 1.5
     passpartout={passpartout}
     transitionName={transitionName}
     data-zoom-page-frame
-    class={tallArtwork ? 'md:mx-auto md:w-fit md:max-w-full' : undefined}
+    class={tallArtwork ? 'w-full md:mx-auto' : 'w-full'}
+    style={
+      tallArtwork
+        ? {
+            maxWidth: `min(100%, calc((100svh - 17.5rem) * ${width} / ${height} + ${passpartout ? '36px' : '12px'}))`,
+          }
+        : undefined
+    }
   >
-    {resolvedImage ? (
-      <Image
-        src={resolvedImage}
-        alt={alt}
-        width={width}
-        quality={55}
-        loading="eager"
-        fetchpriority="high"
-        decoding="async"
-        class={
-          tallArtwork
-            ? 'h-auto w-full object-contain md:h-auto md:w-auto md:max-h-[calc(100svh-17.5rem)] md:max-w-full'
-            : 'h-auto w-full object-contain'
-        }
-      />
-    ) : (
-      <img
-        src={typeof rawSrc === 'string' ? rawSrc : ''}
-        alt={alt}
-        width={width}
-        height={height}
-        loading="eager"
-        fetchpriority="high"
-        decoding="async"
-        class={
-          tallArtwork
-            ? 'h-auto w-full object-contain md:h-auto md:w-auto md:max-h-[calc(100svh-17.5rem)] md:max-w-full'
-            : 'h-auto w-full object-contain'
-        }
-      />
-    )}
+    <div
+      data-artwork-placeholder
+      class="relative w-full overflow-hidden bg-cover bg-center"
+      style={{
+        aspectRatio: `${width} / ${height}`,
+        ...(blurDataUrl ? { backgroundImage: `url("${blurDataUrl}")` } : {}),
+      }}
+    >
+      {
+        resolvedImage ? (
+          <Image
+            src={resolvedImage}
+            alt={alt}
+            width={width}
+            quality={55}
+            loading="eager"
+            fetchpriority="high"
+            decoding="async"
+            data-fade-img
+            class={
+              tallArtwork
+                ? 'h-auto w-full object-contain blur-[1px] transition-all duration-500 ease-out md:h-auto md:w-auto md:max-h-[calc(100svh-17.5rem)] md:max-w-full'
+                : 'h-auto w-full object-contain blur-[1px] transition-all duration-500 ease-out'
+            }
+          />
+        ) : (
+          <img
+            src={typeof rawSrc === 'string' ? rawSrc : ''}
+            alt={alt}
+            width={width}
+            height={height}
+            loading="eager"
+            fetchpriority="high"
+            decoding="async"
+            data-fade-img
+            class={
+              tallArtwork
+                ? 'h-auto w-full object-contain blur-[1px] transition-all duration-500 ease-out md:h-auto md:w-auto md:max-h-[calc(100svh-17.5rem)] md:max-w-full'
+                : 'h-auto w-full object-contain blur-[1px] transition-all duration-500 ease-out'
+            }
+          />
+        )
+      }
+    </div>
   </Frame>
 
   <button
@@ -107,32 +139,48 @@ const tallArtwork = height / width > 1.5
 
   <div
     data-zoom-content
-    class="relative max-h-full max-w-full cursor-zoom-out scale-95 opacity-0 transition-[opacity,transform] duration-300 ease-out"
+    class="relative max-h-full max-w-full cursor-zoom-out opacity-0 transition-opacity duration-300 ease-out"
   >
-    <Frame passpartout={passpartout} class="w-fit max-w-full" data-zoom-dialog-frame>
-      {resolvedImage ? (
-        <Image
-          data-zoom-img
-          src={resolvedImage}
-          alt={alt}
-          width={Math.min(resolvedImage.width, 1500)}
-          quality={85}
-          loading="lazy"
-          decoding="async"
-          class="block h-auto w-auto max-h-[calc(100vh-6rem)] max-w-[calc(100vw-3rem)] object-contain md:max-h-[calc(100vh-8rem)] md:max-w-[calc(100vw-5rem)]"
-        />
-      ) : (
+    <Frame
+      passpartout={passpartout}
+      class="mx-auto w-full max-w-full"
+      style={{
+        width: `min(calc(100vw - 3rem), calc((100vh - 8rem) * ${width} / ${height} + ${passpartout ? '36px' : '12px'}))`,
+        maxWidth: `min(calc(100vw - 3rem), calc((100vh - 8rem) * ${width} / ${height} + ${passpartout ? '36px' : '12px'}))`,
+      }}
+      data-zoom-dialog-frame
+    >
+      <div
+        data-artwork-placeholder
+        class="relative flex w-full items-center justify-center overflow-hidden bg-cover bg-center"
+        style={{
+          aspectRatio: `${width} / ${height}`,
+          ...(blurDataUrl ? { backgroundImage: `url("${blurDataUrl}")` } : {}),
+        }}
+      >
         <img
           data-zoom-img
-          src={typeof rawSrc === 'string' ? rawSrc : ''}
+          src={initialSrc}
           alt={alt}
           width={width}
           height={height}
-          loading="lazy"
+          loading="eager"
           decoding="async"
-          class="block h-auto w-auto max-h-[calc(100vh-6rem)] max-w-[calc(100vw-3rem)] object-contain md:max-h-[calc(100vh-8rem)] md:max-w-[calc(100vw-5rem)]"
+          class="block h-auto w-full max-h-[calc(100vh-6rem)] object-contain md:max-h-[calc(100vh-8rem)]"
+          style={{ aspectRatio: `${width} / ${height}` }}
         />
-      )}
+        {
+          zoomSrc && (
+            <img
+              data-zoom-hires
+              alt={alt}
+              aria-hidden="true"
+              class="pointer-events-none absolute inset-0 block h-full w-full object-contain opacity-0 transition-opacity duration-300 ease-out"
+              style={{ aspectRatio: `${width} / ${height}` }}
+            />
+          )
+        }
+      </div>
     </Frame>
   </div>
 </div>
@@ -148,11 +196,17 @@ const tallArtwork = height / width > 1.5
   let isZoomed = false
   let closeTimeout = 0
 
-  const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches
-  const finePointer = window.matchMedia('(hover: hover) and (pointer: fine)').matches
-  const docStartVT = (document as Document & {
-    startViewTransition?: (cb: () => void) => { finished: Promise<void> }
-  }).startViewTransition
+  const prefersReduced = window.matchMedia(
+    '(prefers-reduced-motion: reduce)',
+  ).matches
+  const finePointer = window.matchMedia(
+    '(hover: hover) and (pointer: fine)',
+  ).matches
+  const docStartVT = (
+    document as Document & {
+      startViewTransition?: (cb: () => void) => { finished: Promise<void> }
+    }
+  ).startViewTransition
   const startViewTransition = docStartVT ? docStartVT.bind(document) : undefined
 
   const pauseContentTransition = () => {
@@ -172,25 +226,40 @@ const tallArtwork = height / width > 1.5
   const open = () => {
     if (!dialog || !content || !closeBtn || isZoomed) return
     isZoomed = true
-    const zoomImg = dialog?.querySelector<HTMLImageElement>('[data-zoom-img]')
+    const zoomHires = dialog?.querySelector<HTMLImageElement>('[data-zoom-hires]')
     const zoomSrc = dialog?.dataset.zoomSrc
-    if (zoomImg && zoomSrc) {
-      const hiRes = new window.Image()
-      hiRes.onload = () => {
-        zoomImg.src = zoomSrc
-        zoomImg.classList.add('hi-res')
+    if (zoomHires && zoomSrc) {
+      if (!zoomHires.getAttribute('src')) {
+        zoomHires.src = zoomSrc
       }
-      hiRes.src = zoomSrc
+      const showHires = () => {
+        zoomHires.classList.remove('opacity-0')
+        zoomHires.classList.add('opacity-100')
+      }
+      if (zoomHires.complete && zoomHires.naturalWidth > 0) {
+        showHires()
+      } else if (zoomHires.decode) {
+        zoomHires.decode().then(showHires).catch(showHires)
+      } else {
+        zoomHires.onload = showHires
+      }
     }
-    if (startViewTransition && !prefersReduced && finePointer && pageFrames.length > 0 && dialogFrame && vtName) {
+    if (
+      startViewTransition &&
+      !prefersReduced &&
+      finePointer &&
+      pageFrames.length > 0 &&
+      dialogFrame &&
+      vtName
+    ) {
       startViewTransition(() => {
         pauseContentTransition()
         clearPageFrameNames()
         dialogFrame!.style.viewTransitionName = vtName
         dialog!.hidden = false
         document.documentElement.classList.add('zoom-open')
-        content!.classList.remove('scale-95', 'opacity-0')
-        content!.classList.add('scale-100', 'opacity-100')
+        content!.classList.remove('opacity-0')
+        content!.classList.add('opacity-100')
         closeBtn!.focus()
       })?.finished.then(resumeContentTransition)
     } else {
@@ -198,8 +267,8 @@ const tallArtwork = height / width > 1.5
       document.documentElement.classList.add('zoom-open')
       requestAnimationFrame(() => {
         if (content) {
-          content.classList.remove('scale-95', 'opacity-0')
-          content.classList.add('scale-100', 'opacity-100')
+          content.classList.remove('opacity-0')
+          content.classList.add('opacity-100')
         }
       })
       closeBtn.focus()
@@ -209,19 +278,26 @@ const tallArtwork = height / width > 1.5
   const close = () => {
     if (!dialog || !content || !isZoomed) return
     isZoomed = false
-    if (startViewTransition && !prefersReduced && finePointer && pageFrames.length > 0 && dialogFrame && vtName) {
+    if (
+      startViewTransition &&
+      !prefersReduced &&
+      finePointer &&
+      pageFrames.length > 0 &&
+      dialogFrame &&
+      vtName
+    ) {
       startViewTransition(() => {
         pauseContentTransition()
         dialogFrame!.style.viewTransitionName = 'none'
         restorePageFrameNames()
-        content!.classList.add('scale-95', 'opacity-0')
-        content!.classList.remove('scale-100', 'opacity-100')
+        content!.classList.add('opacity-0')
+        content!.classList.remove('opacity-100')
         document.documentElement.classList.remove('zoom-open')
         dialog!.hidden = true
       })?.finished.then(resumeContentTransition)
     } else {
-      content.classList.add('scale-95', 'opacity-0')
-      content.classList.remove('scale-100', 'opacity-100')
+      content.classList.add('opacity-0')
+      content.classList.remove('opacity-100')
       document.documentElement.classList.remove('zoom-open')
       window.clearTimeout(closeTimeout)
       closeTimeout = window.setTimeout(() => {

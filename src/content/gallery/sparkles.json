@@ -1,9 +1,13 @@
 {
   "title": "Sparkles",
   "description": "Akvarell og penn på papir",
-  "type": "original",
+  "type": {
+    "discriminant": "original",
+    "value": {
+      "size": "A5 14,8x21cm (print kjem)",
+      "price": 0
+    }
+  },
   "passepartout": true,
-  "size": "A5 14,8x21cm (print kjem)",
-  "sizeAndPrice": [],
-  "image": "../../assets/artworks/sparkles.jpeg"
+  "image": "../../assets/artworks/sparkles/sparkles.jpeg"
 }

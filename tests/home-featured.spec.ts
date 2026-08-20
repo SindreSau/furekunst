@@ -64,3 +64,40 @@ test('home mobile carousel shows the 3 curated artworks', async ({
     expect(await img.getAttribute('alt')).toMatch(featuredAltPattern)
   }
 })
+
+test('home mobile carousel next and prev buttons navigate slides', async ({
+  page,
+}, testInfo) => {
+  test.skip(!isMobile(testInfo.project.name), 'mobile only')
+
+  await page.goto('/')
+
+  const nextBtn = page.locator('[data-carousel-next]')
+  const prevBtn = page.locator('[data-carousel-prev]')
+  const dots = page.locator('[data-carousel-dot]')
+
+  await expect(dots.nth(0)).toHaveAttribute('aria-current', 'true')
+
+  await nextBtn.click()
+  await expect(dots.nth(1)).toHaveAttribute('aria-current', 'true')
+
+  await prevBtn.click()
+  await expect(dots.nth(0)).toHaveAttribute('aria-current', 'true')
+})
+
+test('home mobile carousel buttons work after client-side navigation', async ({
+  page,
+}, testInfo) => {
+  test.skip(!isMobile(testInfo.project.name), 'mobile only')
+
+  await page.goto('/galleri')
+  await page.click('a[href="/"]')
+  await page.waitForURL('**/')
+
+  const nextBtn = page.locator('[data-carousel-next]')
+  const dots = page.locator('[data-carousel-dot]')
+
+  await expect(dots.nth(0)).toHaveAttribute('aria-current', 'true')
+  await nextBtn.click()
+  await expect(dots.nth(1)).toHaveAttribute('aria-current', 'true')
+})

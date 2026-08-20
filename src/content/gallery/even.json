@@ -1,18 +1,21 @@
 {
   "title": "Even",
   "description": "",
-  "type": "print",
-  "passepartout": true,
-  "price": 500,
-  "sizeAndPrice": [
-    {
-      "size": "A4 (21x29,7cm)",
-      "price": 450
-    },
-    {
-      "size": "A3 (29,7x42cm)",
-      "price": 600
+  "type": {
+    "discriminant": "print",
+    "value": {
+      "sizeAndPrice": [
+        {
+          "size": "A4 (21x29,7cm)",
+          "price": 450
+        },
+        {
+          "size": "A3 (29,7x42cm)",
+          "price": 600
+        }
+      ]
     }
-  ],
-  "image": "../../assets/artworks/even.jpg"
+  },
+  "passepartout": true,
+  "image": "../../assets/artworks/even/even.jpg"
 }

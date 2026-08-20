@@ -1,10 +1,13 @@
 {
   "title": "Din",
   "description": "Akvarell på papir",
-  "type": "original",
+  "type": {
+    "discriminant": "original",
+    "value": {
+      "size": "30x30cm",
+      "price": 2500
+    }
+  },
   "passepartout": true,
-  "size": "30x30cm",
-  "price": 2500,
-  "sizeAndPrice": [],
-  "image": "../../assets/artworks/din.jpeg"
+  "image": "../../assets/artworks/din/din.jpeg"
 }

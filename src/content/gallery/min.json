@@ -1,8 +1,13 @@
 {
   "title": "Min",
   "description": "Akvarell på papir",
-  "type": "original",
+  "type": {
+    "discriminant": "original",
+    "value": {
+      "size": "",
+      "price": 0
+    }
+  },
   "passepartout": true,
-  "sizeAndPrice": [],
-  "image": "../../assets/artworks/min.jpeg"
+  "image": "../../assets/artworks/min/min.jpeg"
 }

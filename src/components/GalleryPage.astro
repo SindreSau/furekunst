@@ -5,12 +5,14 @@ import MainLayout from '../layouts/MainLayout.astro'
 import GalleryPost from './GalleryPost.astro'
 import Button from './Button.astro'
 import type { GalleryFilter } from '../lib/gallery'
+import { getSeoSettings } from '../lib/seo'
 
 interface Props {
   posts: CollectionEntry<'gallery'>[]
 }
 
 const { posts } = Astro.props
+const seoSettings = await getSeoSettings()
 
 const filterChips: { label: string; key: GalleryFilter }[] = [
   { label: 'Alle', key: 'all' },
@@ -43,8 +45,8 @@ const preloadUrls = (
 ---
 
 <MainLayout
-  title="Galleri - Kunstverk til sals | Furekunst"
-  description="Utforsk kunstsamlinga til Elisabeth Fure Schwarz med måleri i akryl, akvarell, og olje, samt teikningar med tusj og penn."
+  title={seoSettings.gallerySeoTitle}
+  description={seoSettings.gallerySeoDescription}
   ogImage="/galleri/open-graph.jpeg"
 >
   <Fragment slot="head">

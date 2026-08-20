@@ -2,7 +2,8 @@
 import { ClientRouter } from 'astro:transitions'
 import Header from '../components/header.astro'
 import Footer from '../components/footer.astro'
-import { canonicalUrl, renderOgTags, siteConfig } from '../lib/seo'
+import { canonicalUrl, renderOgTags, getSeoSettings } from '../lib/seo'
+import { getSiteSettings } from '../lib/settings'
 import '../styles/global.css'
 // Asset imports resolve to the same hashed URLs the built CSS references, so
 // the preload dedupes with the @font-face download (no double fetch).
@@ -18,9 +19,12 @@ interface Props {
   type?: string
 }
 
+const seoSettings = await getSeoSettings()
+const settings = await getSiteSettings()
+
 const {
-  title = siteConfig.name,
-  description = siteConfig.description,
+  title = seoSettings.defaultSiteTitle,
+  description = seoSettings.defaultSiteDescription,
   ogImage,
   canonical,
   noindex = false,
@@ -42,13 +46,10 @@ const seoTags = renderOgTags({
 const personJsonLd = {
   '@context': 'https://schema.org',
   '@type': 'Person',
-  name: 'Elisabeth Fure Schwarz',
+  name: settings.artistName,
   jobTitle: 'Kunstnar',
   url: 'https://furekunst.no',
-  sameAs: [
-    'https://www.instagram.com/fure.kunst',
-    'https://www.facebook.com/fure.kunst/',
-  ],
+  sameAs: [settings.instagramUrl, settings.facebookUrl].filter(Boolean),
   makesOffer: {
     '@type': 'Offer',
     itemOffered: {

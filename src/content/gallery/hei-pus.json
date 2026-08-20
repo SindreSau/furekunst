@@ -1,10 +1,13 @@
 {
   "title": "Hei pus",
   "description": "Akryl på lerret",
-  "type": "original",
+  "type": {
+    "discriminant": "original",
+    "value": {
+      "size": "23x33",
+      "price": 2500
+    }
+  },
   "passepartout": true,
-  "size": "23x33",
-  "price": 2500,
-  "sizeAndPrice": [],
-  "image": "../../assets/artworks/hei-pus.jpeg"
+  "image": "../../assets/artworks/hei-pus/hei-pus.jpeg"
 }

@@ -1,17 +1,21 @@
 {
   "title": "Crazy cats",
   "description": "Tusj og penn på papir",
-  "type": "print",
-  "passepartout": true,
-  "sizeAndPrice": [
-    {
-      "size": "Print A3 (29,7x42cm)",
-      "price": 700
-    },
-    {
-      "size": "Print A4 (21x29cm)",
-      "price": 500
+  "type": {
+    "discriminant": "print",
+    "value": {
+      "sizeAndPrice": [
+        {
+          "size": "Print A3 (29,7x42cm)",
+          "price": 700
+        },
+        {
+          "size": "Print A4 (21x29cm)",
+          "price": 500
+        }
+      ]
     }
-  ],
-  "image": "../../assets/artworks/crazy-cats.jpeg"
+  },
+  "passepartout": true,
+  "image": "../../assets/artworks/crazy-cats/crazy-cats.jpeg"
 }
