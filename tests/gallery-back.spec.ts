@@ -74,3 +74,28 @@ test('the Galleri button falls back to a /galleri link on a deep link (no galler
   await page.locator(BACK_BUTTON).click()
   await expect(page).toHaveURL(/\/galleri$/)
 })
+
+test('the Galleri button works on iOS Chrome (CriOS) user agent', async ({
+  browser,
+}) => {
+  const context = await browser.newContext({
+    userAgent:
+      'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) CriOS/120.0.6099.119 Mobile/15E148 Safari/604.1',
+  })
+  const page = await context.newPage()
+
+  await page.goto('/galleri')
+  await page.waitForSelector(GALLERY_LINK)
+
+  const firstCard = page.locator(GALLERY_LINK).first()
+  await firstCard.click({ force: true })
+  await page.waitForURL('**/galleri/**')
+  await page.waitForSelector(BACK_BUTTON)
+
+  await page.locator(BACK_BUTTON).click()
+  await page.waitForURL('**/galleri')
+  await expect(page).toHaveURL(/\/galleri$/)
+
+  await context.close()
+})
+

@@ -124,6 +124,8 @@ const personJsonLd = {
           link.target === '_blank' ||
           link.hasAttribute('download') ||
           link.hasAttribute('data-astro-reload') ||
+          link.hasAttribute('data-astro-back') ||
+          link.closest('[data-astro-back]') ||
           !link.href.startsWith(window.location.origin) ||
           link.href.includes('#')
         )
