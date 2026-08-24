@@ -29,7 +29,7 @@ export default defineConfig({
     },
   ],
   webServer: {
-    command: 'node ./node_modules/astro/bin/astro.mjs dev --host --port 4321',
+    command: 'node ./node_modules/astro/bin/astro.mjs dev --host --port 4321 --force',
     env: {
       PATH: process.env.PATH ?? '',
       ASTRO_TELEMETRY_DISABLED: '1',

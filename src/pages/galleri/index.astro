@@ -1,18 +1,16 @@
 ---
+export const prerender = true
 import { getCollection } from 'astro:content'
 import GalleryPage from '../../components/GalleryPage.astro'
 
-const posts = await getCollection('gallery')
-
-// Sort by createdAt descending if present, fallback to title
-posts
+const posts = (await getCollection('gallery'))
   .filter(post => post.data.published !== false)
   .sort((a, b) => {
-  const dateA = a.data.createdAt ? new Date(a.data.createdAt).getTime() : 0
-  const dateB = b.data.createdAt ? new Date(b.data.createdAt).getTime() : 0
-  if (dateA !== dateB) return dateB - dateA
-  return a.data.title.localeCompare(b.data.title)
-})
+    const dateA = a.data.createdAt ? new Date(a.data.createdAt).getTime() : 0
+    const dateB = b.data.createdAt ? new Date(b.data.createdAt).getTime() : 0
+    if (dateA !== dateB) return dateB - dateA
+    return a.data.title.localeCompare(b.data.title)
+  })
 ---
 
 <GalleryPage posts={posts} />

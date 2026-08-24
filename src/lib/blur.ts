@@ -27,6 +27,18 @@ function getFilesRecursively(dir: string): string[] {
   return files
 }
 
+let cachedAssetFiles: string[] | null = null
+
+function getAssetFiles(): string[] {
+  if (cachedAssetFiles) return cachedAssetFiles
+  const files: string[] = []
+  for (const dir of ASSET_DIRS) {
+    files.push(...getFilesRecursively(dir))
+  }
+  cachedAssetFiles = files
+  return files
+}
+
 function findSourceFile(identifier: string): string | null {
   if (existsSync(identifier)) return identifier
 
@@ -34,21 +46,18 @@ function findSourceFile(identifier: string): string | null {
   const cleanId = identifier.split('?')[0].split('#')[0]
   const baseName = path.basename(cleanId)
 
-  // Direct basename match or prefix match (e.g. Astro hashed names like `ei-ku.B3z9...jpeg`)
-  for (const dir of ASSET_DIRS) {
-    const allFiles = getFilesRecursively(dir)
+  const allFiles = getAssetFiles()
 
-    // Exact filename match
-    const exactMatch = allFiles.find(f => path.basename(f) === baseName)
-    if (exactMatch) return exactMatch
+  // Exact filename match
+  const exactMatch = allFiles.find(f => path.basename(f) === baseName)
+  if (exactMatch) return exactMatch
 
-    // Match by base name without hash / extension (e.g. 'ei-ku' from 'ei-ku.B2b87f.jpeg')
-    const strippedName = baseName.split('.')[0]
-    const matched = allFiles.find(f =>
-      path.basename(f).startsWith(strippedName + '.'),
-    )
-    if (matched) return matched
-  }
+  // Match by base name without hash / extension (e.g. 'ei-ku' from 'ei-ku.B2b87f.jpeg')
+  const strippedName = baseName.split('.')[0]
+  const matched = allFiles.find(f =>
+    path.basename(f).startsWith(strippedName + '.'),
+  )
+  if (matched) return matched
 
   return null
 }

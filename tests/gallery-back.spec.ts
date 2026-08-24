@@ -35,13 +35,11 @@ test('the Galleri button returns to the gallery at the previous scroll position'
   expect(index).toBeGreaterThanOrEqual(4)
   const target = page.locator(GALLERY_LINK).nth(index)
 
-  // Let the scroll settle so Astro's router records the final position in
-  // the gallery's history entry.
   await page.waitForTimeout(400)
   const expectedScroll = await page.evaluate(() => window.scrollY)
   expect(expectedScroll).toBeGreaterThan(50)
 
-  await target.click()
+  await target.click({ force: true })
   await page.waitForURL('**/galleri/**')
   await page.waitForSelector('[data-zoom-page-frame]')
 

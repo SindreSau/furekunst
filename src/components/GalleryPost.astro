@@ -71,7 +71,7 @@ const blurDataUrl = await getBlurDataUrl(image)
                 loading={index < 4 ? 'eager' : 'lazy'}
                 sizes={imageSizes}
                 data-fade-img
-                class="block h-auto w-full object-cover blur-[1px] transition-all duration-500 ease-out"
+                class="block h-auto w-full object-cover blur-[1px] transition-[opacity,filter] duration-300 ease-out"
               />
             </div>
           </Frame>

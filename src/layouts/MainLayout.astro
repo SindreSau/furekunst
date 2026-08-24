@@ -133,6 +133,44 @@ const personJsonLd = {
         history.pushState({ index, scrollX: 0, scrollY: 0 }, '', link.href)
       })
     </script>
+    <script is:inline>
+      // Back buttons (e.g. "← Galleri") act like browser back navigation:
+      // Astro's router saves previous scroll positions in history.state and restores
+      // them on popstate traversal. When history is available in the current session,
+      // history.back() is invoked; on a direct deep link it falls back to the href link.
+      document.addEventListener('click', event => {
+        if (
+          event.defaultPrevented ||
+          event.button !== 0 ||
+          event.metaKey ||
+          event.ctrlKey ||
+          event.shiftKey ||
+          event.altKey
+        )
+          return
+
+        const backLink =
+          event.target instanceof Element
+            ? event.target.closest('[data-astro-back]')
+            : null
+        if (!backLink) return
+
+        let visitedGallery = false
+        try {
+          visitedGallery =
+            sessionStorage.getItem('furekunst:gallery-visited') === '1'
+        } catch {}
+
+        const hasHistory =
+          visitedGallery ||
+          (typeof history.state?.index === 'number' && history.state.index > 0)
+
+        if (hasHistory && window.history.length > 1) {
+          event.preventDefault()
+          window.history.back()
+        }
+      })
+    </script>
     <ClientRouter fallback="animate" />
   </head>
 

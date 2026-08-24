@@ -8,12 +8,32 @@ import ArtworkZoom from '../../components/ArtworkZoom.astro'
 import Button from '../../components/Button.astro'
 import { priceHint } from '../../lib/price'
 
-const posts = await getCollection('gallery')
-const post = posts
-  .filter(entry => entry.data.published !== false)
-  .find(
-    entry => (entry.data.slug || entry.id) === Astro.params.slug,
-  )
+export const prerender = true
+
+export async function getStaticPaths() {
+  const posts = await getCollection('gallery')
+  return posts
+    .filter(entry => entry.data.published !== false)
+    .map(post => ({
+      params: { slug: post.data.slug || post.id },
+      props: { post },
+    }))
+}
+
+interface PageProps {
+  post?: CollectionEntry<'gallery'>
+}
+
+const { post: propPost } = Astro.props as PageProps
+let post = propPost
+if (!post) {
+  const posts = await getCollection('gallery')
+  post = posts
+    .filter(entry => entry.data.published !== false)
+    .find(
+      entry => (entry.data.slug || entry.id) === Astro.params.slug,
+    )
+}
 
 if (!post) {
   Astro.response.status = 404
@@ -214,32 +234,7 @@ if (post && imageAsset) {
         })
       </script>
 
-      <script>
-        // The "← Galleri" button returns to the gallery at the SAME scroll
-        // position the user left, like the browser's back button: Astro's
-        // router saves the gallery's scroll in history.state and restores it
-        // on a popstate traversal. Only take that path when the gallery was
-        // actually visited this session (gallery → detail is the only in-site
-        // route into a detail page, so the previous entry is the gallery);
-        // on a direct deep link fall back to the plain /galleri link.
-        const backLink = document.querySelector('[data-astro-back]')
-        if (backLink && !(backLink as HTMLElement).dataset.backBound) {
-          ;(backLink as HTMLElement).dataset.backBound = '1'
-          backLink.addEventListener('click', event => {
-            let visitedGallery = false
-            try {
-              visitedGallery =
-                sessionStorage.getItem('furekunst:gallery-visited') === '1'
-            } catch {
-              // sessionStorage unavailable — use the plain link.
-            }
-            if (visitedGallery && window.history.length > 1) {
-              event.preventDefault()
-              window.history.back()
-            }
-          })
-        }
-      </script>
+
     </MainLayout>
   ) : (
     <MainLayout

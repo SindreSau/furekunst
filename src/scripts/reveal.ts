@@ -6,13 +6,14 @@ const prefersReduced = window.matchMedia(
 // Stagger cap: below-fold cards reveal on scroll with their SSR index delay,
 // which grows unbounded (index * 25ms). Cap it so a deep card never waits
 // half a second before starting its fade-up.
-const MAX_STAGGER_MS = 300
+const MAX_STAGGER_MS = 80
 
 function reveal(el: RevealEl) {
   if (el._revealed) return
   el._revealed = true
   el.setAttribute('data-revealed', '')
-  const delay = Math.min(Number(el.dataset.delay) || 0, MAX_STAGGER_MS)
+  const rawDelay = Number(el.dataset.delay) || 0
+  const delay = Math.min(Math.round(rawDelay * 0.4), MAX_STAGGER_MS)
   el.style.transitionDelay = `${delay}ms`
   // Clear the hidden state forced inline by the astro:before-swap handler
   // (see below) — on the wrapper AND on the named frames inside it (the
@@ -184,24 +185,33 @@ document.addEventListener('astro:after-swap', () => {
     return
   }
 
-  // Forward navigations play the staggered fade-up, but only AFTER the view
-  // transition has actually finished: astro:after-swap fires while the
-  // transition is still running and the snapshot overlay paints above all
-  // live content (z-index cannot break through it — w3c/csswg-drafts#8941),
-  // so a fade-up started here would play invisibly behind the frozen
-  // snapshot and pop when the overlay lifts. The router keeps
-  // data-astro-transition on <html> until the transition finishes (Astro 7
-  // has no page-transition-end event), so poll for its removal. The 2s cap
-  // is the backstop for a skipped transition or a swallowed removal.
-  void (async () => {
-    const html = document.documentElement
-    const started = performance.now()
-    while (
-      html.hasAttribute('data-astro-transition') &&
-      performance.now() - started < 2000
-    ) {
-      await new Promise(resolve => setTimeout(resolve, 16))
-    }
+  // Forward navigations play the staggered fade-up as soon as the view
+  // transition overlay finishes (Astro removes data-astro-transition from <html>).
+  // Use a MutationObserver for 0ms event-driven response rather than polling.
+  const html = document.documentElement
+  if (!html.hasAttribute('data-astro-transition')) {
     initReveal()
-  })()
+    return
+  }
+
+  let done = false
+  const run = () => {
+    if (done) return
+    done = true
+    observer.disconnect()
+    clearTimeout(safetyTimer)
+    initReveal()
+  }
+
+  const observer = new MutationObserver(() => {
+    if (!html.hasAttribute('data-astro-transition')) {
+      run()
+    }
+  })
+
+  observer.observe(html, {
+    attributes: true,
+    attributeFilter: ['data-astro-transition'],
+  })
+  const safetyTimer = setTimeout(run, 600)
 })
