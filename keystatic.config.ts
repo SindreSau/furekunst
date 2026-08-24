@@ -1,17 +1,19 @@
 import { config, fields, collection, singleton } from '@keystatic/core'
 
+const isProd = process.env.NODE_ENV === 'production'
+const repo =
+  (process.env.PUBLIC_KEYSTATIC_REPO as `${string}/${string}` | undefined) ||
+  'SindreSau/furekunst'
+
 export default config({
-  storage:
-    process.env.NODE_ENV === 'production' && process.env.PUBLIC_KEYSTATIC_REPO
-      ? {
-          kind: 'github',
-          repo:
-            (process.env.PUBLIC_KEYSTATIC_REPO as `${string}/${string}`) ||
-            'SindreSau/furekunst',
-        }
-      : {
-          kind: 'local',
-        },
+  storage: isProd
+    ? {
+        kind: 'github',
+        repo,
+      }
+    : {
+        kind: 'local',
+      },
   ui: {
     brand: { name: 'Furekunst Admin' },
     navigation: {

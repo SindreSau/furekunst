@@ -2,6 +2,9 @@
 
 interface ImportMetaEnv {
   readonly PUBLIC_KEYSTATIC_REPO?: string
+  readonly KEYSTATIC_SECRET?: string
+  readonly KEYSTATIC_GITHUB_CLIENT_ID?: string
+  readonly KEYSTATIC_GITHUB_CLIENT_SECRET?: string
 }
 
 interface ImportMeta {
