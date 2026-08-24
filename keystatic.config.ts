@@ -1,15 +1,10 @@
 import { config, fields, collection, singleton } from '@keystatic/core'
 
-const isProd = process.env.NODE_ENV === 'production'
-const repo =
-  (process.env.PUBLIC_KEYSTATIC_REPO as `${string}/${string}` | undefined) ||
-  'SindreSau/furekunst'
-
 export default config({
-  storage: isProd
+  storage: import.meta.env.PROD
     ? {
         kind: 'github',
-        repo,
+        repo: 'SindreSau/furekunst',
       }
     : {
         kind: 'local',

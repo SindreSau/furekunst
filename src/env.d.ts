@@ -7,9 +7,7 @@ interface ImportMetaEnv {
   readonly KEYSTATIC_GITHUB_CLIENT_SECRET?: string
 }
 
-interface ImportMeta {
-  readonly env: ImportMetaEnv
-}
+
 
 declare namespace astroHTML.JSX {
   interface ImgHTMLAttributes {
