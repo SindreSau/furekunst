@@ -2,23 +2,16 @@
 
 # dependencies
 /node_modules
-/.pnp
-.pnp.*
-.yarn/*
-!.yarn/patches
-!.yarn/plugins
-!.yarn/releases
-!.yarn/versions
 
-# testing
-/coverage
+# local agent tooling (opencode)
+/.opencode/
+/opencode.json
 
-# next.js
-/.next/
-/out/
-
-# production
-/build
+# ad-hoc debug scripts/screenshots
+/debug-*.mjs
+/stack*.mjs
+/trace*.mjs
+/chips-default.png
 
 # misc
 .DS_Store
@@ -38,4 +31,25 @@ yarn-error.log*
 
 # typescript
 *.tsbuildinfo
-next-env.d.ts
+
+# astro
+/dist
+/.astro/
+
+# lighthouse ci
+/.lighthouseci/
+
+# performance reports
+/docs/perf
+
+# playwright mcp snapshots
+/.playwright-mcp/
+
+# playwright tests
+/test-results/
+/playwright-report/
+/blob-report/
+
+# design-review agent screenshots
+review-*.png
+.env*.local

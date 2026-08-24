@@ -1,0 +1,94 @@
+---
+export const prerender = true
+
+import { Image } from 'astro:assets'
+import { getEntry } from 'astro:content'
+import MainLayout from '../layouts/MainLayout.astro'
+import FadeInSection from '../components/FadeInSection.astro'
+import SocialLinks from '../components/SocialLinks.astro'
+import defaultProfilbilde from '../assets/img/profilbilde.jpeg'
+import { getSiteSettings } from '../lib/settings'
+import { getSeoSettings } from '../lib/seo'
+import { parseMarkdownParagraphs } from '../lib/markdown'
+
+const contactEntry = await getEntry('contact', 'index')
+const settings = await getSiteSettings()
+const seoSettings = await getSeoSettings()
+
+const contactData = contactEntry?.data
+const heading = contactData?.heading ?? 'Kontakt'
+const profileImage = contactData?.image ?? defaultProfilbilde
+const imageAlt = contactData?.imageAlt ?? settings.artistName
+
+const defaultIntroText = `Har du spørsmål om kunsten min, eller er du interessert i å kjøpe eit bilete? Eg set pris på at du tek kontakt via e-post eller Instagram.
+
+Viss du ynskjer eit personleg måleri eller har andre førespurnader, er eg open for å diskutere moglegheitene.`
+
+const rawIntroText =
+  contactData?.introText ||
+  (contactData?.paragraphs?.length
+    ? contactData.paragraphs.join('\n\n')
+    : defaultIntroText)
+const paragraphsHtml = parseMarkdownParagraphs(rawIntroText)
+
+const pageTitle = seoSettings.contactSeoTitle
+const pageDescription = seoSettings.contactSeoDescription
+
+const contactPageStructuredData = {
+  '@context': 'https://schema.org',
+  '@type': 'ContactPage',
+  name: pageTitle,
+  url: 'https://furekunst.no/kontakt',
+  email: settings.email,
+  sameAs: [settings.instagramUrl, settings.facebookUrl].filter(Boolean),
+}
+---
+
+<MainLayout
+  title={pageTitle}
+  description={pageDescription}
+>
+  <Fragment slot="head">
+    <script
+      is:inline
+      type="application/ld+json"
+      set:html={JSON.stringify(contactPageStructuredData)}
+    ></script>
+  </Fragment>
+
+  <div class="mx-auto flex max-w-4xl flex-col-reverse items-center gap-10 md:gap-6 lg:flex-row lg:gap-8">
+    <FadeInSection className="overflow-hidden rounded-md lg:rounded-none">
+      <Image
+        src={profileImage}
+        alt={imageAlt}
+        width={800}
+        quality={70}
+        loading="eager"
+        fetchpriority="high"
+        sizes="(max-width: 768px) 100vw, (max-width: 1024px) 70vw, 600px"
+        class="frame-shadow h-full max-h-[500px] w-full max-w-[50vw] rounded-sm object-cover sm:rounded-none md:max-w-none"
+      />
+    </FadeInSection>
+
+    <div class="flex flex-col">
+      <FadeInSection delay={70}>
+        <h1 class="font-didot mb-8 text-4xl text-gray-800">{heading}</h1>
+      </FadeInSection>
+
+      {paragraphsHtml.map((paragraphHtml, idx) => (
+        <FadeInSection delay={100 + idx * 25}>
+          <p
+            class={idx === paragraphsHtml.length - 1 ? 'mb-10 leading-relaxed text-gray-600' : 'mb-6 leading-relaxed text-gray-600'}
+            set:html={paragraphHtml}
+          />
+        </FadeInSection>
+      ))}
+
+      <FadeInSection delay={100 + paragraphsHtml.length * 25 + 35}>
+        <SocialLinks variant="contact" />
+      </FadeInSection>
+    </div>
+  </div>
+</MainLayout>
+
+

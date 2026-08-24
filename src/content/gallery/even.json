@@ -1,0 +1,21 @@
+{
+  "title": "Even",
+  "description": "",
+  "type": {
+    "discriminant": "print",
+    "value": {
+      "sizeAndPrice": [
+        {
+          "size": "A4 (21x29,7cm)",
+          "price": 450
+        },
+        {
+          "size": "A3 (29,7x42cm)",
+          "price": 600
+        }
+      ]
+    }
+  },
+  "passepartout": true,
+  "image": "../../assets/artworks/even/even.jpg"
+}

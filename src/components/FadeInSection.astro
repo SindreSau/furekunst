@@ -1,0 +1,36 @@
+---
+// FadeInSection — scroll-reveal wrapper (ported from Next.js fade-in-section.tsx).
+// Vanilla JS reveal (the bundled script runs once for all instances on a page)
+// instead of a React island: identical animation, no hydration cost, and it
+// honours prefers-reduced-motion.
+interface Props {
+  delay?: number
+  className?: string
+  observeScroll?: boolean
+  initiallyVisible?: boolean
+  /** Optional filter key for the gallery's client-side type filtering. */
+  dataFilterCard?: string
+}
+
+const {
+  delay = 0,
+  className = '',
+  observeScroll = true,
+  initiallyVisible = false,
+  dataFilterCard,
+} = Astro.props
+const revealMode = initiallyVisible || !observeScroll ? 'no-scroll' : 'scroll'
+---
+
+<div
+  class={`${className} translate-y-8 opacity-[0.01] transition-all duration-300 ease-out`}
+  data-reveal={revealMode}
+  data-delay={delay}
+  data-filter-card={dataFilterCard}
+>
+  <slot />
+</div>
+
+<script>
+  import '../scripts/reveal.ts'
+</script>

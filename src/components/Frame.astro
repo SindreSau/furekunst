@@ -1,0 +1,72 @@
+---
+// Frame — unified "framed artwork" treatment (FK-012): double offset shadow,
+// inner edge highlights, optional passepartout. The root <figure> can carry a
+// view-transition name so the whole frame (border + passepartout) morphs
+// between gallery card, detail page, and zoom dialog.
+interface Props {
+  passpartout?: boolean
+  class?: string
+  transitionName?: string
+  [key: string]: unknown
+}
+
+const {
+  passpartout = false,
+  class: className = '',
+  transitionName,
+  ...rest
+} = Astro.props
+
+// Custom animation object: `animation-name: none` stops Astro's default
+// `astroFadeIn/astroFadeOut` from overriding the browser's native
+// view-transition morph (position + size interpolation between old/new).
+const morphAnim = {
+  forwards: {
+    old: { name: 'none' },
+    new: { name: 'none' },
+  },
+  backwards: {
+    old: { name: 'none' },
+    new: { name: 'none' },
+  },
+}
+const frameClass = [
+  'relative isolate border-[6px] border-slate-800',
+  'shadow-[5px_5px_4px_0px_rgba(0,0,0,0.2)]',
+  'transition-all duration-300 ease-out',
+  'group-hover:scale-[1.01] group-hover:shadow-[6px_6px_6px_0px_rgba(0,0,0,0.25)]',
+  className,
+]
+  .filter(Boolean)
+  .join(' ')
+
+---
+
+<figure
+  class={frameClass}
+  transition:name={transitionName}
+  transition:animate={morphAnim}
+  {...rest}
+>
+  <div
+    class="pointer-events-none absolute top-0 right-0 left-0 z-10 h-1 bg-gradient-to-b from-black/30 to-transparent"
+  ></div>
+  <div
+    class="pointer-events-none absolute top-0 bottom-0 left-0 z-10 w-1 bg-gradient-to-r from-black/30 to-transparent"
+  ></div>
+
+  <div class={passpartout ? 'relative bg-white p-3' : 'relative'}>
+    {passpartout && (
+      <>
+        <div
+          class="pointer-events-none absolute top-3 right-3 left-3 z-10 h-1 bg-gradient-to-b from-black/10 to-transparent"
+        ></div>
+        <div
+          class="pointer-events-none absolute top-3 bottom-3 left-3 z-10 w-1 bg-gradient-to-r from-black/10 to-transparent"
+        ></div>
+      </>
+    )}
+
+    <slot />
+  </div>
+</figure>

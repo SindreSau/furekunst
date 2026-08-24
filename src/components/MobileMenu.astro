@@ -1,0 +1,230 @@
+---
+// Mobile menu — vanilla port of islands/MobileMenu.tsx (FK-014).
+// Server-rendered markup + one bundled script; identical behavior:
+// aria-expanded/aria-controls, ESC-to-close with focus return, close on
+// resize >= 768px, close on link click, CSS-only staggered item reveal
+// (FK-025, driven by [data-open] + nth-child transition-delay), and scroll
+// lock via `html.menu-open`.
+interface Props {
+  pages: { title: string; url: string }[]
+  pathname: string
+  activePath: string
+}
+
+const { pages, pathname, activePath } = Astro.props
+---
+
+<button
+  type="button"
+  data-menu-toggle
+  aria-label="Opna meny"
+  aria-expanded="false"
+  aria-controls="mobilmeny"
+  class="relative z-50 cursor-pointer p-2 text-ink-mid hover:text-ink-strong md:hidden"
+>
+  <span class="sr-only">Opna hovudmeny</span>
+  <span class="relative block h-6 w-6" aria-hidden="true">
+    <span class="absolute top-0 left-0 h-0.5 w-6 bg-current transition duration-300 ease-in-out"></span>
+    <span class="absolute top-2.5 left-0 h-0.5 w-6 bg-current transition duration-300 ease-in-out"></span>
+    <span class="absolute bottom-0 left-0 h-0.5 w-6 bg-current transition duration-300 ease-in-out"></span>
+  </span>
+</button>
+
+<!-- Header height after FK-025 tagline (~90px); keep in sync with header.astro. -->
+<nav
+  id="mobilmeny"
+  data-menu-nav
+  aria-label="Hovudnavigasjon"
+  class="bg-background fixed top-[5.65rem] right-0 bottom-0 left-0 z-40 translate-x-full overflow-y-auto pt-6 transition-transform duration-75 ease-in-out md:hidden"
+>
+  <div class="flex h-full flex-col items-center justify-start space-y-8 pt-8 text-2xl shadow-md">
+    {pages.map((page, index) => (
+      <div
+        data-menu-item={index}
+        class="translate-y-8 opacity-0 transition-all duration-500 ease-out"
+      >
+        {pathname === page.url ? (
+          // Same-URL navigation is a reload without a view transition (it
+          // flashes white); render the current page as inert text instead.
+          <span
+            aria-current="page"
+            class="cursor-default border-b-2 border-accent text-[1.58rem] text-ink"
+          >
+            {page.title}
+          </span>
+        ) : (
+          <a
+            href={page.url}
+            data-astro-prefetch
+            class={`text-ink-mid hover:text-ink ${
+              activePath === page.url
+                ? 'border-b-2 border-accent text-[1.58rem] text-ink'
+                : ''
+            }`}
+          >
+            {page.title}
+          </a>
+        )}
+      </div>
+    ))}
+  </div>
+</nav>
+
+<script>
+  // With <ClientRouter />, bundled module scripts execute once; use
+  // `astro:page-load` to re-bind to fresh DOM nodes after each navigation.
+  let toggle: HTMLButtonElement | null = null
+  let nav: HTMLElement | null = null
+  let items: HTMLElement[] = []
+  let bars: HTMLElement[] = []
+  let isOpen = false
+
+  const setAria = () => {
+    toggle?.setAttribute('aria-expanded', String(isOpen))
+    toggle?.setAttribute('aria-label', isOpen ? 'Steng meny' : 'Opna meny')
+  }
+
+  const setBars = () => {
+    const [barTop, barMid, barBottom] = bars
+    barTop?.classList.toggle('translate-y-2.5', isOpen)
+    barTop?.classList.toggle('rotate-45', isOpen)
+    barMid?.classList.toggle('opacity-0', isOpen)
+    barBottom?.classList.toggle('-translate-y-3', isOpen)
+    barBottom?.classList.toggle('-rotate-45', isOpen)
+  }
+
+  const setItems = () => {
+    items.forEach(item => {
+      // Stagger is pure CSS now (FK-025): [data-open] on the nav gates the
+      // nth-child transition-delays in the <style> block below. The delay is
+      // only present while the menu is open, so the close animation runs all
+      // items out at 0ms together — mirroring the old JS-written delays.
+      item.classList.toggle('translate-y-8', !isOpen)
+      item.classList.toggle('opacity-0', !isOpen)
+      item.classList.toggle('translate-y-0', isOpen)
+      item.classList.toggle('opacity-100', isOpen)
+    })
+  }
+
+  const closeMenu = (restoreFocus = false) => {
+    if (!isOpen || !toggle || !nav) return
+    isOpen = false
+    nav.classList.add('translate-x-full')
+    nav.removeAttribute('data-open')
+    document.documentElement.classList.remove('menu-open')
+    setAria()
+    setBars()
+    setItems()
+    if (restoreFocus) toggle.focus()
+  }
+  const openMenu = () => {
+    if (isOpen || !toggle || !nav) return
+    isOpen = true
+    nav.classList.remove('translate-x-full')
+    nav.setAttribute('data-open', '')
+    document.documentElement.classList.add('menu-open')
+    setAria()
+    setBars()
+    setItems()
+  }
+
+  const initMenu = () => {
+    toggle = document.querySelector<HTMLButtonElement>('[data-menu-toggle]')
+    nav = document.querySelector<HTMLElement>('[data-menu-nav]')
+    if (!toggle || !nav) return
+    isOpen = false
+    items = Array.from(nav.querySelectorAll<HTMLElement>('[data-menu-item]'))
+    bars = Array.from(toggle.querySelectorAll<HTMLElement>('span span'))
+
+    toggle.addEventListener('click', () => (isOpen ? closeMenu() : openMenu()))
+
+    // With <ClientRouter />, link clicks trigger client-side navigation. A
+    // plain left-click on an internal link keeps the menu covering the screen
+    // until the view transition swaps the page — closing it on click would
+    // slide the menu away and flash the current page while the next one
+    // loads. The fresh page renders with a closed menu, so there's nothing to
+    // clean up after the swap. Clicks that won't navigate the SPA (modifier
+    // clicks, target=_blank, download, cross-origin, hash links) still close
+    // the menu immediately.
+    nav.addEventListener('click', event => {
+      const target = event.target as Element | null
+      if (target?.closest?.('[aria-current="page"]:not(a)')) {
+        closeMenu()
+        return
+      }
+      const anchor = (event.target as Element | null)?.closest?.('a')
+      if (!anchor) return
+      const isPlainNav =
+        event.button === 0 &&
+        !event.metaKey &&
+        !event.ctrlKey &&
+        !event.shiftKey &&
+        !event.altKey &&
+        anchor.target !== '_blank' &&
+        !anchor.hasAttribute('download') &&
+        anchor.origin === window.location.origin &&
+        !anchor.getAttribute('href')?.startsWith('#')
+      if (!isPlainNav) closeMenu()
+    })
+  }
+
+  // Initialize on every page load (initial + client-side navigations).
+  document.addEventListener('astro:page-load', initMenu)
+
+  // Keydown, resize listeners are registered once on global targets; they
+  // read the module state, so they keep working after each navigation.
+  document.addEventListener('keydown', event => {
+    if (event.key === 'Escape') closeMenu(true)
+  })
+
+  const desktop = window.matchMedia('(min-width: 768px)')
+  desktop.addEventListener('change', () => {
+    if (desktop.matches) closeMenu()
+  })
+</script>
+
+<style>
+  /* iOS WebKit can include full-height fixed elements with overflow (even
+     off-screen via translate) in the document's scrollable overflow, causing
+     phantom scroll below the footer. visibility:hidden removes the closed menu
+     from scrollable overflow and from tab order when closed. The 80ms delay
+     lets the 75ms slide-out finish before hiding; the open state shows
+     instantly with the slide-in. The menu must stay visible while open during
+     cross-document view transitions (data-open is removed only on close —
+     behavior unchanged). Tailwind v4's translate-x-full uses the CSS `translate`
+     property, so the transition targets `translate` (not `transform`). */
+  [data-menu-nav] {
+    visibility: hidden;
+    transition:
+      translate 75ms ease-in-out,
+      visibility 0s linear 80ms;
+  }
+  [data-menu-nav][data-open] {
+    visibility: visible;
+    transition:
+      translate 75ms ease-in-out,
+      visibility 0s;
+  }
+  /* Item stagger is pure CSS (FK-025): while the nav has [data-open] each item
+     inherits a staggered transition-delay for its slide/fade-in. Removing
+     [data-open] on close resets every item to 0ms so they animate out
+     together, matching the old JS-written delays. */
+  [data-menu-nav] [data-menu-item] {
+    transition-delay: 0ms;
+  }
+  [data-menu-nav][data-open] [data-menu-item]:nth-child(1) {
+    transition-delay: 120ms;
+  }
+  [data-menu-nav][data-open] [data-menu-item]:nth-child(2) {
+    transition-delay: 240ms;
+  }
+  [data-menu-nav][data-open] [data-menu-item]:nth-child(3) {
+    transition-delay: 360ms;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    [data-menu-nav] [data-menu-item] {
+      transition: none !important;
+      transition-delay: 0ms !important;
+    }
+  }
+</style>

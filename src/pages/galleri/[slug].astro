@@ -1,0 +1,256 @@
+---
+import type { GetImageResult } from 'astro'
+import { getCollection, type CollectionEntry } from 'astro:content'
+import { getImage } from 'astro:assets'
+import MainLayout from '../../layouts/MainLayout.astro'
+import ArtworkDetails from '../../components/ArtworkDetails.astro'
+import ArtworkZoom from '../../components/ArtworkZoom.astro'
+import Button from '../../components/Button.astro'
+import { priceHint } from '../../lib/price'
+
+export const prerender = true
+
+export async function getStaticPaths() {
+  const posts = await getCollection('gallery')
+  return posts
+    .filter(entry => entry.data.published !== false)
+    .map(post => ({
+      params: { slug: post.data.slug || post.id },
+      props: { post },
+    }))
+}
+
+interface PageProps {
+  post?: CollectionEntry<'gallery'>
+}
+
+const { post: propPost } = Astro.props as PageProps
+let post = propPost
+if (!post) {
+  const posts = await getCollection('gallery')
+  post = posts
+    .filter(entry => entry.data.published !== false)
+    .find(
+      entry => (entry.data.slug || entry.id) === Astro.params.slug,
+    )
+}
+
+if (!post) {
+  Astro.response.status = 404
+}
+
+const artSlug = post ? (post.data.slug || post.id) : ''
+
+interface DetailRender {
+  post: CollectionEntry<'gallery'>
+  image: GetImageResult
+  zoomImage: GetImageResult
+  metaDescription: string
+  ogImage: string
+  structuredData: Record<string, unknown>
+}
+
+let detail: DetailRender | null = null
+const imageAsset = post?.data.image
+
+if (post && imageAsset) {
+  const { data } = post
+
+  // The page image must use the EXACT same optimized URL as the gallery card
+  // (width 700, quality 55): the gallery → detail morph captures the new
+  // page's snapshot at first render, and only a URL the browser already has
+  // in cache (from the card the user just clicked) decodes in time.
+  const imageWidth = Math.min(imageAsset.width, 700)
+  const imageHeight = Math.max(
+    1,
+    Math.round((imageAsset.height / imageAsset.width) * imageWidth),
+  )
+  const image = await getImage({
+    src: imageAsset,
+    width: imageWidth,
+    height: imageHeight,
+    quality: 55,
+  })
+  // Hi-res variant for the fullscreen zoom dialog (displayed much larger).
+  const zoomImage = await getImage({
+    src: imageAsset,
+    width: Math.min(imageAsset.width, 1500),
+    height: Math.max(
+      1,
+      Math.round(
+        (imageAsset.height / imageAsset.width) *
+          Math.min(imageAsset.width, 1500),
+      ),
+    ),
+    quality: 85,
+  })
+
+  const typeLabel = data.type === 'original' ? 'Original' : 'Print'
+  const sizeInfo =
+    data.type === 'original' && data.size ? `Storleik: ${data.size}.` : ''
+  const priceInfo = priceHint(data) ?? ''
+  const metaDescription = data.description
+    ? [data.description, sizeInfo, priceInfo].filter(Boolean).join(' ')
+    : `${data.title} - ${typeLabel} av Elisabeth Fure Schwarz. ${[sizeInfo, priceInfo].filter(Boolean).join(' ')}`.trim()
+
+  const printOffers = data.sizeAndPrice
+    .filter(item => item.price > 0)
+    .map(item => ({
+      '@type': 'Offer',
+      availability: 'https://schema.org/InStock',
+      priceCurrency: 'NOK',
+      price: item.price,
+      description: `Storleik: ${item.size}`,
+    }))
+
+  const offers =
+    data.type === 'print'
+      ? printOffers.length > 0
+        ? printOffers
+        : null
+      : {
+          '@type': 'Offer',
+          availability: 'https://schema.org/InStock',
+          priceCurrency: 'NOK',
+          price: (data.price ?? 0) > 0 ? data.price : 'Ikke oppgitt',
+        }
+
+  const structuredData = {
+    '@context': 'https://schema.org',
+    '@type': 'VisualArtwork',
+    name: data.title,
+    description: data.description || 'Kunstverk av Elisabeth Fure Schwarz',
+    artMedium: data.description.trim().split(/\s+/)[0] || 'Måleri',
+    artform: typeLabel,
+    image: image.src,
+    url: new URL(
+      Astro.url.pathname,
+      Astro.site ?? 'https://furekunst.no',
+    ).toString(),
+    ...(data.size ? { size: data.size } : {}),
+    creator: {
+      '@type': 'Person',
+      name: 'Elisabeth Fure Schwarz',
+      url: 'https://furekunst.no',
+    },
+    ...(offers ? { offers } : {}),
+  }
+
+  detail = {
+    post,
+    image,
+    zoomImage,
+    metaDescription,
+    ogImage: image.src,
+    structuredData,
+  }
+}
+---
+
+{
+  detail ? (
+    <MainLayout
+      title={`${detail.post.data.title} | Furekunst`}
+      description={detail.metaDescription}
+      ogImage={detail.ogImage}
+      canonical={`/galleri/${detail.post.data.slug || detail.post.id}`}
+    >
+      <Fragment slot="head">
+        <link
+          rel="preload"
+          as="image"
+          href={detail.image.src}
+          fetchpriority="high"
+        />
+        <style
+          is:inline
+          set:html={`::view-transition-group(art-${artSlug}) { z-index: 1; }`}
+        />
+        <script
+          is:inline
+          type="application/ld+json"
+          set:html={JSON.stringify(detail.structuredData)}
+        />
+      </Fragment>
+
+      <div class="mx-auto px-4 md:px-0" data-art-slug={artSlug}>
+        <a
+          href="/galleri"
+          data-astro-back
+          data-astro-prefetch
+          class="mb-3 inline-flex items-center gap-2 text-sm font-medium text-gray-800 transition-colors duration-300 hover:text-primary"
+        >
+          <svg
+            aria-hidden="true"
+            viewBox="0 0 24 24"
+            class="h-4 w-4"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <path d="m12 19-7-7 7-7" />
+            <path d="M19 12H5" />
+          </svg>
+          Galleri
+        </a>
+        <div class="grid grid-cols-1 gap-8 md:grid-cols-2">
+          <div class="overflow-visible p-1">
+            <ArtworkZoom
+              image={imageAsset}
+              src={detail.image.src}
+              zoomSrc={detail.zoomImage.src}
+              alt={detail.post.data.title}
+              width={detail.image.attributes.width}
+              height={detail.image.attributes.height}
+              passpartout={detail.post.data.passepartout}
+              transitionName={`art-${detail.post.data.slug || detail.post.id}`}
+            />
+          </div>
+
+          <ArtworkDetails post={detail.post} />
+        </div>
+      </div>
+
+      <script>
+        // View-transition groups paint in DOM order: on the back-navigation to
+        // the gallery the other cards are "entry-only" groups and paint above
+        // the morphing artwork (the paired group). The native fix is a z-index
+        // on the ::view-transition-group pseudo-element (W3C csswg#8941). This
+        // page knows the active slug, so inject that rule into the incoming
+        // gallery document right before the swap — into the body, which the
+        // router swaps wholesale (head nodes it diffs/drops).
+        document.addEventListener('astro:before-swap', event => {
+          const el = document.querySelector('[data-art-slug]')
+          const slug = el ? el.getAttribute('data-art-slug') : ''
+          if (!slug) return
+          const newDocument = event.newDocument
+          if (!newDocument) return
+          const style = newDocument.createElement('style')
+          style.setAttribute('data-art-vt', '')
+          style.textContent = `::view-transition-group(art-${slug}) { z-index: 1; }`
+          newDocument.body.appendChild(style)
+        })
+      </script>
+
+
+    </MainLayout>
+  ) : (
+    <MainLayout
+      title="Sida ikkje funnen | Furekunst"
+      description="Sida du leita etter finst ikkje."
+      noindex
+    >
+      <div class="flex min-h-[50vh] flex-col items-center justify-center text-center">
+        <h1 class="mb-4 text-3xl font-bold">Ikkje funnen</h1>
+        <p class="mb-8 max-w-md text-gray-600">
+          Kunstverket du leita etter finst ikkje.
+        </p>
+        <Button type="link" href="/galleri" prefetch class="px-4 py-1 text-sm">
+          Sjå galleriet
+        </Button>
+      </div>
+    </MainLayout>
+  )
+}

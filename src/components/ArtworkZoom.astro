@@ -1,0 +1,346 @@
+---
+import type { ImageMetadata } from 'astro'
+import { Image } from 'astro:assets'
+import Frame from './Frame.astro'
+import { getBlurDataUrl } from '../lib/blur'
+
+interface Props {
+  image?: ImageMetadata
+  src?: string | ImageMetadata
+  zoomSrc?: string
+  alt: string
+  width?: number
+  height?: number
+  passpartout?: boolean
+  transitionName?: string
+}
+
+const {
+  image,
+  src: rawSrc,
+  zoomSrc,
+  alt,
+  width: customWidth,
+  height: customHeight,
+  passpartout = false,
+  transitionName,
+} = Astro.props
+
+const resolvedImage: ImageMetadata | undefined =
+  image ??
+  (typeof rawSrc === 'object' && rawSrc !== null
+    ? (rawSrc as ImageMetadata)
+    : undefined)
+
+const width = resolvedImage
+  ? Math.min(resolvedImage.width, 700)
+  : (customWidth ?? 700)
+const height = resolvedImage
+  ? Math.max(
+      1,
+      Math.round((resolvedImage.height / resolvedImage.width) * width),
+    )
+  : (customHeight ?? 500)
+
+const tallArtwork = height / width > 1.5
+const initialSrc =
+  typeof rawSrc === 'string' ? rawSrc : (resolvedImage?.src ?? '')
+const blurDataUrl = await getBlurDataUrl(resolvedImage || rawSrc)
+---
+
+<div class="relative">
+  <Frame
+    passpartout={passpartout}
+    transitionName={transitionName}
+    data-zoom-page-frame
+    class={tallArtwork ? 'w-full md:mx-auto' : 'w-full'}
+    style={tallArtwork
+      ? {
+          maxWidth: `min(100%, calc((100svh - 17.5rem) * ${width} / ${height} + ${passpartout ? '36px' : '12px'}))`,
+        }
+      : undefined}
+  >
+    <div
+      data-artwork-placeholder
+      class="relative w-full overflow-hidden bg-cover bg-center max-md:bg-none!"
+      style={{
+        aspectRatio: `${width} / ${height}`,
+        ...(blurDataUrl ? { backgroundImage: `url("${blurDataUrl}")` } : {}),
+      }}
+    >
+      {
+        resolvedImage ? (
+          <Image
+            src={resolvedImage}
+            alt={alt}
+            width={width}
+            quality={55}
+            loading="eager"
+            fetchpriority="high"
+            decoding="async"
+            data-fade-img
+            class={
+              tallArtwork
+                ? 'h-auto w-full object-contain blur-[1px] max-md:blur-none transition-all duration-500 ease-out md:h-auto md:w-auto md:max-h-[calc(100svh-17.5rem)] md:max-w-full'
+                : 'h-auto w-full object-contain blur-[1px] max-md:blur-none transition-all duration-500 ease-out'
+            }
+          />
+        ) : (
+          <img
+            src={typeof rawSrc === 'string' ? rawSrc : ''}
+            alt={alt}
+            width={width}
+            height={height}
+            loading="eager"
+            fetchpriority="high"
+            decoding="async"
+            data-fade-img
+            class={
+              tallArtwork
+                ? 'h-auto w-full object-contain blur-[1px] max-md:blur-none transition-all duration-500 ease-out md:h-auto md:w-auto md:max-h-[calc(100svh-17.5rem)] md:max-w-full'
+                : 'h-auto w-full object-contain blur-[1px] max-md:blur-none transition-all duration-500 ease-out'
+            }
+          />
+        )
+      }
+    </div>
+  </Frame>
+
+  <button
+    type="button"
+    data-zoom-trigger
+    data-zoom-name={transitionName}
+    aria-label={`Vis stort bilete: ${alt}`}
+    class="absolute inset-0 z-20 hidden w-full cursor-zoom-in md:block"
+  >
+    <span class="sr-only">Vis stort bilete: {alt}</span>
+  </button>
+</div>
+
+<div
+  data-zoom-dialog
+  data-zoom-src={zoomSrc}
+  hidden
+  role="dialog"
+  aria-modal="true"
+  aria-label={`Stort bilete: ${alt}`}
+  class="fixed inset-0 z-[100] flex items-center justify-center bg-white/95 p-4 md:p-8"
+>
+  <button
+    type="button"
+    data-zoom-close
+    aria-label="Lukk stort bilete"
+    class="absolute top-4 right-4 z-10 rounded-full bg-primary px-3 py-2 text-sm text-white transition-colors hover:bg-gray-800 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-primary"
+  >
+    Lukk
+  </button>
+
+  <div
+    data-zoom-content
+    class="relative max-h-full max-w-full cursor-zoom-out opacity-0 transition-opacity duration-300 ease-out"
+  >
+    <Frame
+      passpartout={passpartout}
+      class="mx-auto w-full max-w-full"
+      style={{
+        width: `min(calc(100vw - 3rem), calc((100vh - 8rem) * ${width} / ${height} + ${passpartout ? '36px' : '12px'}))`,
+        maxWidth: `min(calc(100vw - 3rem), calc((100vh - 8rem) * ${width} / ${height} + ${passpartout ? '36px' : '12px'}))`,
+      }}
+      data-zoom-dialog-frame
+    >
+      <div
+        data-artwork-placeholder
+        class="relative flex w-full items-center justify-center overflow-hidden bg-cover bg-center"
+        style={{
+          aspectRatio: `${width} / ${height}`,
+          ...(blurDataUrl ? { backgroundImage: `url("${blurDataUrl}")` } : {}),
+        }}
+      >
+        <img
+          data-zoom-img
+          src={initialSrc}
+          alt={alt}
+          width={width}
+          height={height}
+          loading="eager"
+          decoding="async"
+          class="block h-auto w-full max-h-[calc(100vh-6rem)] object-contain md:max-h-[calc(100vh-8rem)]"
+          style={{ aspectRatio: `${width} / ${height}` }}
+        />
+        {
+          zoomSrc && (
+            <img
+              data-zoom-hires
+              alt={alt}
+              aria-hidden="true"
+              class="pointer-events-none absolute inset-0 block h-full w-full object-contain opacity-0 transition-opacity duration-300 ease-out"
+              style={{ aspectRatio: `${width} / ${height}` }}
+            />
+          )
+        }
+      </div>
+    </Frame>
+  </div>
+</div>
+
+<script>
+  let trigger: HTMLButtonElement | null = null
+  let dialog: HTMLElement | null = null
+  let closeBtn: HTMLButtonElement | null = null
+  let content: HTMLElement | null = null
+  let pageFrames: HTMLElement[] = []
+  let dialogFrame: HTMLElement | null = null
+  let vtName = ''
+  let isZoomed = false
+  let closeTimeout = 0
+
+  const prefersReduced = window.matchMedia(
+    '(prefers-reduced-motion: reduce)',
+  ).matches
+  const finePointer = window.matchMedia(
+    '(hover: hover) and (pointer: fine)',
+  ).matches
+  const docStartVT = (
+    document as Document & {
+      startViewTransition?: (cb: () => void) => { finished: Promise<void> }
+    }
+  ).startViewTransition
+  const startViewTransition = docStartVT ? docStartVT.bind(document) : undefined
+
+  const pauseContentTransition = () => {
+    if (content) content.style.transition = 'none'
+  }
+  const resumeContentTransition = () => {
+    if (content) content.style.transition = ''
+  }
+
+  const clearPageFrameNames = () => {
+    for (const frame of pageFrames) frame.style.viewTransitionName = 'none'
+  }
+  const restorePageFrameNames = () => {
+    for (const frame of pageFrames) frame.style.viewTransitionName = ''
+  }
+
+  const open = () => {
+    if (!dialog || !content || !closeBtn || isZoomed) return
+    isZoomed = true
+    const zoomHires =
+      dialog?.querySelector<HTMLImageElement>('[data-zoom-hires]')
+    const zoomSrc = dialog?.dataset.zoomSrc
+    if (zoomHires && zoomSrc) {
+      if (!zoomHires.getAttribute('src')) {
+        zoomHires.src = zoomSrc
+      }
+      const showHires = () => {
+        zoomHires.classList.remove('opacity-0')
+        zoomHires.classList.add('opacity-100')
+      }
+      if (zoomHires.complete && zoomHires.naturalWidth > 0) {
+        showHires()
+      } else if (zoomHires.decode) {
+        zoomHires.decode().then(showHires).catch(showHires)
+      } else {
+        zoomHires.onload = showHires
+      }
+    }
+    if (
+      startViewTransition &&
+      !prefersReduced &&
+      finePointer &&
+      pageFrames.length > 0 &&
+      dialogFrame &&
+      vtName
+    ) {
+      startViewTransition(() => {
+        pauseContentTransition()
+        clearPageFrameNames()
+        dialogFrame!.style.viewTransitionName = vtName
+        dialog!.hidden = false
+        document.documentElement.classList.add('zoom-open')
+        content!.classList.remove('opacity-0')
+        content!.classList.add('opacity-100')
+        closeBtn!.focus()
+      })?.finished.then(resumeContentTransition)
+    } else {
+      dialog.hidden = false
+      document.documentElement.classList.add('zoom-open')
+      requestAnimationFrame(() => {
+        if (content) {
+          content.classList.remove('opacity-0')
+          content.classList.add('opacity-100')
+        }
+      })
+      closeBtn.focus()
+    }
+  }
+
+  const close = () => {
+    if (!dialog || !content || !isZoomed) return
+    isZoomed = false
+    if (
+      startViewTransition &&
+      !prefersReduced &&
+      finePointer &&
+      pageFrames.length > 0 &&
+      dialogFrame &&
+      vtName
+    ) {
+      startViewTransition(() => {
+        pauseContentTransition()
+        dialogFrame!.style.viewTransitionName = 'none'
+        restorePageFrameNames()
+        content!.classList.add('opacity-0')
+        content!.classList.remove('opacity-100')
+        document.documentElement.classList.remove('zoom-open')
+        dialog!.hidden = true
+      })?.finished.then(resumeContentTransition)
+    } else {
+      content.classList.add('opacity-0')
+      content.classList.remove('opacity-100')
+      document.documentElement.classList.remove('zoom-open')
+      window.clearTimeout(closeTimeout)
+      closeTimeout = window.setTimeout(() => {
+        dialog!.hidden = true
+      }, 300)
+    }
+  }
+
+  const initZoom = () => {
+    trigger = document.querySelector<HTMLButtonElement>('[data-zoom-trigger]')
+    dialog = document.querySelector<HTMLElement>('[data-zoom-dialog]')
+    if (!trigger || !dialog) return
+    closeBtn = dialog.querySelector<HTMLButtonElement>('[data-zoom-close]')
+    content = dialog.querySelector<HTMLElement>('[data-zoom-content]')
+    if (!closeBtn || !content) return
+    pageFrames = Array.from(
+      document.querySelectorAll<HTMLElement>('[data-zoom-page-frame]'),
+    )
+    dialogFrame = dialog.querySelector<HTMLElement>('[data-zoom-dialog-frame]')
+    vtName = trigger.dataset.zoomName || ''
+    isZoomed = false
+
+    trigger.removeEventListener('click', open)
+    closeBtn.removeEventListener('click', close)
+
+    trigger.addEventListener('click', open)
+    closeBtn.addEventListener('click', close)
+    content.addEventListener('click', event => {
+      event.stopPropagation()
+      close()
+    })
+    dialog.addEventListener('click', event => {
+      if (event.target === dialog) close()
+    })
+  }
+
+  document.addEventListener('astro:page-load', initZoom)
+
+  document.addEventListener('keydown', event => {
+    if (event.key === 'Escape' && isZoomed) close()
+  })
+
+  const smallScreen = window.matchMedia('(max-width: 767px)')
+  smallScreen.addEventListener('change', () => {
+    if (smallScreen.matches) close()
+  })
+</script>

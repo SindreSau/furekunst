@@ -1,0 +1,28 @@
+---
+export const prerender = true
+
+import MainLayout from '../layouts/MainLayout.astro'
+import Button from '../components/Button.astro'
+---
+
+<MainLayout
+  title="Sida ikkje funnen | Furekunst"
+  description="Sida du leita etter finst ikkje."
+  noindex
+>
+  <div class="flex min-h-[50vh] flex-col items-center justify-center text-center">
+    <h1 class="mb-4 text-8xl font-bold md:text-9xl">404</h1>
+    <h2 class="mb-2 text-2xl font-semibold">Oisann!</h2>
+    <p class="mb-8 max-w-md text-gray-600">
+      Nå er du heilt nedsnøva. Sida du leita etter finst ikkje.
+    </p>
+    <div class="flex flex-col items-center justify-center gap-4 sm:flex-row sm:gap-6">
+      <Button type="link" href="/" class="text-lg">
+        Gå heim
+      </Button>
+      <Button type="link" href="/galleri" class="text-lg">
+        Sjå galleriet
+      </Button>
+    </div>
+  </div>
+</MainLayout>

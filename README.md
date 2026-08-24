@@ -1,36 +1,65 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Furekunst
 
-## Getting Started
+Kunstnar Elisabeth Fure Schwarz sine måleri og kunstverk.
 
-First, run the development server:
+Personal art portfolio built with [Astro](https://astro.build) 7.x, styled with
+Tailwind CSS v4 (via `@tailwindcss/vite`). Content is managed with
+[Keystatic](https://keystatic.dev): content entries live in `src/content/*`
+(JSON) and artwork images in `src/assets/artworks`, edited through the Keystatic
+Admin UI at `/keystatic`. In production Keystatic commits edits back to the
+GitHub repo (`PUBLIC_KEYSTATIC_REPO`). Deployed to Vercel (`@astrojs/vercel`)
+with ISR caching (1 h) for the dynamic routes; `/kontakt` and the 404 are
+prerendered.
+
+## Getting started
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
+pnpm install
 pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open `http://localhost:4321`. The Keystatic Admin UI is at `/keystatic`.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Commands
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+| Command              | Description                                           |
+| -------------------- | ----------------------------------------------------- |
+| `pnpm dev`           | Start dev server                                      |
+| `pnpm build`         | Type-check (`astro check`) + production build         |
+| `pnpm preview`       | Preview the production build locally                  |
+| `pnpm check`         | Run `astro check`                                     |
+| `pnpm test`          | Run the Playwright suite (`pnpm test:ui` for UI mode) |
+| `pnpm format`        | Format with Prettier                                  |
+| `pnpm perf:run`      | Lighthouse CI collect + assert against local preview  |
+| `pnpm perf:baseline` | Lighthouse CI mobile run against prod furekunst.no    |
 
-## Learn More
+## Environment variables
 
-To learn more about Next.js, take a look at the following resources:
+None are required for local development (Keystatic uses local storage). On
+Vercel, set:
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+| Variable                | Description                                                    |
+| ----------------------- | -------------------------------------------------------------- |
+| `PUBLIC_KEYSTATIC_REPO` | GitHub repo (`owner/repo`) for Keystatic storage in production |
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Adding an artwork
 
-## Deploy on Vercel
+1. Open `/keystatic` locally (or the deployed admin) and create a new
+   "Kunstverk (Galleri)" entry.
+2. Add a title, description, type (original/print), optional size/price, and
+   upload the artwork image.
+3. In production the edit is committed to the repo and picked up on rebuild
+   (ISR keeps existing pages fresh); locally it is written straight to
+   `src/content/gallery/`.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Image optimization
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- Local images are optimized at build time by Astro's asset pipeline
+  (`astro:assets`); on Vercel, transformed variants are served through the
+  Vercel image service with ISR caching.
+
+## Measurement budget
+
+Performance targets are enforced by Lighthouse CI (`lighthouserc.cjs`):
+performance score ≥ 0.85, LCP ≤ 3000 ms, CLS ≤ 0.1, TBT ≤ 200 ms, total bytes
+≤ 2.5 MB. Baseline and after-migration numbers are tracked in `docs/metrics.md`.

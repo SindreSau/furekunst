@@ -1,0 +1,13 @@
+{
+  "title": "Mas",
+  "description": "Akvarell og penn på papir",
+  "type": {
+    "discriminant": "original",
+    "value": {
+      "size": "A3 (30x42cm)",
+      "price": 3500
+    }
+  },
+  "passepartout": true,
+  "image": "../../assets/artworks/mas/mas.jpeg"
+}

@@ -1,0 +1,186 @@
+---
+import { ClientRouter } from 'astro:transitions'
+import Header from '../components/header.astro'
+import Footer from '../components/footer.astro'
+import { canonicalUrl, renderOgTags, getSeoSettings } from '../lib/seo'
+import { getSiteSettings } from '../lib/settings'
+import '../styles/global.css'
+// Asset imports resolve to the same hashed URLs the built CSS references, so
+// the preload dedupes with the @font-face download (no double fetch).
+import didotWoff from '../assets/fonts/woff2/Didot.woff2'
+import geistLatinWoff from '../assets/fonts/woff2/geist-latin-wght-normal.woff2'
+
+interface Props {
+  title?: string
+  description?: string
+  ogImage?: string
+  canonical?: string
+  noindex?: boolean
+  type?: string
+}
+
+const seoSettings = await getSeoSettings()
+const settings = await getSiteSettings()
+
+const {
+  title = seoSettings.defaultSiteTitle,
+  description = seoSettings.defaultSiteDescription,
+  ogImage,
+  canonical,
+  noindex = false,
+  type,
+} = Astro.props
+
+// Canonical + OG tags (FK-027). `canonical` may be a path ('/galleri/x') or a
+// full URL; defaults to the current page's pathname.
+const canonicalHref = canonicalUrl(canonical ?? Astro.url.pathname)
+const seoTags = renderOgTags({
+  title,
+  description,
+  url: canonicalHref,
+  ogImage,
+  type,
+})
+
+// JSON-LD Person (ported from Next root layout)
+const personJsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'Person',
+  name: settings.artistName,
+  jobTitle: 'Kunstnar',
+  url: 'https://furekunst.no',
+  sameAs: [settings.instagramUrl, settings.facebookUrl].filter(Boolean),
+  makesOffer: {
+    '@type': 'Offer',
+    itemOffered: {
+      '@type': 'CreativeWork',
+      name: 'Måleri og kunstbilete',
+    },
+  },
+}
+---
+
+<!doctype html>
+<html lang="nn" class="light">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <!-- Preload the two faces every page paints with (Didot regular + Geist
+         latin), so warm navigations fetch them from cache in the first frame
+         instead of discovering them via @font-face. The faces use
+         font-display: optional — the browser commits at first paint to the
+         real font when it's available (preload + cache = warm navigation) or
+         to the fallback (cold slow load), never swapping, so no flash either
+         way. crossorigin is required for font fetches; the other Didot faces
+         (Bold/Italic/Title) are unused and load on demand if ever referenced. -->
+    <link
+      rel="preload"
+      href={didotWoff}
+      as="font"
+      type="font/woff2"
+      crossorigin
+    />
+    <link
+      rel="preload"
+      href={geistLatinWoff}
+      as="font"
+      type="font/woff2"
+      crossorigin
+    />
+    <meta name="theme-color" content="#fffff9" />
+    <meta name="generator" content={Astro.generator} />
+    <link rel="sitemap" href="/sitemap.xml" />
+    <link rel="canonical" href={canonicalHref} />
+    <slot name="head" />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    {noindex && <meta name="robots" content="noindex" />}
+    {seoTags.map(tag => <meta {...tag.attrs} />)}
+    <script
+      is:inline
+      type="application/ld+json"
+      set:html={JSON.stringify(personJsonLd)}
+    />
+    <script is:inline>
+      // iOS Chrome/Edge back button fix (astro#11919): WebKit doesn't keep
+      // ClientRouter's history entries non-skippable, so pressing back jumps
+      // straight past them to a previous site or the start screen. Plant the
+      // entry synchronously inside the tap gesture with Astro-shaped state so
+      // the router's popstate handler runs on back/forward like on desktop.
+      document.addEventListener('click', e => {
+        if (!/CriOS|EdgiOS/i.test(navigator.userAgent)) return
+        if (
+          e.defaultPrevented ||
+          e.button !== 0 ||
+          e.metaKey ||
+          e.ctrlKey ||
+          e.shiftKey ||
+          e.altKey
+        )
+          return
+        const link = e.target instanceof Element ? e.target.closest('a') : null
+        if (
+          !link ||
+          link.target === '_blank' ||
+          link.hasAttribute('download') ||
+          link.hasAttribute('data-astro-reload') ||
+          link.hasAttribute('data-astro-back') ||
+          link.closest('[data-astro-back]') ||
+          !link.href.startsWith(window.location.origin) ||
+          link.href.includes('#')
+        )
+          return
+        const index =
+          (typeof history.state?.index === 'number' ? history.state.index : 0) + 1
+        history.pushState({ index, scrollX: 0, scrollY: 0 }, '', link.href)
+      })
+    </script>
+    <script is:inline>
+      // Back buttons (e.g. "← Galleri") act like browser back navigation:
+      // Astro's router saves previous scroll positions in history.state and restores
+      // them on popstate traversal. When history is available in the current session,
+      // history.back() is invoked; on a direct deep link it falls back to the href link.
+      document.addEventListener('click', event => {
+        if (
+          event.defaultPrevented ||
+          event.button !== 0 ||
+          event.metaKey ||
+          event.ctrlKey ||
+          event.shiftKey ||
+          event.altKey
+        )
+          return
+
+        const backLink =
+          event.target instanceof Element
+            ? event.target.closest('[data-astro-back]')
+            : null
+        if (!backLink) return
+
+        let visitedGallery = false
+        try {
+          visitedGallery =
+            sessionStorage.getItem('furekunst:gallery-visited') === '1'
+        } catch {}
+
+        const hasHistory =
+          visitedGallery ||
+          (typeof history.state?.index === 'number' && history.state.index > 0)
+
+        if (hasHistory && window.history.length > 1) {
+          event.preventDefault()
+          window.history.back()
+        }
+      })
+    </script>
+    <ClientRouter fallback="animate" />
+  </head>
+
+  <body class="font-body text-primary flex min-h-dvh flex-col antialiased">
+    <Header />
+    <main id="innhold" class="container mx-auto mt-8 max-w-7xl flex-grow">
+      <slot />
+    </main>
+    <Footer transition:persist />
+  </body>
+</html>

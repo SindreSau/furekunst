@@ -1,0 +1,101 @@
+---
+import MobileMenu from './MobileMenu.astro'
+
+export interface Page {
+  title: string
+  url: string
+}
+
+export const pages: Page[] = [
+  { title: 'Heim', url: '/' },
+  { title: 'Galleri', url: '/galleri' },
+  { title: 'Kontakt', url: '/kontakt' },
+]
+
+const pathname = Astro.url.pathname
+const groupPath = '/' + (pathname.split('/')[1] || '')
+
+// The underline bar must morph (slide) between nav positions like the artwork
+// frames do. Astro's default animation for a named element is a fade-out/in;
+// `animation-name: none` lets the browser's native view-transition morph
+// interpolate the bar's position and size instead.
+const morphAnim = {
+  forwards: {
+    old: { name: 'none' },
+    new: { name: 'none' },
+  },
+  backwards: {
+    old: { name: 'none' },
+    new: { name: 'none' },
+  },
+}
+---
+
+<header class="relative z-40 w-full">
+  <div class="container mx-auto max-w-7xl py-2">
+    <a href="#innhold" class="sr-only focus:not-sr-only"
+      >Hopp til hovedinnhold</a
+    >
+    <div class="flex items-center justify-between py-4">
+      <a href="/" class="font-didot text-xl tracking-widest text-ink">
+        <span class="block">ELISABETH FURE</span>
+        <span
+          class="block font-body text-[0.6rem] uppercase tracking-[0.35em] text-accent"
+        >
+          FUREKUNST
+        </span>
+      </a>
+
+      <MobileMenu pages={pages} pathname={pathname} activePath={groupPath} />
+
+      <nav class="hidden space-x-4 md:flex" aria-label="Hovudnavigasjon">
+        {
+          pages.map(page => {
+            const isCurrent = pathname === page.url
+            const isSection = groupPath === page.url
+            // The active link gets an accent underline bar. It carries a shared
+            // view-transition name so the bar morphs/travels between links
+            // during client-side navigation (only one renders per page).
+            const underlined = isCurrent || isSection
+            return (
+              <span class="flex flex-col items-center">
+                {isCurrent ? (
+                  // Clicking a link to the page you're already on is a same-URL
+                  // navigation: a reload with no view transition that flashes the
+                  // whole page white while it loads. Render it as inert text
+                  // instead of a link.
+                  <span
+                    aria-current="page"
+                    class="cursor-default text-ink-strong"
+                  >
+                    {page.title}
+                  </span>
+                ) : (
+                  <a
+                    href={page.url}
+                    data-astro-prefetch
+                    class={`hover:text-ink-strong ${
+                      isSection ? 'text-ink-strong' : 'text-ink-mid'
+                    }`}
+                  >
+                    {page.title}
+                  </a>
+                )}
+                {underlined && (
+                  <span
+                    aria-hidden="true"
+                    transition:name="nav-underline"
+                    transition:animate={morphAnim}
+                    class="mt-0.5 block h-0.5 w-full bg-accent"
+                  />
+                )}
+              </span>
+            )
+          })
+        }
+      </nav>
+    </div>
+
+    <div class="h-px w-full bg-ink-line"></div>
+  </div>
+</header>

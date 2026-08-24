@@ -1,0 +1,165 @@
+---
+import type { CollectionEntry } from 'astro:content'
+import { getImage } from 'astro:assets'
+import MainLayout from '../layouts/MainLayout.astro'
+import GalleryPost from './GalleryPost.astro'
+import Button from './Button.astro'
+import type { GalleryFilter } from '../lib/gallery'
+import { getSeoSettings } from '../lib/seo'
+
+interface Props {
+  posts: CollectionEntry<'gallery'>[]
+}
+
+const { posts } = Astro.props
+const seoSettings = await getSeoSettings()
+
+const filterChips: { label: string; key: GalleryFilter }[] = [
+  { label: 'Alle', key: 'all' },
+  { label: 'Original', key: 'original' },
+  { label: 'Print', key: 'print' },
+]
+const PRELOAD_IMAGES = 2
+const preloadUrls = (
+  await Promise.all(
+    posts.slice(0, PRELOAD_IMAGES).map(async post => {
+      const image = post.data.image
+      if (!image) return null
+      const width = Math.min(image.width, 700)
+      const optimized = await getImage({
+        src: image,
+        width,
+        height: Math.max(1, Math.round((image.height / image.width) * width)),
+        quality: 55,
+      })
+      return optimized.src
+    }),
+  )
+).filter((src): src is string => Boolean(src))
+---
+
+<MainLayout
+  title={seoSettings.gallerySeoTitle}
+  description={seoSettings.gallerySeoDescription}
+  ogImage="/galleri/open-graph.jpeg"
+>
+  <Fragment slot="head">
+    {
+      preloadUrls.map((url, i) => (
+        <link
+          rel="preload"
+          as="image"
+          href={url}
+          fetchpriority={i < 2 ? 'high' : 'auto'}
+        />
+      ))
+    }
+  </Fragment>
+
+  <section aria-labelledby="gallery-heading">
+    <header
+      class="mb-8 flex flex-col gap-4 md:mb-10 sm:flex-row sm:items-end sm:justify-between"
+    >
+      <div>
+        <h1 id="gallery-heading" class="mb-2">Galleri</h1>
+        <p class="flex items-center gap-1 text-sm text-muted-foreground">
+          Klikk gjerne på eit bilete for å sjå fleire detaljar
+          <svg
+            aria-hidden="true"
+            viewBox="0 0 24 24"
+            class="h-4 w-4 text-gray-500"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <path d="M14 4.1 12 6"></path>
+            <path d="m5.1 8-2.9-.8"></path>
+            <path d="m6 12-1.9 2"></path>
+            <path d="M7.2 2.2 8 5.1"></path>
+            <path
+              d="M9.037 9.69a.498.498 0 0 1 .653-.653l11 4.5a.5.5 0 0 1-.074.949l-4.349 1.041a1 1 0 0 0-.74.739l-1.04 4.35a.5.5 0 0 1-.95.074z"
+            ></path>
+          </svg>
+        </p>
+      </div>
+      <div
+        class="flex flex-wrap items-center gap-2"
+        role="group"
+        aria-label="Filtrer galleriet"
+      >
+        {
+          filterChips.map(chip => (
+            <Button
+              type="button"
+              variant="filter"
+              filterKey={chip.key}
+              pressed={chip.key === 'all'}
+            >
+              {chip.label}
+            </Button>
+          ))
+        }
+      </div>
+    </header>
+
+    <div
+      class="gallery-masonry columns-1 gap-x-4 [column-fill:balance] sm:columns-2 sm:gap-x-5 lg:columns-3 lg:gap-x-6 [&_[data-reveal]]:duration-300"
+    >
+      {posts.map((post, index) => <GalleryPost post={post} index={index} />)}
+    </div>
+  </section>
+</MainLayout>
+
+<script>
+  // Remember that the gallery was visited this session: the detail-page
+  // "← Galleri" button then history.back()s (preserving the scroll position)
+  // instead of re-entering the gallery at the top. Idempotent, so it is safe
+  // that this module re-runs on every navigation into the page.
+  try {
+    sessionStorage.setItem('furekunst:gallery-visited', '1')
+  } catch {
+    // sessionStorage unavailable (private mode) — the button falls back to a
+    // plain link.
+  }
+  let currentFilter: string | null = null
+  document.addEventListener('astro:page-load', () => {
+    currentFilter = null
+  })
+  document.addEventListener('click', event => {
+    const chip = (event.target as Element | null)?.closest?.('[data-filter]')
+    if (!chip) return
+    const filter = chip.getAttribute('data-filter') ?? 'all'
+    if (filter === currentFilter) return
+    currentFilter = filter
+
+    for (const other of document.querySelectorAll('[data-filter]')) {
+      other.setAttribute('aria-pressed', other === chip ? 'true' : 'false')
+    }
+
+    const setVisible = () => {
+      for (const card of document.querySelectorAll<HTMLElement>('[data-filter-card]')) {
+        card.hidden = !(filter === 'all' || card.dataset.filterCard === filter)
+      }
+    }
+
+    const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    const startVT = (document as Document & {
+      startViewTransition?: (cb: () => void) => { finished: Promise<void> }
+    }).startViewTransition
+    if (!reduce && startVT) {
+      // While filtering, each card link becomes ONE named view-transition
+      // entity (image + title + price + pill glide together — see
+      // global.css); the frame's art-<slug> name is suppressed at the same
+      // time so the image doesn't morph separately from its text.
+      document.documentElement.setAttribute('data-filtering', '')
+      const vt = startVT.call(document, setVisible)
+      void vt.finished.finally(() => {
+        document.documentElement.removeAttribute('data-filtering')
+      })
+    } else {
+      setVisible()
+    }
+  })
+</script>
